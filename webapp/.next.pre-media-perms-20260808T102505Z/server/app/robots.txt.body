@@ -1,0 +1,8 @@
+User-Agent: *
+Allow: /
+Disallow: /admin/
+Disallow: /account/
+Disallow: /api/
+
+Host: https://animator-surpriz.uz
+Sitemap: https://animator-surpriz.uz/sitemap.xml

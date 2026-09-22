@@ -1,0 +1,163 @@
+<link rel="stylesheet" href="/v2/v2-account.css?v=20260803-unified6">
+{% set display_name = customer.full_name or customer.phone_display %}
+
+<main class="v2-main profile-page" id="content">
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      <div class="v2-container profile-flashes" aria-live="polite">
+        {% for category, message in messages %}
+          <div class="customer-flash customer-flash--{{ category }}"{% if category == 'error' %} role="alert"{% else %} role="status"{% endif %}>{{ message }}</div>
+        {% endfor %}
+      </div>
+    {% endif %}
+  {% endwith %}
+
+  <section class="profile-art" aria-labelledby="profile-page-title">
+    <div class="profile-sr-only">
+      <h1 id="profile-page-title">Профиль</h1>
+      <p>Здесь вся магия ваших праздников. Следите за заказами, сохраняйте любимых героев и планируйте новые сюрпризы.</p>
+    </div>
+    <picture class="profile-art__picture">
+      <source media="(max-width: 767px)" srcset="/v2/assets/account/profile-mobile.png">
+      <img
+        class="profile-art__image"
+        src="/v2/assets/account/profile-desktop.png"
+        alt=""
+        width="1672"
+        height="941"
+        fetchpriority="high"
+      >
+    </picture>
+  </section>
+
+  <section class="profile-content">
+    <div class="v2-container profile-layout">
+      <aside class="profile-sidebar" aria-label="Навигация и данные профиля">
+        <div class="profile-user" id="overview">
+          <div class="profile-user__copy">
+            <span class="profile-user__label">Ваш аккаунт</span>
+            <strong class="profile-user__name">{{ display_name }}</strong>
+            <span class="profile-user__phone">{{ customer.phone_display }}</span>
+          </div>
+        </div>
+
+        <nav class="profile-nav" aria-label="Разделы профиля">
+          <a class="profile-nav__link profile-nav__link--upcoming" href="#upcoming-order">
+            <svg class="v2-i" aria-hidden="true"><use href="#i-calendar"/></svg>
+            <span class="profile-nav__label">Ближайший заказ</span>
+            <span class="profile-nav__label-short" aria-hidden="true">Заказ</span>
+          </a>
+          <a class="profile-nav__link profile-nav__link--history" href="#order-history">
+            <svg class="v2-i" aria-hidden="true"><use href="#i-list"/></svg>
+            <span class="profile-nav__label">История заказов</span>
+            <span class="profile-nav__label-short" aria-hidden="true">История</span>
+          </a>
+          <a class="profile-nav__link profile-nav__link--data" href="#account-data">
+            <svg class="v2-i" aria-hidden="true"><use href="#i-user"/></svg>
+            <span class="profile-nav__label">Данные аккаунта</span>
+            <span class="profile-nav__label-short" aria-hidden="true">Данные</span>
+          </a>
+        </nav>
+
+        <a class="profile-build" href="/surpriz/#order">
+          <svg class="v2-i" aria-hidden="true"><use href="#i-plus"/></svg>
+          <span>Собрать праздник</span>
+        </a>
+
+        <div class="profile-account-data" id="account-data">
+          <h2>Данные аккаунта</h2>
+          <dl>
+            <div>
+              <dt>Имя</dt>
+              <dd>{{ customer.full_name or 'Не указано' }}</dd>
+            </div>
+            <div>
+              <dt>Телефон</dt>
+              <dd>{{ customer.phone_display }}</dd>
+            </div>
+            <div>
+              <dt>Способ входа</dt>
+              <dd>Telegram</dd>
+            </div>
+          </dl>
+        </div>
+
+        <form class="profile-logout" action="{{ url_for('customer_logout') }}" method="post">
+          <button type="submit">
+            <svg class="v2-i" aria-hidden="true"><use href="#i-logout"/></svg>
+            <span>Выйти из аккаунта</span>
+          </button>
+        </form>
+      </aside>
+
+      <div class="profile-main">
+        <section class="profile-section" id="upcoming-order" aria-labelledby="upcoming-order-title">
+          <header class="profile-section__head">
+            <div>
+              <span class="profile-section__eyebrow">Всё под контролем</span>
+              <h2 id="upcoming-order-title">Ближайший заказ</h2>
+            </div>
+            {% if upcoming_order %}
+              <span class="profile-section__count">1 активный</span>
+            {% endif %}
+          </header>
+
+          {% if upcoming_order %}
+            {% set order = upcoming_order %}
+            {% set featured = true %}
+            {% include 'site/account/_order_card.html' %}
+          {% else %}
+            <div class="profile-next-empty">
+              <span class="profile-next-empty__icon" aria-hidden="true">
+                <svg class="v2-i"><use href="#i-calendar"/></svg>
+              </span>
+              <div>
+                <h3>Активных заказов сейчас нет</h3>
+                <p>Когда вы соберёте праздник, ближайшая дата и статус появятся здесь.</p>
+              </div>
+              <a href="/surpriz/#order">Собрать праздник</a>
+            </div>
+          {% endif %}
+        </section>
+
+        <section class="profile-section" id="order-history" aria-labelledby="order-history-title">
+          <header class="profile-section__head profile-section__head--history">
+            <div>
+              <span class="profile-section__eyebrow">Все заявки в одном месте</span>
+              <h2 id="order-history-title">История заказов</h2>
+            </div>
+            {% if orders %}
+              <span class="profile-section__total">{{ orders|length }}</span>
+            {% endif %}
+          </header>
+
+          {% if history_orders %}
+            <div class="profile-orders">
+              {% for order in history_orders %}
+                {% set featured = false %}
+                {% include 'site/account/_order_card.html' %}
+              {% endfor %}
+            </div>
+          {% elif upcoming_order %}
+            <div class="profile-history-note">
+              <svg class="v2-i" aria-hidden="true"><use href="#i-sparkles"/></svg>
+              <p>Других заказов пока нет. Текущий праздник уже показан выше.</p>
+            </div>
+          {% else %}
+            <div class="profile-empty">
+              <span class="profile-empty__icon" aria-hidden="true">
+                <svg class="v2-i"><use href="#i-party-hat"/></svg>
+              </span>
+              <h3>Заказов пока нет</h3>
+              <p>Соберите первый праздник — он появится здесь вместе с актуальным статусом.</p>
+              <a class="profile-build profile-build--inline" href="/surpriz/#order">
+                <svg class="v2-i" aria-hidden="true"><use href="#i-plus"/></svg>
+                <span>Собрать первый праздник</span>
+              </a>
+            </div>
+          {% endif %}
+        </section>
+      </div>
+    </div>
+  </section>
+</main>

@@ -1,0 +1,376 @@
+/* Landing-style skin for the character and show detail pages.
+   The markup stays on its v2 classes; this file only restyles it so the page
+   matches the catalog a visitor just came from. Loaded after v2.css. */
+
+body.v2-landing-shell {
+  /* Замеряно с главной: заголовки — тёмный индиго, фиолетовый отдан ссылкам,
+     оранжевый живёт только в градиенте кнопки заказа. */
+  --detail-ink: #21165b;
+  --detail-muted: #4c4963;
+  --detail-violet: #6c1be3;
+  --detail-orange: #ff4d0b;
+  --detail-cta: linear-gradient(105deg, #ff7700, #ff4d0b);
+
+  /* Переопределяем сами переменные v2 — так лендинговую палитру подхватывает всё,
+     что мы не покрасили поимённо: наведение, фокус-кольца, рамки. Иначе фокус
+     остаётся бирюзовым, хотя на главной он оранжевый. */
+  --ink: #21165b;
+  --ink-soft: #4c4963;
+  --link: #6c1be3;
+  --link-hover: #5215b4;
+  --focus: #e9540b;
+}
+
+/* ── Шапка и мобильный док ────────────────────────────────────
+   Разметка уже лендинговая, но v2.css красит её своим старым бирюзовым
+   (`body.v2 a { color: var(--link) }`, #087A86). Возвращаем цвета главной. */
+
+body.v2-landing-shell .brand,
+body.v2-landing-shell .brand span {
+  color: #1d3550;
+}
+
+body.v2-landing-shell .nav > a,
+body.v2-landing-shell .nav-menu__toggle {
+  color: #202024;
+  font-family: Inter, ui-sans-serif, system-ui, sans-serif;
+  font-weight: 750;
+}
+
+body.v2-landing-shell .nav > a:hover,
+body.v2-landing-shell .nav-menu__toggle:hover {
+  color: #6c1be3;
+}
+
+
+body.v2-landing-shell .nav-menu__item,
+body.v2-landing-shell .nav-menu__footer {
+  color: var(--detail-ink);
+}
+
+body.v2-landing-shell .nav-menu__item small {
+  color: var(--detail-muted);
+}
+
+/* На главной телефон — не сплошной цвет, а фиолетовый градиент по тексту. */
+body.v2-landing-shell .header__phone {
+  background: linear-gradient(100deg, #8a30f6, #5238ed);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+body.v2-landing-shell .header__phone span {
+  color: inherit;
+}
+
+body.v2-landing-shell .header__register,
+body.v2-landing-shell .header__register [data-auth-label] {
+  color: #fff;
+}
+
+body.v2-landing-shell .mobile-dock__item,
+body.v2-landing-shell .mobile-dock__create {
+  color: #1f1f1f;
+}
+
+body.v2-landing-shell .mobile-dock__item.is-active,
+body.v2-landing-shell .mobile-dock__create.is-active {
+  color: #f2530b;
+}
+
+/* v2 красит КАЖДУЮ ссылку своим бирюзовым. В лендинг-скине ссылка берёт цвет
+   окружающего текста, а те, что должны выделяться, покрашены ниже отдельно. */
+body.v2-landing-shell a {
+  color: inherit;
+}
+
+/* «Все персонажи» / «Все шоу» — как «Смотреть все» на главной. */
+body.v2-landing-shell .v2-section-head__link,
+body.v2-landing-shell .sp-bandhead__link {
+  color: var(--detail-violet);
+  font-weight: 800;
+}
+
+/* ── Полотно страницы ─────────────────────────────────────────── */
+
+body.v2-landing-shell .v2-main,
+body.v2-landing-shell .v2-charpage,
+body.v2-landing-shell .v2-showpage {
+  background:
+    radial-gradient(circle at 7% 9%, rgba(255, 102, 13, .10), transparent 24%),
+    radial-gradient(circle at 92% 24%, rgba(110, 35, 224, .11), transparent 26%),
+    linear-gradient(180deg, #fffaf5 0%, #fff 45%, #fbf7ff 100%);
+  font-family: "Rubik", sans-serif;
+  isolation: isolate;
+  overflow: hidden;
+  padding-bottom: 96px;
+  position: relative;
+}
+
+body.v2-landing-shell .v2-main::before,
+body.v2-landing-shell .v2-charpage::before,
+body.v2-landing-shell .v2-showpage::before {
+  background: url("/surpriz/assets/img/show-programs/confetti-frame.webp") center top / min(1560px, 110vw) auto repeat-y;
+  content: "";
+  inset: 24px 0;
+  opacity: .3;
+  pointer-events: none;
+  position: absolute;
+  z-index: -1;
+}
+
+/* ── Хлебные крошки и кнопка «Назад» ──────────────────────────── */
+
+body.v2-landing-shell .v2-charpage__topline {
+  align-items: center;
+  padding-top: 26px;
+}
+
+body.v2-landing-shell .v2-crumbs {
+  color: var(--detail-muted);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+body.v2-landing-shell .v2-crumbs__link {
+  color: var(--detail-violet);
+  text-decoration: none;
+}
+
+body.v2-landing-shell .v2-crumbs__link:hover { text-decoration: underline; }
+
+body.v2-landing-shell .v2-charpage__back {
+  background: rgba(255, 255, 255, .92);
+  border: 1px solid rgba(36, 18, 79, .12);
+  border-radius: 999px;
+  box-shadow: 0 6px 18px rgba(54, 28, 96, .07);
+  color: var(--detail-ink);
+  font-weight: 800;
+}
+
+/* ── Заголовок и чипы ─────────────────────────────────────────── */
+
+body.v2-landing-shell .v2-charpage__info h1,
+body.v2-landing-shell .v2-showpage h1 {
+  color: var(--detail-ink);
+  font: 700 clamp(36px, 4vw, 60px)/1.0 "Balsamiq Sans", sans-serif;
+  letter-spacing: -.045em;
+  margin: 10px 0 14px;
+}
+
+body.v2-landing-shell .v2-charpage__chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+
+body.v2-landing-shell .v2-chip {
+  background: rgba(255, 255, 255, .92);
+  border: 1px solid rgba(36, 18, 79, .12);
+  border-radius: 999px;
+  box-shadow: 0 6px 18px rgba(54, 28, 96, .07);
+  color: var(--detail-ink);
+  font-size: 12px;
+  font-weight: 800;
+  padding: 7px 13px;
+}
+
+body.v2-landing-shell .v2-charpage__info > p,
+body.v2-landing-shell .v2-char-about__text {
+  color: var(--detail-muted);
+  font-size: clamp(15px, 1.35vw, 18px);
+  line-height: 1.6;
+}
+
+/* ── Галерея ──────────────────────────────────────────────────── */
+
+body.v2-landing-shell .v2-char-gallery__frame,
+body.v2-landing-shell .v2-char-gallery__stage {
+  border-radius: 26px;
+  overflow: hidden;
+}
+
+body.v2-landing-shell .v2-char-gallery__frame {
+  background: linear-gradient(160deg, #fff5e9 0%, #f7efff 58%, #e7fbf6 100%);
+  border: 1px solid rgba(36, 18, 79, .10);
+  box-shadow: 0 18px 46px rgba(54, 28, 96, .13);
+}
+
+body.v2-landing-shell .v2-char-gallery__thumb {
+  border-radius: 14px;
+  overflow: hidden;
+}
+
+body.v2-landing-shell .v2-char-gallery__thumb.is-active {
+  outline: 2px solid var(--detail-violet);
+  outline-offset: 2px;
+}
+
+/* ── Карточки: заказ и описание ───────────────────────────────── */
+
+body.v2-landing-shell .v2-card {
+  background: rgba(255, 255, 255, .97);
+  border: 1px solid rgba(36, 18, 79, .10);
+  border-radius: 26px;
+  box-shadow: 0 18px 46px rgba(54, 28, 96, .11);
+}
+
+body.v2-landing-shell .v2-char-cta__price {
+  color: var(--detail-orange);
+  font: 700 clamp(24px, 2.4vw, 34px)/1.1 "Balsamiq Sans", sans-serif;
+  letter-spacing: -.03em;
+}
+
+/* У персонажа нет своей цены — вместо суммы идёт пояснение, и оно не должно
+   выглядеть ценником, иначе читается как «бесплатно» или как ошибка. */
+body.v2-landing-shell .v2-char-cta__price--soft {
+  color: var(--detail-muted);
+  font: 600 15px/1.45 "Rubik", sans-serif;
+  letter-spacing: 0;
+}
+
+body.v2-landing-shell .v2-btn--primary {
+  background: var(--detail-cta);
+  border: 0;
+  border-radius: 10px;
+  box-shadow: 0 12px 24px rgba(255, 79, 11, .22);
+  color: #fff;
+  font-weight: 900;
+}
+
+body.v2-landing-shell .v2-btn--primary:hover {
+  box-shadow: 0 16px 30px rgba(255, 79, 11, .3);
+  transform: translateY(-1px);
+}
+
+body.v2-landing-shell .v2-char-cta__phone {
+  color: var(--detail-violet);
+  font-weight: 800;
+  text-decoration: none;
+}
+
+body.v2-landing-shell .v2-char-cta__note {
+  color: var(--detail-muted);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+/* ── Похожие персонажи ────────────────────────────────────────── */
+
+body.v2-landing-shell .v2-section-head h2 {
+  color: var(--detail-ink);
+  font: 700 clamp(28px, 3vw, 44px)/1.04 "Balsamiq Sans", sans-serif;
+  letter-spacing: -.045em;
+}
+
+body.v2-landing-shell .v2-char-tile {
+  background: rgba(255, 255, 255, .97);
+  border: 1px solid rgba(36, 18, 79, .10);
+  border-radius: 24px;
+  box-shadow: 0 18px 46px rgba(54, 28, 96, .11);
+  overflow: hidden;
+  transition: box-shadow .2s ease, transform .2s ease;
+}
+
+body.v2-landing-shell .v2-char-tile__name {
+  color: var(--detail-ink);
+  font: 700 clamp(17px, 1.4vw, 21px)/1.12 "Balsamiq Sans", sans-serif;
+  letter-spacing: -.03em;
+}
+
+body.v2-landing-shell .v2-char-tile__more {
+  color: var(--detail-violet);
+  font-weight: 800;
+}
+
+@media (hover: hover) and (pointer: fine) and (min-width: 900px) {
+  body.v2-landing-shell .v2-char-tile:hover {
+    box-shadow: 0 26px 62px rgba(54, 28, 96, .18);
+    transform: translateY(-5px);
+  }
+}
+
+@media (max-width: 899.98px) {
+  body.v2-landing-shell .v2-charpage,
+  body.v2-landing-shell .v2-showpage {
+    padding-bottom: 84px;
+  }
+
+  body.v2-landing-shell .v2-charpage__info h1 {
+    font-size: clamp(30px, 8vw, 42px);
+  }
+}
+
+/* ── Страница шоу-программы: те же акценты, что в каталоге ────── */
+
+body.v2-landing-shell .sp-title {
+  color: var(--detail-ink);
+  font: 700 clamp(36px, 4vw, 60px)/1.0 "Balsamiq Sans", sans-serif;
+  letter-spacing: -.045em;
+}
+
+body.v2-landing-shell .sp-eyebrow,
+body.v2-landing-shell .sp-kicker {
+  color: var(--detail-orange);
+  font-weight: 800;
+  letter-spacing: .06em;
+}
+
+body.v2-landing-shell .sp-price,
+body.v2-landing-shell .sp-buy__price {
+  color: var(--detail-orange);
+  font-family: "Balsamiq Sans", sans-serif;
+  letter-spacing: -.03em;
+}
+
+body.v2-landing-shell .sp-hero__frame,
+body.v2-landing-shell .sp-buy,
+body.v2-landing-shell .sp-addon,
+body.v2-landing-shell .sp-band {
+  border-radius: 26px;
+}
+
+body.v2-landing-shell .sp-hero__frame {
+  box-shadow: 0 18px 46px rgba(54, 28, 96, .13);
+  overflow: hidden;
+}
+
+body.v2-landing-shell .sp-addon__name,
+body.v2-landing-shell .sp-bandhead__title {
+  color: var(--detail-ink);
+  font-family: "Balsamiq Sans", sans-serif;
+  letter-spacing: -.03em;
+}
+
+body.v2-landing-shell .sp-buy__cta {
+  background: var(--detail-cta);
+  border-radius: 10px;
+  box-shadow: 0 12px 24px rgba(255, 79, 11, .22);
+  color: #fff;
+  font-weight: 900;
+}
+
+/* ── Крупнее фото героя, как карточки на главной ──────────────── */
+
+@media (min-width: 900px) {
+  body.v2-landing-shell .v2-charpage__layout {
+    align-items: start;
+    gap: 52px;
+    grid-template-columns: minmax(0, 1.15fr) minmax(0, .85fr);
+  }
+}
+
+
+/* The canvas lives on <main>; nested page wrappers stay transparent so the
+   confetti is not drawn twice. */
+body.v2-landing-shell .v2-charpage,
+body.v2-landing-shell .v2-showpage {
+  background: none;
+}
+
+body.v2-landing-shell .v2-charpage::before,
+body.v2-landing-shell .v2-showpage::before {
+  content: none;
+}

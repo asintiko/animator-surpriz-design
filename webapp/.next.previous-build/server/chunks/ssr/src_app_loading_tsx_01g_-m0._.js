@@ -1,0 +1,3 @@
+module.exports=[2747,a=>{"use strict";var b=a.i(78516);a.s(["default",0,function(){return(0,b.jsxs)("div",{className:"page-loading",role:"status","aria-live":"polite",children:[(0,b.jsx)("span",{className:"skeleton skeleton-title"}),(0,b.jsx)("span",{className:"skeleton skeleton-line"}),(0,b.jsx)("div",{className:"skeleton-grid",children:Array.from({length:4},(a,c)=>(0,b.jsx)("span",{className:"skeleton skeleton-card"},c))}),(0,b.jsx)("span",{className:"sr-only",children:"Загрузка страницы"})]})}])},25210,a=>{a.n(a.i(2747))}];
+
+//# sourceMappingURL=src_app_loading_tsx_01g_-m0._.js.map

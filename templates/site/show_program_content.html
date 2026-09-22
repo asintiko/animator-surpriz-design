@@ -1,0 +1,497 @@
+<link rel="stylesheet" href="/v2/v2-shows.css?v=20260720-4">
+{% import 'site/_v2_show_macros.html' as showui %}
+{% set sec = namespace(n=0) %}
+<div class="v2-show3">
+<main class="v2-main" id="content">
+
+  <!-- ============ КРОШКИ + НАЗАД ============ -->
+  <div class="v2-container sp-topline">
+    <nav class="v2-crumbs" aria-label="Breadcrumb">
+      <a class="v2-crumbs__link" href="/">Главная</a>
+      <span class="v2-crumbs__sep" aria-hidden="true">/</span>
+      <a class="v2-crumbs__link" href="/show-programs/">Шоу-программы</a>
+      <span class="v2-crumbs__sep" aria-hidden="true">/</span>
+      <span class="v2-crumbs__current">{{ show.name }}</span>
+    </nav>
+    <button class="v2-btn v2-btn--ghost v2-btn--sm sp-back" type="button" data-v2-back data-fallback="/show-programs/">
+      <svg class="v2-i" aria-hidden="true"><use href="#i-arrow-left"/></svg>
+      <span>Назад</span>
+    </button>
+  </div>
+
+  <!-- ============ EDITORIAL HERO ============ -->
+  <section class="v2-container sp-hero">
+    <div class="sp-hero__info">
+      <p class="ed-eyebrow" data-reveal><span class="ed-eyebrow__rule" aria-hidden="true"></span>Шоу-программа</p>
+      <h1 class="sp-title" data-reveal data-reveal-delay="60">{{ show.name }}</h1>
+      <p class="sp-lead" data-reveal data-reveal-delay="120">{{ show.summary_text }}</p>
+      <div data-reveal data-reveal-delay="160">
+        {{ showui.meta_line(show.duration_label, show.age_label, show.format_label, show.category_label) }}
+      </div>
+
+      {% if show.promotions %}
+        <div class="sp-promos" data-reveal data-reveal-delay="200">
+          {{ showui.promo_badges(show.promotions) }}
+        </div>
+      {% endif %}
+
+      <div class="sp-buy" data-reveal data-reveal-delay="240" data-hero-cta>
+        {{ showui.price_accent(show.price_label) }}
+        <div class="sp-buy__cta">
+          <a class="v2-btn v2-btn--primary v2-btn--lg" href="/party-builder/?program={{ show.slug }}">
+            <svg class="v2-i" aria-hidden="true"><use href="#i-party-hat"/></svg>
+            <span>Собрать программу</span>
+          </a>
+          {% if show.video_url %}
+            <button class="v2-btn v2-btn--ghost v2-btn--lg" type="button" data-video-open data-video-url="{{ show.video_url|e }}">
+              <svg class="v2-i" aria-hidden="true"><use href="#i-play"/></svg>
+              <span>Видео</span>
+            </button>
+          {% endif %}
+        </div>
+      </div>
+
+      <p class="sp-phone" data-reveal data-reveal-delay="280">
+        <svg class="v2-i" aria-hidden="true"><use href="#i-phone"/></svg>
+        <span>Остались вопросы по программе? Позвоните: <a href="{{ phone_tel }}">{{ phone_display }}</a> — подскажем и поможем с выбором.</span>
+      </p>
+    </div>
+
+    <figure class="sp-hero__media" data-reveal data-reveal-delay="140">
+      <span class="sp-hero__mat" aria-hidden="true"></span>
+      <span class="sp-hero__frame">
+        {{ showui.media_placeholder(show.has_image) }}
+        {% if show.has_image %}
+          <img alt="{{ show.name }} — шоу-программа" decoding="async" loading="eager" onerror="this.style.display='none'" src="{{ show.hero_file_path }}">
+        {% endif %}
+      </span>
+    </figure>
+  </section>
+  <div data-sticky-sentinel aria-hidden="true"></div>
+
+  <!-- ============ СЕКЦИИ ============ -->
+  <div class="v2-container sp-body">
+
+    {% if show.description %}
+      {% set sec.n = sec.n + 1 %}
+      <section class="sp-section" data-reveal>
+        <header class="sp-section__side">
+          <span class="ed-num ed-num--sm" aria-hidden="true">{{ '%02d' % sec.n }}</span>
+          <h2 class="sp-section__title">О программе</h2>
+          <span class="sp-section__rule" aria-hidden="true"></span>
+        </header>
+        <div class="sp-section__body">
+          <p class="sp-prose">{{ show.description|replace('\n', '<br>')|safe }}</p>
+        </div>
+      </section>
+    {% endif %}
+
+    {% if show.included_items_list %}
+      {% set sec.n = sec.n + 1 %}
+      <section class="sp-section" data-reveal>
+        <header class="sp-section__side">
+          <span class="ed-num ed-num--sm" aria-hidden="true">{{ '%02d' % sec.n }}</span>
+          <h2 class="sp-section__title">Что входит</h2>
+          <span class="sp-section__rule" aria-hidden="true"></span>
+        </header>
+        <div class="sp-section__body">
+          <ul class="sp-list">
+            {% for item in show.included_items_list %}
+              <li><svg class="v2-i" aria-hidden="true"><use href="#i-check"/></svg><span>{{ item }}</span></li>
+            {% endfor %}
+          </ul>
+        </div>
+      </section>
+    {% endif %}
+
+    {% if show.suitable_for_list %}
+      {% set sec.n = sec.n + 1 %}
+      <section class="sp-section" data-reveal>
+        <header class="sp-section__side">
+          <span class="ed-num ed-num--sm" aria-hidden="true">{{ '%02d' % sec.n }}</span>
+          <h2 class="sp-section__title">Кому подходит</h2>
+          <span class="sp-section__rule" aria-hidden="true"></span>
+        </header>
+        <div class="sp-section__body">
+          <ul class="sp-list">
+            {% for item in show.suitable_for_list %}
+              <li><svg class="v2-i" aria-hidden="true"><use href="#i-heart"/></svg><span>{{ item }}</span></li>
+            {% endfor %}
+          </ul>
+        </div>
+      </section>
+    {% endif %}
+
+    {% if show.has_gifts %}
+      {% set sec.n = sec.n + 1 %}
+      <section class="sp-section" data-reveal>
+        <header class="sp-section__side">
+          <span class="ed-num ed-num--sm" aria-hidden="true">{{ '%02d' % sec.n }}</span>
+          <h2 class="sp-section__title">Подарки детям</h2>
+          <span class="sp-section__rule" aria-hidden="true"></span>
+        </header>
+        <div class="sp-section__body">
+          <div class="sp-band sp-band--gifts">
+            <ul class="sp-list sp-list--band">
+              {% for bundle in show.gift_bundles %}
+                <li>
+                  <svg class="v2-i" aria-hidden="true"><use href="#i-gift"/></svg>
+                  <span><strong>{{ bundle.name }}</strong> — включено бесплатно</span>
+                </li>
+              {% endfor %}
+              {% for gift_group in show.gift_choice_groups %}
+                <li>
+                  <svg class="v2-i" aria-hidden="true"><use href="#i-gift"/></svg>
+                  <span>На выбор: {% for addon in gift_group.addons %}<strong>{{ addon.name }}</strong>{% if not loop.last %}, {% endif %}{% endfor %}</span>
+                </li>
+              {% endfor %}
+            </ul>
+          </div>
+        </div>
+      </section>
+    {% endif %}
+
+    {% if show.restrictions_list %}
+      {% set sec.n = sec.n + 1 %}
+      <section class="sp-section" data-reveal>
+        <header class="sp-section__side">
+          <span class="ed-num ed-num--sm" aria-hidden="true">{{ '%02d' % sec.n }}</span>
+          <h2 class="sp-section__title">Важно знать</h2>
+          <span class="sp-section__rule" aria-hidden="true"></span>
+        </header>
+        <div class="sp-section__body">
+          <div class="sp-band sp-band--warn">
+            <ul class="sp-list sp-list--band">
+              {% for item in show.restrictions_list %}
+                <li><svg class="v2-i" aria-hidden="true"><use href="#i-info"/></svg><span>{{ item }}</span></li>
+              {% endfor %}
+            </ul>
+          </div>
+        </div>
+      </section>
+    {% endif %}
+
+    {% if show.addons %}
+      {% set sec.n = sec.n + 1 %}
+      <section class="sp-section sp-section--addons" data-reveal>
+        <header class="sp-section__side">
+          <span class="ed-num ed-num--sm" aria-hidden="true">{{ '%02d' % sec.n }}</span>
+          <h2 class="sp-section__title">Можно добавить</h2>
+          <span class="sp-section__rule" aria-hidden="true"></span>
+        </header>
+        <div class="sp-section__body">
+          <div class="sp-addons">
+            {% for addon in show.addons %}
+              <article class="sp-addon">
+                <div class="sp-addon__media">
+                  {{ showui.media_placeholder(addon.has_image) }}
+                  {% if addon.has_image %}
+                    <img alt="{{ addon.name }}" decoding="async" loading="lazy" onerror="this.style.display='none'" src="{{ addon.image_path }}">
+                  {% endif %}
+                </div>
+                <div class="sp-addon__body">
+                  {% if addon.is_recommended %}
+                    <p class="sp-addon__rec">
+                      <svg class="v2-i" aria-hidden="true"><use href="#i-star"/></svg>
+                      Рекомендуем
+                    </p>
+                  {% endif %}
+                  <h3 class="sp-addon__name">{{ addon.name }}</h3>
+                  <p class="sp-addon__summary">{{ addon.summary_text|truncate(140, false, '…') }}</p>
+                  <p class="sp-addon__meta">
+                    <span class="sp-addon__price">{{ addon.price_label }}</span>
+                    {% if addon.duration_label %}<span class="sp-addon__dur">+ {{ addon.duration_label }}</span>{% endif %}
+                  </p>
+                </div>
+              </article>
+            {% endfor %}
+          </div>
+        </div>
+      </section>
+    {% endif %}
+  </div>
+
+  <!-- ============ КАК ЗАКАЗАТЬ ============ -->
+  <section class="sp-steps-section">
+    <div class="v2-container">
+      <header class="sp-bandhead" data-reveal>
+        <p class="ed-eyebrow"><span class="ed-eyebrow__rule" aria-hidden="true"></span>Всё просто</p>
+        <h2 class="sp-bandhead__title">Как заказать за 3 шага</h2>
+      </header>
+      <div class="sp-steps">
+        <article class="sp-step" data-reveal>
+          <span class="ed-num" aria-hidden="true">01</span>
+          <h3 class="sp-step__title">Нажмите «Собрать программу»</h3>
+          <p class="sp-step__text">Конструктор сразу подставит это шоу — останется выбрать детали праздника.</p>
+        </article>
+        <article class="sp-step" data-reveal data-reveal-delay="120">
+          <span class="ed-num" aria-hidden="true">02</span>
+          <h3 class="sp-step__title">Укажите дату и адрес</h3>
+          <p class="sp-step__text">Заполните короткую форму: дата, время, место и пожелания к программе.</p>
+        </article>
+        <article class="sp-step" data-reveal data-reveal-delay="240">
+          <span class="ed-num" aria-hidden="true">03</span>
+          <h3 class="sp-step__title">Мы подтверждаем заказ</h3>
+          <p class="sp-step__text">Менеджер свяжется с вами, подтвердит детали — и мы приедем с реквизитом заранее.</p>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ ПОХОЖИЕ ШОУ ============ -->
+  {% if related_shows %}
+    <section class="sp-related">
+      <div class="v2-container">
+        <header class="sp-bandhead sp-bandhead--row" data-reveal>
+          <div>
+            <h2 class="sp-bandhead__title">Похожие шоу-программы</h2>
+          </div>
+          <a class="sf-more sp-bandhead__link" href="/show-programs/">
+            <span>Все шоу</span>
+            <svg class="v2-i" aria-hidden="true"><use href="#i-arrow-right"/></svg>
+          </a>
+        </header>
+        <ul class="sp-related__grid">
+          {% for item in related_shows %}
+            {{ showui.related_card(item) }}
+          {% endfor %}
+        </ul>
+      </div>
+    </section>
+  {% endif %}
+</main>
+
+<!-- ============ STICKY CTA ============ -->
+<div class="v2-sticky-cta sp-cta" data-sticky-cta aria-hidden="true" inert>
+  <div class="v2-sticky-cta__inner sp-cta__inner">
+    <div class="v2-sticky-cta__info sp-cta__info">
+      <span class="v2-sticky-cta__name sp-cta__name">{{ show.name }}</span>
+      <span class="v2-sticky-cta__price sp-cta__price">{{ show.price_label }}{% if show.duration_label %} · {{ show.duration_label }}{% endif %}</span>
+    </div>
+    <a class="v2-btn v2-btn--primary v2-btn--md" href="/party-builder/?program={{ show.slug }}">
+      <svg class="v2-i" aria-hidden="true"><use href="#i-party-hat"/></svg>
+      <span>Собрать</span>
+    </a>
+  </div>
+</div>
+
+{% if show.video_url %}
+  <!-- ============ ВИДЕО-МОДАЛ ============ -->
+  <div class="v2-lightbox v2-video-modal" data-video-modal aria-hidden="true" role="dialog" aria-modal="true" aria-label="Видео: {{ show.name }}" tabindex="-1" inert>
+    <div class="v2-lightbox__backdrop" data-video-close></div>
+    <div class="v2-video-modal__stage" data-video-stage></div>
+    <button class="v2-lightbox__close" type="button" data-video-close aria-label="Закрыть видео">
+      <svg class="v2-i" aria-hidden="true"><use href="#i-close"/></svg>
+    </button>
+  </div>
+{% endif %}
+</div>
+
+<script>
+(function () {
+  "use strict";
+
+  function ready(fn) {
+    if (document.readyState === "loading") {
+      document.addEventListener("DOMContentLoaded", fn);
+    } else {
+      fn();
+    }
+  }
+
+  /* ---------- Кнопка «Назад» ---------- */
+  document.querySelectorAll("[data-v2-back]").forEach(function (button) {
+    button.addEventListener("click", function () {
+      var fallback = button.getAttribute("data-fallback") || "/show-programs/";
+      var ref = document.referrer || "";
+      var sameSite = ref.indexOf(window.location.origin) === 0;
+      if (sameSite && window.history.length > 1) {
+        window.history.back();
+      } else {
+        window.location.assign(fallback);
+      }
+    });
+  });
+
+  ready(function () {
+
+  /* ---------- Sticky CTA: после hero, не перекрывает футер ---------- */
+  var sticky = document.querySelector("[data-sticky-cta]");
+  var sentinel = document.querySelector("[data-sticky-sentinel]");
+  var stickyBoundary = document.querySelector(".sp-hero") || sentinel;
+  var footer = document.querySelector(".surpriz-site-footer");
+  if (sticky && stickyBoundary) {
+    var pastHero = false;
+    var footerVisible = false;
+    var update = function () {
+      var visible = pastHero && !footerVisible;
+      sticky.classList.toggle("is-visible", visible);
+      sticky.setAttribute("aria-hidden", visible ? "false" : "true");
+      if (visible) sticky.removeAttribute("inert");
+      else sticky.setAttribute("inert", "");
+    };
+    if ("IntersectionObserver" in window) {
+      new IntersectionObserver(function (entries) {
+        pastHero = !entries[0].isIntersecting && entries[0].boundingClientRect.bottom <= 0;
+        update();
+      }, { threshold: 0 }).observe(stickyBoundary);
+      if (footer) {
+        new IntersectionObserver(function (entries) {
+          footerVisible = entries[0].isIntersecting;
+          update();
+        }, { threshold: 0 }).observe(footer);
+      }
+    } else {
+      var syncStickyPosition = function () {
+        pastHero = stickyBoundary.getBoundingClientRect().bottom <= 0;
+        footerVisible = footer ? footer.getBoundingClientRect().top < window.innerHeight : false;
+        update();
+      };
+      window.addEventListener("scroll", syncStickyPosition, { passive: true });
+      window.addEventListener("resize", syncStickyPosition, { passive: true });
+      syncStickyPosition();
+    }
+  }
+
+  /* ---------- Видео-модал ---------- */
+  var openBtn = document.querySelector("[data-video-open]");
+  var modal = document.querySelector("[data-video-modal]");
+  if (openBtn && modal) {
+    var stage = modal.querySelector("[data-video-stage]");
+    var lastFocus = null;
+    var modalScope = modal.parentElement;
+    var backgroundTargets = modalScope
+      ? Array.prototype.slice.call(modalScope.children).filter(function (element) { return element !== modal; })
+      : [];
+    [document.querySelector(".v2-header"), document.querySelector(".v2-mbar"), document.querySelector(".surpriz-site-footer")]
+      .forEach(function (element) {
+        if (element && backgroundTargets.indexOf(element) === -1) backgroundTargets.push(element);
+      });
+
+    var setBackgroundInert = function (inert) {
+      backgroundTargets.forEach(function (element) {
+        if (inert) {
+          if (!element.hasAttribute("inert")) {
+            element.setAttribute("inert", "");
+            element.setAttribute("data-video-inerted", "");
+          }
+        } else if (element.hasAttribute("data-video-inerted")) {
+          element.removeAttribute("inert");
+          element.removeAttribute("data-video-inerted");
+        }
+      });
+    };
+
+    var embedUrl = function (url) {
+      var match = url.match(/(?:youtube\.com\/(?:watch\?.*v=|embed\/|shorts\/)|youtu\.be\/)([\w-]{6,})/);
+      if (match) return "https://www.youtube.com/embed/" + match[1] + "?autoplay=1&rel=0";
+      match = url.match(/vimeo\.com\/(\d+)/);
+      if (match) return "https://player.vimeo.com/video/" + match[1] + "?autoplay=1";
+      return "";
+    };
+
+    var closeModal = function () {
+      modal.classList.remove("is-open");
+      modal.setAttribute("aria-hidden", "true");
+      modal.setAttribute("inert", "");
+      setBackgroundInert(false);
+      document.body.style.overflow = "";
+      if (stage) stage.innerHTML = "";
+      if (lastFocus && lastFocus.focus) lastFocus.focus();
+    };
+
+    openBtn.addEventListener("click", function () {
+      var url = openBtn.getAttribute("data-video-url") || "";
+      var embed = embedUrl(url);
+      var isFile = /\.(mp4|webm|mov)(\?|$)/i.test(url);
+      if (!embed && !isFile) {
+        window.open(url, "_blank", "noopener");
+        return;
+      }
+      lastFocus = document.activeElement;
+      if (stage) {
+        stage.innerHTML = embed
+          ? '<iframe class="v2-video-modal__frame" allowfullscreen allow="autoplay; fullscreen; picture-in-picture" src="' + embed + '" title="Видео"></iframe>'
+          : '<video class="v2-video-modal__video" controls autoplay playsinline src="' + url + '"></video>';
+      }
+      modal.classList.add("is-open");
+      modal.setAttribute("aria-hidden", "false");
+      modal.removeAttribute("inert");
+      setBackgroundInert(true);
+      document.body.style.overflow = "hidden";
+      var closeBtn = modal.querySelector("[data-video-close]");
+      if (closeBtn) closeBtn.focus();
+    });
+
+    modal.querySelectorAll("[data-video-close]").forEach(function (el) {
+      el.addEventListener("click", closeModal);
+    });
+    document.addEventListener("keydown", function (event) {
+      if (!modal.classList.contains("is-open")) return;
+      if (event.key === "Escape") {
+        closeModal();
+        return;
+      }
+      if (event.key !== "Tab") return;
+      var focusable = Array.prototype.slice.call(modal.querySelectorAll(
+        'a[href], button:not([disabled]), iframe, video, [tabindex]:not([tabindex="-1"])'
+      )).filter(function (element) {
+        return !element.hasAttribute("hidden") && element.getAttribute("aria-hidden") !== "true";
+      });
+      if (!focusable.length) {
+        event.preventDefault();
+        modal.focus();
+        return;
+      }
+      var first = focusable[0];
+      var last = focusable[focusable.length - 1];
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault();
+        first.focus();
+      }
+    });
+  }
+
+  });
+})();
+</script>
+
+{# Крошки для поисковика — повторяют те, что видит человек выше. #}
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    { "@type": "ListItem", "position": 1, "name": "Главная", "item": "https://animator-surpriz.uz/" },
+    { "@type": "ListItem", "position": 2, "name": "Шоу-программы", "item": "https://animator-surpriz.uz/show-programs/" },
+    { "@type": "ListItem", "position": 3, "name": {{ show.name | tojson }}, "item": {{ ("https://animator-surpriz.uz" ~ show.route) | tojson }} }
+  ]
+}
+</script>
+
+{# Услуга с реальной ценой из базы. Цена та же, что показана на странице —
+   расхождение разметки и содержимого Google считает нарушением. #}
+{% if show.base_price and show.base_price > 0 %}
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Service",
+  "serviceType": "Шоу-программа на детский праздник",
+  "name": {{ show.name | tojson }},
+  "description": {{ (show.summary_text or show.short_description or show.description or "") | striptags | trim | tojson }},
+  {% if show.hero_file_path %}"image": {{ ("https://animator-surpriz.uz" ~ show.hero_file_path) | tojson }},{% endif %}
+  "provider": { "@id": "https://animator-surpriz.uz/#business" },
+  "areaServed": { "@type": "City", "name": "Ташкент" },
+  "offers": {
+    "@type": "Offer",
+    "priceCurrency": "UZS",
+    "price": {{ show.base_price | tojson }},
+    "availability": "https://schema.org/InStock",
+    "url": {{ ("https://animator-surpriz.uz/show-programs/" ~ show.slug ~ "/") | tojson }}
+  }
+}
+</script>
+{% endif %}

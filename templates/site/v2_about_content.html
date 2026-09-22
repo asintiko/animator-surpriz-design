@@ -1,0 +1,131 @@
+<main class="v2-main" id="content">
+
+  <!-- История -->
+  <section class="v2-section v2-about-hero v2-confetti-bg">
+    <div class="v2-container v2-about-hero__inner">
+      <div class="v2-about-hero__text" data-reveal>
+        <span class="v2-eyebrow"><svg class="v2-i" aria-hidden="true"><use href="#i-heart"/></svg>О студии</span>
+        <h1 class="v2-h1">Мы делаем детство <span class="v2-accent">ярче</span></h1>
+        <p class="v2-sub">Surpriz — это студия детских праздников в Ташкенте. Мы начинали с одного костюма и огромного желания дарить детям настоящее волшебство — а сегодня у нас {{ characters_total }}+ героев, {{ shows_total }} шоу-программ и сотни семей, которые зовут нас снова и снова.</p>
+        <p class="v2-sub">Мы верим, что детский праздник — это не «отвлечь детей на час», а воспоминание на всю жизнь. Поэтому пишем сценарии, шьём костюмы, репетируем и приезжаем заранее — чтобы всё прошло именно так, как мечтал ваш ребёнок.</p>
+      </div>
+      {% if photos %}
+        <div class="v2-about-hero__collage" data-reveal data-reveal-delay="140">
+          {% if photos|length > 0 %}
+            <span class="v2-about-hero__photo v2-about-hero__photo--1 v2-blob v2-float">
+              <img src="{{ photos[0].hero_file_path }}" alt="{{ photos[0].name }}" loading="eager" decoding="async">
+            </span>
+          {% endif %}
+          {% if photos|length > 1 %}
+            <span class="v2-about-hero__photo v2-about-hero__photo--2 v2-blob v2-blob--2 v2-float--d1">
+              <img src="{{ photos[1].hero_file_path }}" alt="{{ photos[1].name }}" loading="lazy" decoding="async">
+            </span>
+          {% endif %}
+          {% if photos|length > 2 %}
+            <span class="v2-about-hero__photo v2-about-hero__photo--3 v2-blob v2-blob--3 v2-float--d2">
+              <img src="{{ photos[2].hero_file_path }}" alt="{{ photos[2].name }}" loading="lazy" decoding="async">
+            </span>
+          {% endif %}
+        </div>
+      {% endif %}
+    </div>
+
+    <div class="v2-container">
+      <dl class="v2-trust" data-reveal data-reveal-delay="200">
+        <div class="v2-trust__item">
+          <dt class="v2-trust__num"><span data-count="500" data-count-suffix="+">0</span></dt>
+          <dd class="v2-trust__label">праздников провели</dd>
+        </div>
+        <div class="v2-trust__item">
+          <dt class="v2-trust__num"><span data-count="{{ characters_total }}" data-count-suffix="+">0</span></dt>
+          <dd class="v2-trust__label">героев в каталоге</dd>
+        </div>
+        <div class="v2-trust__item">
+          <dt class="v2-trust__num"><span data-count="{{ shows_total }}">0</span></dt>
+          <dd class="v2-trust__label">шоу-программ</dd>
+        </div>
+        <div class="v2-trust__item">
+          <dt class="v2-trust__num"><span data-count="5" data-count-suffix="+">0</span></dt>
+          <dd class="v2-trust__label">лет опыта артистов</dd>
+        </div>
+      </dl>
+    </div>
+  </section>
+
+  <!-- Ценности -->
+  <section class="v2-section v2-section--paper">
+    <div class="v2-container">
+      <div class="v2-section-head" data-reveal>
+        <div>
+          <span class="v2-eyebrow"><svg class="v2-i" aria-hidden="true"><use href="#i-star"/></svg>Наши принципы</span>
+          <h2 class="v2-h2">На чём стоит Surpriz</h2>
+          <p class="v2-sub">Простые правила, которые мы не нарушаем ни на одном празднике.</p>
+        </div>
+      </div>
+
+      <div class="v2-feats">
+        <article class="v2-feat" data-reveal>
+          <span class="v2-feat__icon v2-feat__icon--sun"><svg class="v2-i" aria-hidden="true"><use href="#i-mask"/></svg></span>
+          <h3>Свои костюмы и реквизит</h3>
+          <p>Не арендуем на стороне: каждый костюм чистый, яркий и в идеальном состоянии.</p>
+        </article>
+        <article class="v2-feat" data-reveal data-reveal-delay="80">
+          <span class="v2-feat__icon v2-feat__icon--coral"><svg class="v2-i" aria-hidden="true"><use href="#i-star"/></svg></span>
+          <h3>Артисты с опытом 5+ лет</h3>
+          <p>Профессиональные актёры и аниматоры, которые умеют найти подход к любому ребёнку.</p>
+        </article>
+        <article class="v2-feat" data-reveal data-reveal-delay="160">
+          <span class="v2-feat__icon v2-feat__icon--teal"><svg class="v2-i" aria-hidden="true"><use href="#i-shield"/></svg></span>
+          <h3>Договор и страховка</h3>
+          <p>Работаем официально: фиксируем детали в договоре и отвечаем за безопасность программы.</p>
+        </article>
+        <article class="v2-feat" data-reveal data-reveal-delay="240">
+          <span class="v2-feat__icon v2-feat__icon--grape"><svg class="v2-i" aria-hidden="true"><use href="#i-cash"/></svg></span>
+          <h3>Оплата после праздника</h3>
+          <p>Сначала эмоции — потом расчёт. Без предоплат и скрытых доплат.</p>
+        </article>
+        <article class="v2-feat" data-reveal data-reveal-delay="320">
+          <span class="v2-feat__icon v2-feat__icon--sky"><svg class="v2-i" aria-hidden="true"><use href="#i-timer-fast"/></svg></span>
+          <h3>Приезжаем вовремя</h3>
+          <p>Выезжаем заранее, чтобы к началу праздника всё было готово до мелочей.</p>
+        </article>
+        <article class="v2-feat" data-reveal data-reveal-delay="400">
+          <span class="v2-feat__icon v2-feat__icon--tangerine"><svg class="v2-i" aria-hidden="true"><use href="#i-users"/></svg></span>
+          <h3>500+ довольных семей</h3>
+          <p>Сотни праздников по Ташкенту и области — и столько же историй, которые дети пересказывают друзьям.</p>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <!-- Команда / подход -->
+  <section class="v2-section">
+    <div class="v2-container v2-container--narrow v2-about-story" data-reveal>
+      <span class="v2-eyebrow"><svg class="v2-i" aria-hidden="true"><use href="#i-party-hat"/></svg>Как мы работаем</span>
+      <h2 class="v2-h2">Праздник под ключ — без хлопот для родителей</h2>
+      <p>Вы рассказываете нам о ребёнке: кого он любит, во что играет, о чём мечтает. Мы предлагаем программу, согласовываем детали и берём всё организационное на себя — от реквизита до тайминга.</p>
+      <p>В день праздника артисты приезжают заранее, переодеваются и встречают гостей уже в образе. А вы просто наслаждаетесь моментом и фотографируете счастливые лица.</p>
+      <div class="v2-about-story__actions">
+        <a class="v2-btn v2-btn--primary v2-btn--lg" href="/party-builder/"><svg class="v2-i" aria-hidden="true"><use href="#i-party-hat"/></svg><span>Собрать праздник</span></a>
+        <a class="v2-btn v2-btn--ghost v2-btn--lg" href="/catalog/"><svg class="v2-i" aria-hidden="true"><use href="#i-mask"/></svg><span>Посмотреть героев</span></a>
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA -->
+  <section class="v2-section v2-section--tight">
+    <div class="v2-container">
+      <div class="v2-cta-banner v2-cta-banner--home" data-reveal>
+        <div class="v2-cta-banner__text">
+          <h2>Познакомимся на празднике?</h2>
+          <p>Оставьте заявку — перезвоним, всё расскажем и подберём программу под вашего ребёнка.</p>
+        </div>
+        <div class="v2-cta-banner__actions">
+          <a class="v2-btn v2-btn--navy v2-btn--lg" href="/party-builder/"><svg class="v2-i" aria-hidden="true"><use href="#i-party-hat"/></svg><span>Собрать праздник</span></a>
+          <a class="v2-cta-banner__phone" href="tel:+998998926565"><svg class="v2-i" aria-hidden="true"><use href="#i-phone"/></svg><span>+998 99 892-65-65</span></a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+</main>

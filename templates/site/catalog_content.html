@@ -1,0 +1,476 @@
+<main class="v2-main" id="content">
+  <div class="v2-catalog" data-v2-catalog data-page-size="{{ pagination.page_size or 9 }}">
+
+    <!-- ============ HERO ============ -->
+    <section class="v2-page-hero v2-catalog-hero">
+      <div class="v2-container">
+        <span class="v2-eyebrow" data-reveal><svg class="v2-i" aria-hidden="true"><use href="#i-mask"/></svg>Каталог</span>
+        <h1 class="v2-h1" data-reveal data-reveal-delay="60">{{ heading }}</h1>
+        <p class="v2-sub v2-catalog-hero__sub" data-reveal data-reveal-delay="120">{{ description }}</p>
+
+        <form class="v2-catalog-search" data-catalog-search-form action="/catalog/" method="get" role="search" data-reveal data-reveal-delay="180">
+          <label class="screen-reader-text" for="v2-catalog-search-input">Поиск персонажа</label>
+          <svg class="v2-i v2-catalog-search__icon" aria-hidden="true"><use href="#i-search"/></svg>
+          <input
+            autocomplete="off"
+            class="v2-catalog-search__input"
+            data-catalog-search-input
+            id="v2-catalog-search-input"
+            name="q"
+            placeholder="Найти героя: Леди Баг, Человек-паук, Эльза..."
+            type="search"
+            value="{{ search_query }}"
+          >
+          <button class="v2-catalog-search__clear" type="button" data-catalog-search-clear aria-label="Очистить поиск" hidden>
+            <svg class="v2-i" aria-hidden="true"><use href="#i-close"/></svg>
+          </button>
+        </form>
+      </div>
+    </section>
+
+    <!-- ============ ФИЛЬТРЫ ============ -->
+    <div class="v2-catalog-filters" data-v2-catalog-filters>
+      <div class="v2-container">
+        <nav class="v2-cat-pills" aria-label="Категории персонажей">
+          <a class="v2-cat-pill {% if active_category_slug == 'all' and not active_tag_slug %}is-active{% endif %}" href="/catalog/">
+            Все
+          </a>
+          {% for category in categories %}
+            {% if category.slug != 'all' %}
+              <a class="v2-cat-pill {% if category.slug == active_category_slug %}is-active{% endif %}" href="{{ category.route }}">
+                {{ category.name }}
+                <span class="v2-cat-pill__count">{{ category.character_count }}</span>
+              </a>
+            {% endif %}
+          {% endfor %}
+        </nav>
+
+        {% if tags %}
+          <div class="v2-tag-row" data-tag-row>
+            <button class="v2-tag-row__toggle" type="button" data-tags-toggle aria-expanded="false">
+              <svg class="v2-i" aria-hidden="true"><use href="#i-filter"/></svg>
+              <span>Ещё фильтры</span>
+              <svg class="v2-i v2-tag-row__chevron" aria-hidden="true"><use href="#i-chevron-down"/></svg>
+            </button>
+            <div class="v2-tag-row__list" data-tag-row-list>
+              {% for tag in tags %}
+                <a class="v2-chip v2-tag-row__chip {% if tag.slug == active_tag_slug %}is-active{% endif %}" href="{{ tag.route }}">{{ tag.name }}</a>
+              {% endfor %}
+            </div>
+          </div>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- ============ КАТАЛОГ ============ -->
+    <section class="v2-section--tight v2-catalog-body">
+      <div class="v2-container">
+
+        <div class="v2-catalog-toolbar">
+          <p class="v2-catalog-count" data-result-count role="status">
+            Найдено: <strong>{{ pagination.total_items }}</strong>
+            <span class="screen-reader-text">{{ active_scope_label }}</span>
+          </p>
+          <div class="v2-view-toggle" role="group" aria-label="Вид каталога">
+            <button class="v2-view-toggle__btn is-active" type="button" data-view="grid" aria-label="Показать плиткой">
+              <svg class="v2-i" aria-hidden="true"><use href="#i-grid"/></svg>
+            </button>
+            <button class="v2-view-toggle__btn" type="button" data-view="list" aria-label="Показать списком">
+              <svg class="v2-i" aria-hidden="true"><use href="#i-list"/></svg>
+            </button>
+          </div>
+        </div>
+
+        <ul class="v2-catalog-grid" data-products-list>
+          {% for character in characters %}
+            <li class="v2-char-tile" data-view-card data-reveal data-reveal-delay="{{ (loop.index0 % 3) * 70 }}">
+              <a class="v2-char-tile__media" href="{{ character.route }}" tabindex="-1" aria-hidden="true">
+                {% if character.hero_file_path %}
+                  <img
+                    alt="{{ character.name }}"
+                    decoding="async"
+                    loading="lazy"
+                    onerror="this.style.display='none'"
+                    src="{{ character.hero_file_path }}"
+                    style="object-position: {{ character.cover_offset_x or 50 }}% {{ character.cover_offset_y or 50 }}%; object-fit: {{ character.cover_fit or 'cover' }}; transform: scale({{ (character.image_zoom or 100) / 100 }}); transform-origin: {{ character.cover_offset_x or 50 }}% {{ character.cover_offset_y or 50 }}%;"
+                  >
+                {% else %}
+                  <span class="v2-char-tile__ph">
+                    <svg class="v2-i" aria-hidden="true"><use href="#i-star"/></svg>
+                    <small>Фото скоро</small>
+                  </span>
+                {% endif %}
+                {% if character.primary_category_name %}
+                  <span class="v2-char-tile__cat">{{ character.primary_category_name }}</span>
+                {% endif %}
+              </a>
+              <div class="v2-char-tile__body">
+                <h3 class="v2-char-tile__name">
+                  <a href="{{ character.route }}">{{ character.name }}</a>
+                </h3>
+                <p class="v2-char-tile__desc">{{ (character.short_description or character.description or 'Карточка персонажа скоро будет дополнена подробным описанием.')[:120] }}</p>
+                <a class="v2-char-tile__more" href="{{ character.route }}">
+                  <span>Подробнее</span>
+                  <svg class="v2-i" aria-hidden="true"><use href="#i-arrow-right"/></svg>
+                </a>
+              </div>
+            </li>
+          {% else %}
+            <li class="v2-empty" data-view-card>
+              <span class="v2-empty__star">
+                <svg class="v2-i" aria-hidden="true"><use href="#i-star"/></svg>
+              </span>
+              {% if search_query %}
+                <h2 class="v2-h3">Ничего не нашли</h2>
+                <p>Попробуйте другое название, английский вариант или более короткий запрос.</p>
+                <a class="v2-btn v2-btn--ghost v2-btn--md" href="/catalog/" data-catalog-reset>
+                  <svg class="v2-i" aria-hidden="true"><use href="#i-close"/></svg>
+                  <span>Сбросить поиск</span>
+                </a>
+              {% else %}
+                <h2 class="v2-h3">Каталог пока пуст</h2>
+                <p>Добавьте первых персонажей в админке, и они сразу появятся на сайте.</p>
+              {% endif %}
+            </li>
+          {% endfor %}
+        </ul>
+
+        {% if pagination.total_pages > 1 %}
+          <nav class="v2-pagination" aria-label="Страницы каталога" data-catalog-pagination>
+            {% if pagination.prev_url %}
+              <a class="v2-pagination__btn v2-pagination__btn--arrow" href="{{ pagination.prev_url }}" aria-label="Предыдущая страница">
+                <svg class="v2-i" aria-hidden="true"><use href="#i-arrow-left"/></svg>
+              </a>
+            {% endif %}
+            {% for page in pagination.pages %}
+              {% if page.is_current %}
+                <span class="v2-pagination__btn is-current" aria-current="page">{{ page.number }}</span>
+              {% else %}
+                <a class="v2-pagination__btn" href="{{ page.url }}">{{ page.number }}</a>
+              {% endif %}
+            {% endfor %}
+            {% if pagination.next_url %}
+              <a class="v2-pagination__btn v2-pagination__btn--arrow" href="{{ pagination.next_url }}" aria-label="Следующая страница">
+                <svg class="v2-i" aria-hidden="true"><use href="#i-arrow-right"/></svg>
+              </a>
+            {% endif %}
+          </nav>
+        {% else %}
+          <nav class="v2-pagination" aria-label="Страницы каталога" data-catalog-pagination hidden></nav>
+        {% endif %}
+
+      </div>
+    </section>
+  </div>
+</main>
+
+<script>
+(function () {
+  "use strict";
+
+  var root = document.querySelector("[data-v2-catalog]");
+  if (!root) return;
+
+  var grid = root.querySelector("[data-products-list]");
+  var countEl = root.querySelector("[data-result-count]");
+  var paginationEl = root.querySelector("[data-catalog-pagination]");
+  var input = root.querySelector("[data-catalog-search-input]");
+  var clearBtn = root.querySelector("[data-catalog-search-clear]");
+  var form = root.querySelector("[data-catalog-search-form]");
+  var pageSize = Math.max(1, parseInt(root.getAttribute("data-page-size"), 10) || 9);
+  var STORAGE_KEY = "surprizCatalogView";
+  var REDUCED = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  /* ---------- Вид: плитка / список (localStorage surprizCatalogView) ---------- */
+  var viewButtons = Array.prototype.slice.call(root.querySelectorAll("[data-view]"));
+
+  function readView() {
+    try {
+      return window.localStorage.getItem(STORAGE_KEY) === "list" ? "list" : "grid";
+    } catch (error) {
+      return "grid";
+    }
+  }
+
+  function storeView(view) {
+    try {
+      window.localStorage.setItem(STORAGE_KEY, view);
+    } catch (error) {}
+  }
+
+  function applyView(view) {
+    var normalized = view === "list" ? "list" : "grid";
+    root.classList.toggle("v2-catalog--view-list", normalized === "list");
+    viewButtons.forEach(function (button) {
+      button.classList.toggle("is-active", button.getAttribute("data-view") === normalized);
+    });
+  }
+
+  viewButtons.forEach(function (button) {
+    button.addEventListener("click", function () {
+      var view = button.getAttribute("data-view") === "list" ? "list" : "grid";
+      storeView(view);
+      applyView(view);
+    });
+  });
+
+  applyView(readView());
+
+  /* ---------- Дополнительные фильтры (теги) ---------- */
+  var tagsToggle = root.querySelector("[data-tags-toggle]");
+  var tagRow = root.querySelector("[data-tag-row]");
+  if (tagsToggle && tagRow) {
+    tagsToggle.addEventListener("click", function () {
+      var open = !tagRow.classList.contains("is-open");
+      tagRow.classList.toggle("is-open", open);
+      tagsToggle.setAttribute("aria-expanded", open ? "true" : "false");
+    });
+  }
+
+  /* ---------- Live-поиск (/api/catalog/search, контракт не меняем) ---------- */
+  if (!grid || !input) return;
+
+  var initial = {
+    gridHtml: grid.innerHTML,
+    countHtml: countEl ? countEl.innerHTML : "",
+    paginationHtml: paginationEl ? paginationEl.innerHTML : "",
+    paginationHidden: paginationEl ? paginationEl.hidden : true,
+    url: window.location.pathname + window.location.search
+  };
+  var searchTimer = null;
+  var searchController = null;
+  var liveState = null;
+
+  function escapeHtml(value) {
+    return String(value == null ? "" : value)
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#039;");
+  }
+
+  function buildCard(character, index) {
+    var description = character.description || "Карточка персонажа скоро будет дополнена подробным описанием.";
+    var offX = character.cover_offset_x != null ? character.cover_offset_x : 50;
+    var offY = character.cover_offset_y != null ? character.cover_offset_y : 50;
+    var fit = character.cover_fit || "cover";
+    var zoom = (character.image_zoom != null ? character.image_zoom : 100) / 100;
+    var focus = offX + "% " + offY + "%";
+    // The placeholder used to sit under the photo; cut-outs are transparent, so it
+    // showed straight through. Photo and placeholder are alternatives, never both.
+    var img = character.hero_file_path
+      ? '<img alt="' + escapeHtml(character.name) + '" decoding="async" loading="lazy" onerror="this.style.display=\'none\'" src="' + escapeHtml(character.hero_file_path) + '" style="object-position: ' + focus + "; object-fit: " + escapeHtml(fit) + "; transform: scale(" + zoom + "); transform-origin: " + focus + ';">'
+      : '<span class="v2-char-tile__ph"><svg class="v2-i" aria-hidden="true"><use href="#i-star"/></svg><small>Фото скоро</small></span>';
+    var delay = REDUCED ? 0 : (index % 3) * 70;
+    return (
+      '<li class="v2-char-tile is-in" data-view-card data-reveal style="transition-delay: ' + delay + 'ms">' +
+        '<a class="v2-char-tile__media" href="' + escapeHtml(character.route) + '" tabindex="-1" aria-hidden="true">' +
+          img +
+        "</a>" +
+        '<div class="v2-char-tile__body">' +
+          '<h3 class="v2-char-tile__name"><a href="' + escapeHtml(character.route) + '">' + escapeHtml(character.name) + "</a></h3>" +
+          '<p class="v2-char-tile__desc">' + escapeHtml(description).slice(0, 120) + "</p>" +
+          '<a class="v2-char-tile__more" href="' + escapeHtml(character.route) + '"><span>Подробнее</span><svg class="v2-i" aria-hidden="true"><use href="#i-arrow-right"/></svg></a>' +
+        "</div>" +
+      "</li>"
+    );
+  }
+
+  function buildEmptyState(query) {
+    return (
+      '<li class="v2-empty is-in" data-view-card data-reveal>' +
+        '<span class="v2-empty__star"><svg class="v2-i" aria-hidden="true"><use href="#i-star"/></svg></span>' +
+        '<h2 class="v2-h3">Ничего не нашли</h2>' +
+        "<p>По запросу «" + escapeHtml(query) + "» никого нет. Попробуйте другое название, английский вариант или более короткий запрос.</p>" +
+        '<button class="v2-btn v2-btn--ghost v2-btn--md" type="button" data-catalog-reset><svg class="v2-i" aria-hidden="true"><use href="#i-close"/></svg><span>Сбросить поиск</span></button>' +
+      "</li>"
+    );
+  }
+
+  function updateUrl(query) {
+    if (!window.history || !window.history.replaceState) return;
+    if (!query) {
+      window.history.replaceState({}, "", initial.url);
+      return;
+    }
+    window.history.replaceState({}, "", "/catalog/?q=" + encodeURIComponent(query));
+  }
+
+  function syncClearButton() {
+    if (clearBtn) clearBtn.hidden = !input.value.trim();
+  }
+
+  function revealNow(container) {
+    /* Карточки восстанавливаются из снимка, снятого до срабатывания
+       IntersectionObserver — сразу помечаем их видимыми. */
+    Array.prototype.slice.call(container.querySelectorAll("[data-reveal]")).forEach(function (el) {
+      el.classList.add("is-in");
+      el.style.transitionDelay = "";
+    });
+  }
+
+  function restoreInitial() {
+    if (searchController) {
+      searchController.abort();
+      searchController = null;
+    }
+    liveState = null;
+    root.classList.remove("is-live-searching");
+    grid.innerHTML = initial.gridHtml;
+    revealNow(grid);
+    if (countEl) countEl.innerHTML = initial.countHtml;
+    if (paginationEl) {
+      paginationEl.innerHTML = initial.paginationHtml;
+      paginationEl.hidden = initial.paginationHidden;
+    }
+    updateUrl("");
+    applyView(readView());
+  }
+
+  function renderLivePagination() {
+    if (!paginationEl) return;
+    paginationEl.innerHTML = "";
+    if (!liveState || liveState.totalPages <= 1) {
+      paginationEl.hidden = true;
+      return;
+    }
+    function pageButton(label, pageNumber, extraClass, ariaLabel) {
+      var btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "v2-pagination__btn" + (extraClass ? " " + extraClass : "");
+      btn.setAttribute("data-live-page", String(pageNumber));
+      if (ariaLabel) btn.setAttribute("aria-label", ariaLabel);
+      btn.textContent = label;
+      return btn;
+    }
+    if (liveState.page > 1) {
+      paginationEl.appendChild(pageButton("←", liveState.page - 1, "v2-pagination__btn--arrow", "Предыдущая страница"));
+    }
+    for (var number = 1; number <= liveState.totalPages; number += 1) {
+      if (number === liveState.page) {
+        var current = document.createElement("span");
+        current.className = "v2-pagination__btn is-current";
+        current.setAttribute("aria-current", "page");
+        current.textContent = String(number);
+        paginationEl.appendChild(current);
+      } else {
+        paginationEl.appendChild(pageButton(String(number), number, "", "Страница " + number));
+      }
+    }
+    if (liveState.page < liveState.totalPages) {
+      paginationEl.appendChild(pageButton("→", liveState.page + 1, "v2-pagination__btn--arrow", "Следующая страница"));
+    }
+    paginationEl.hidden = false;
+  }
+
+  function renderLivePage(nextPage) {
+    if (!liveState) return;
+    var page = Math.min(Math.max(1, nextPage || 1), liveState.totalPages);
+    liveState.page = page;
+    var start = (page - 1) * pageSize;
+    var items = liveState.items.slice(start, start + pageSize);
+    grid.innerHTML = items.length
+      ? items.map(function (item, index) { return buildCard(item, index); }).join("")
+      : buildEmptyState(liveState.query);
+    if (countEl) {
+      countEl.innerHTML = liveState.total
+        ? "Найдено: <strong>" + liveState.total + "</strong> по запросу «" + escapeHtml(liveState.query) + "»"
+        : "По запросу «" + escapeHtml(liveState.query) + "» ничего не найдено";
+    }
+    renderLivePagination();
+    root.classList.remove("is-live-searching");
+    applyView(readView());
+    window.setTimeout(function () {
+      Array.prototype.slice.call(grid.querySelectorAll("[data-view-card]")).forEach(function (card) {
+        card.style.transitionDelay = "";
+      });
+    }, 850);
+  }
+
+  function runLiveSearch(query) {
+    var normalized = (query || "").trim();
+    window.clearTimeout(searchTimer);
+    syncClearButton();
+    if (!normalized) {
+      restoreInitial();
+      return;
+    }
+    updateUrl(normalized);
+    root.classList.add("is-live-searching");
+    if (searchController) searchController.abort();
+    searchController = new AbortController();
+    fetch("/api/catalog/search?q=" + encodeURIComponent(normalized), {
+      headers: { Accept: "application/json" },
+      signal: searchController.signal
+    })
+      .then(function (response) {
+        return response.json().then(function (payload) {
+          if (!response.ok || !payload.success) throw new Error("Search failed");
+          return payload;
+        });
+      })
+      .then(function (payload) {
+        var items = Array.isArray(payload.items) ? payload.items : [];
+        liveState = {
+          query: normalized,
+          items: items,
+          total: items.length,
+          totalPages: Math.max(1, Math.ceil(items.length / pageSize)),
+          page: 1
+        };
+        renderLivePage(1);
+      })
+      .catch(function (error) {
+        if (error && error.name !== "AbortError") {
+          root.classList.remove("is-live-searching");
+        }
+      });
+  }
+
+  if (form) {
+    form.addEventListener("submit", function (event) {
+      event.preventDefault();
+      runLiveSearch(input.value);
+    });
+  }
+
+  input.addEventListener("input", function () {
+    syncClearButton();
+    window.clearTimeout(searchTimer);
+    searchTimer = window.setTimeout(function () {
+      runLiveSearch(input.value);
+    }, 240);
+  });
+
+  if (clearBtn) {
+    clearBtn.addEventListener("click", function () {
+      input.value = "";
+      syncClearButton();
+      restoreInitial();
+      input.focus();
+    });
+  }
+
+  root.addEventListener("click", function (event) {
+    var reset = event.target.closest ? event.target.closest("[data-catalog-reset]") : null;
+    if (reset) {
+      event.preventDefault();
+      input.value = "";
+      syncClearButton();
+      restoreInitial();
+      input.focus();
+      return;
+    }
+    var pageLink = event.target.closest ? event.target.closest("[data-live-page]") : null;
+    if (pageLink && liveState) {
+      event.preventDefault();
+      renderLivePage(parseInt(pageLink.getAttribute("data-live-page"), 10) || 1);
+      var filters = root.querySelector("[data-v2-catalog-filters]");
+      (filters || root).scrollIntoView({ behavior: REDUCED ? "auto" : "smooth", block: "start" });
+    }
+  });
+
+  syncClearButton();
+})();
+</script>

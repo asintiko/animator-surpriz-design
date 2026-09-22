@@ -1,0 +1,573 @@
+{% extends "admin/base.html" %}
+
+{% block content %}
+  <form enctype="multipart/form-data" method="post">
+    <div class="adm-editor">
+      <div class="adm-editor__main">
+
+        <section class="adm-card">
+          <div class="adm-card__head">
+            <span class="adm-editor__section-icon"><svg class="adm-i"><use href="#i-sparkles"/></svg></span>
+            <div>
+              <div class="adm-card__eyebrow">Редактор шоу-программы</div>
+              <h2 class="adm-card__title">
+                {% if is_new %}Новая шоу-программа{% else %}{{ character.name }}{% endif %}
+              </h2>
+            </div>
+            <div class="adm-card__head-actions">
+              <a class="adm-btn adm-btn--ghost adm-btn--sm" href="{{ url_for('admin_dashboard', tab='show_programs') }}">
+                <svg class="adm-i"><use href="#i-arrow-left"/></svg>Назад к шоу-программам
+              </a>
+            </div>
+          </div>
+          <p class="adm-note">Заполняйте только то, что должно видеть клиент. Пустые блоки на сайте не показываются.</p>
+        </section>
+
+        <section class="adm-card">
+          <div class="adm-editor__section-head">
+            <span class="adm-editor__section-icon adm-editor__section-icon--teal"><svg class="adm-i"><use href="#i-edit"/></svg></span>
+            <div>
+              <div class="adm-card__eyebrow">Основное</div>
+              <h3 class="adm-card__title adm-card__title--sm">Название, адрес страницы и публикация</h3>
+            </div>
+          </div>
+          <div class="adm-stack">
+            <div class="adm-form-grid">
+              <label class="adm-field">
+                <span class="adm-field__label">Название</span>
+                <input class="adm-input" name="name" required type="text" value="{{ character.name }}">
+              </label>
+              <label class="adm-field">
+                <span class="adm-field__label">Slug страницы</span>
+                <input class="adm-input" name="slug" placeholder="cryo-show" type="text" value="{{ character.slug }}">
+              </label>
+            </div>
+            <div class="adm-form-grid">
+              <label class="adm-field">
+                <span class="adm-field__label">Статус</span>
+                <select class="adm-input" name="status">
+                  {% for status_key, status_label in show_status_labels.items() %}
+                    <option {% if character.status == status_key %}selected{% endif %} value="{{ status_key }}">{{ status_label }}</option>
+                  {% endfor %}
+                </select>
+              </label>
+              <label class="adm-field">
+                <span class="adm-field__label">Порядок показа</span>
+                <input class="adm-input" min="0" name="sort_order" step="1" type="number" value="{{ character.sort_order or 0 }}">
+              </label>
+            </div>
+            <p class="adm-note">Меньший порядок показывается выше в публичном каталоге. Черновик и скрытая программа не видны клиентам.</p>
+          </div>
+        </section>
+
+        <section class="adm-card">
+          <div class="adm-editor__section-head">
+            <span class="adm-editor__section-icon adm-editor__section-icon--coral"><svg class="adm-i"><use href="#i-image"/></svg></span>
+            <div>
+              <div class="adm-card__eyebrow">Медиа</div>
+              <h3 class="adm-card__title adm-card__title--sm">Обложка, фото и видео</h3>
+            </div>
+          </div>
+          <div class="adm-form-grid">
+            <label class="adm-field">
+              <span class="adm-field__label">Добавить фото / видео</span>
+              <input class="adm-input adm-input--file" multiple name="media_files" type="file">
+            </label>
+            <label class="adm-field">
+              <span class="adm-field__label">Видео-ссылка</span>
+              <input class="adm-input" name="video_url" placeholder="https://..." type="url" value="{{ character.video_url }}">
+            </label>
+          </div>
+          <p class="adm-note adm-mt">Главное фото выбирается ниже среди загруженных медиа. Видео-ссылка показывается на странице шоу как дополнительная кнопка.</p>
+
+          {% if character.media %}
+            <div class="adm-media-grid">
+              {% for media in character.media %}
+                <article class="adm-media-card">
+                  <label class="adm-media-card__cover">
+                    <input {% if media.id == character.hero_media_id %}checked{% endif %} name="hero_media_id" type="radio" value="{{ media.id }}">
+                    <span>Сделать главным фото</span>
+                  </label>
+                  <div class="adm-media-card__preview">
+                    {% if media.media_type == 'video' %}
+                      <video controls preload="metadata" src="{{ media.file_path }}"></video>
+                    {% else %}
+                      <img alt="{{ media.alt_text or character.name }}" loading="lazy" src="{{ media.file_path }}">
+                    {% endif %}
+                  </div>
+                  <label class="adm-field">
+                    <span class="adm-field__label">Alt-текст</span>
+                    <input class="adm-input" name="media_alt_{{ media.id }}" type="text" value="{{ media.alt_text }}">
+                  </label>
+                  <label class="adm-field">
+                    <span class="adm-field__label">Подпись</span>
+                    <textarea class="adm-input" name="media_caption_{{ media.id }}">{{ media.caption }}</textarea>
+                  </label>
+                  <label class="adm-field">
+                    <span class="adm-field__label">Порядок медиа</span>
+                    <input class="adm-input" name="media_sort_{{ media.id }}" type="number" value="{{ media.sort_order }}">
+                  </label>
+                  <div class="adm-flex">
+                    <a class="adm-btn adm-btn--ghost adm-btn--sm" href="{{ media.file_path }}" target="_blank" rel="noopener">Открыть</a>
+                    <button class="adm-btn adm-btn--danger adm-btn--sm" formaction="{{ url_for('admin_show_program_media_delete', character_id=character.id, media_id=media.id) }}" formmethod="post" onclick="return confirm('Удалить это медиа?');" type="submit">Удалить</button>
+                  </div>
+                </article>
+              {% endfor %}
+            </div>
+          {% endif %}
+        </section>
+
+        <section class="adm-card">
+          <div class="adm-editor__section-head">
+            <span class="adm-editor__section-icon"><svg class="adm-i"><use href="#i-cash"/></svg></span>
+            <div>
+              <div class="adm-card__eyebrow">Цена и длительность</div>
+              <h3 class="adm-card__title adm-card__title--sm">То, что клиент видит на карточке</h3>
+            </div>
+          </div>
+          <div class="adm-form-grid">
+            <label class="adm-field">
+              <span class="adm-field__label">Цена в сумах</span>
+              <input class="adm-input" min="0" name="base_price" step="1000" type="number" value="{{ character.base_price }}">
+            </label>
+            <label class="adm-field">
+              <span class="adm-field__label">Длительность в минутах</span>
+              <input class="adm-input" min="0" name="default_duration_minutes" step="5" type="number" value="{{ character.default_duration_minutes }}">
+            </label>
+            <label class="adm-field">
+              <span class="adm-field__label">Возраст от</span>
+              <input class="adm-input" min="0" name="age_from" step="1" type="number" value="{{ character.age_from if character.age_from is not none else '' }}">
+            </label>
+            <label class="adm-field">
+              <span class="adm-field__label">Возраст до</span>
+              <input class="adm-input" min="0" name="age_to" step="1" type="number" value="{{ character.age_to if character.age_to is not none else '' }}">
+            </label>
+          </div>
+        </section>
+
+        <section class="adm-card">
+          <div class="adm-editor__section-head">
+            <span class="adm-editor__section-icon adm-editor__section-icon--grape"><svg class="adm-i"><use href="#i-users"/></svg></span>
+            <div>
+              <div class="adm-card__eyebrow">Персонажи и доплаты</div>
+              <h3 class="adm-card__title adm-card__title--sm">Сколько героев входит в эту программу бесплатно</h3>
+            </div>
+          </div>
+          <div class="adm-form-grid">
+            <label class="adm-field">
+              <span class="adm-field__label">Бесплатных персонажей в программе</span>
+              <input class="adm-input" min="0" name="included_characters_count" step="1" type="number" value="{{ character.included_characters_count }}">
+            </label>
+            <label class="adm-field">
+              <span class="adm-field__label">Доплата за следующего персонажа (сум)</span>
+              <input class="adm-input" min="0" name="extra_character_price_3" step="1000" type="number" value="{{ character.extra_character_price_3 }}">
+            </label>
+            <label class="adm-field">
+              <span class="adm-field__label">Доплата за каждого далее (сум)</span>
+              <input class="adm-input" min="0" name="extra_character_price_4_plus" step="1000" type="number" value="{{ character.extra_character_price_4_plus }}">
+            </label>
+          </div>
+          <p class="adm-note adm-mt">Например: включено 2 персонажа бесплатно, первый сверх лимита стоит как «доплата за следующего», а все последующие — по цене «за каждого далее». Доплата масштабируется вместе с длительностью заказа.</p>
+        </section>
+
+        <section class="adm-card">
+          <div class="adm-editor__section-head">
+            <span class="adm-editor__section-icon adm-editor__section-icon--teal"><svg class="adm-i"><use href="#i-grid"/></svg></span>
+            <div>
+              <div class="adm-card__eyebrow">Группа вариантов</div>
+              <h3 class="adm-card__title adm-card__title--sm">Объединение программ в один выбор (например, Лента-шоу)</h3>
+            </div>
+          </div>
+          <div class="adm-form-grid">
+            <label class="adm-field">
+              <span class="adm-field__label">Slug группы вариантов</span>
+              <input class="adm-input" name="variant_group_slug" placeholder="lenta-show" type="text" value="{{ character.variant_group_slug }}">
+            </label>
+            <label class="adm-field">
+              <span class="adm-field__label">Название группы</span>
+              <input class="adm-input" name="variant_group_name" placeholder="Лента-шоу" type="text" value="{{ character.variant_group_name }}">
+            </label>
+            <label class="adm-field">
+              <span class="adm-field__label">Метка варианта</span>
+              <input class="adm-input" name="variant_label" placeholder="Бумажное" type="text" value="{{ character.variant_label }}">
+            </label>
+          </div>
+          <p class="adm-note adm-mt">Программы с одинаковым «Slug группы вариантов» объединяются в конструкторе в одну карточку с переключателями. «Метка варианта» — это короткий текст на кнопке выбора (Бумажное / Атласное / Серпантин). Оставьте поля пустыми, если программа отдельная.</p>
+        </section>
+
+        <section class="adm-card">
+          <div class="adm-editor__section-head">
+            <span class="adm-editor__section-icon adm-editor__section-icon--ink"><svg class="adm-i"><use href="#i-note"/></svg></span>
+            <div>
+              <div class="adm-card__eyebrow">Описание</div>
+              <h3 class="adm-card__title adm-card__title--sm">Короткий текст и подробности</h3>
+            </div>
+          </div>
+          <div class="adm-form-grid">
+            <label class="adm-field">
+              <span class="adm-field__label">Короткое описание</span>
+              <textarea class="adm-input" name="short_description" rows="5">{{ character.short_description }}</textarea>
+            </label>
+            <label class="adm-field">
+              <span class="adm-field__label">Полное описание</span>
+              <textarea class="adm-input" name="description" rows="5">{{ character.description }}</textarea>
+            </label>
+          </div>
+        </section>
+
+        <section class="adm-card">
+          <div class="adm-editor__section-head">
+            <span class="adm-editor__section-icon adm-editor__section-icon--grape"><svg class="adm-i"><use href="#i-party-hat"/></svg></span>
+            <div>
+              <div class="adm-card__eyebrow">Формат</div>
+              <h3 class="adm-card__title adm-card__title--sm">Категория и формат проведения</h3>
+            </div>
+          </div>
+          <div class="adm-form-grid">
+            <label class="adm-field">
+              <span class="adm-field__label">Категория шоу</span>
+              <input class="adm-input" name="show_category" placeholder="Научное, бумажное, активное..." type="text" value="{{ character.show_category }}">
+            </label>
+            <label class="adm-field">
+              <span class="adm-field__label">Формат проведения</span>
+              <input class="adm-input" name="format_tags" placeholder="зал, улица, детский сад..." type="text" value="{{ character.format_tags }}">
+            </label>
+          </div>
+        </section>
+
+        <section class="adm-card">
+          <div class="adm-editor__section-head">
+            <span class="adm-editor__section-icon adm-editor__section-icon--teal"><svg class="adm-i"><use href="#i-check"/></svg></span>
+            <div>
+              <div class="adm-card__eyebrow">Что входит</div>
+              <h3 class="adm-card__title adm-card__title--sm">Состав базовой программы</h3>
+            </div>
+          </div>
+          <label class="adm-field">
+            <span class="adm-field__label">Что входит в программу</span>
+            <textarea class="adm-input" name="included_items" placeholder="Каждый пункт лучше писать с новой строки" rows="5">{{ character.included_items }}</textarea>
+          </label>
+        </section>
+
+        <section class="adm-card">
+          <div class="adm-editor__section-head">
+            <span class="adm-editor__section-icon adm-editor__section-icon--coral"><svg class="adm-i"><use href="#i-child"/></svg></span>
+            <div>
+              <div class="adm-card__eyebrow">Кому подходит</div>
+              <h3 class="adm-card__title adm-card__title--sm">Возраст, площадки и праздники</h3>
+            </div>
+          </div>
+          <label class="adm-field">
+            <span class="adm-field__label">Кому подходит</span>
+            <textarea class="adm-input" name="suitable_for" placeholder="Например: день рождения дома, детский сад, выпускной" rows="5">{{ character.suitable_for }}</textarea>
+          </label>
+        </section>
+
+        <section class="adm-card">
+          <div class="adm-editor__section-head">
+            <span class="adm-editor__section-icon adm-editor__section-icon--ink"><svg class="adm-i"><use href="#i-info"/></svg></span>
+            <div>
+              <div class="adm-card__eyebrow">Важно знать</div>
+              <h3 class="adm-card__title adm-card__title--sm">Ограничения и условия</h3>
+            </div>
+          </div>
+          <label class="adm-field">
+            <span class="adm-field__label">Ограничения / важно знать</span>
+            <textarea class="adm-input" name="restrictions" placeholder="Если ограничений нет, оставьте поле пустым" rows="5">{{ character.restrictions }}</textarea>
+          </label>
+        </section>
+
+        <section class="adm-card">
+          <div class="adm-editor__section-head">
+            <span class="adm-editor__section-icon"><svg class="adm-i"><use href="#i-mask"/></svg></span>
+            <div>
+              <div class="adm-card__eyebrow">Персонажи</div>
+              <h3 class="adm-card__title adm-card__title--sm">Кого показывать в сборщике для этого шоу</h3>
+            </div>
+          </div>
+          <p class="adm-note">
+            Отметьте персонажей, которые подходят к этой программе. Если ничего не выбрать, в сборщике клиент увидит понятное сообщение, а не пустую сетку.
+          </p>
+          {% if available_characters %}
+            <div class="admin-show-character-toolbar">
+              <button class="adm-btn adm-btn--ghost adm-btn--sm" data-show-character-toggle-all type="button">Выбрать всех</button>
+              <span class="admin-show-character-counter" data-show-character-counter aria-live="polite"></span>
+            </div>
+            <div class="admin-show-character-grid" data-show-character-grid>
+              {% for item in available_characters %}
+                <label class="admin-show-character-card {% if item.id in linked_character_ids %}is-selected{% endif %}">
+                  <input {% if item.id in linked_character_ids %}checked{% endif %} name="linked_character_ids" type="checkbox" value="{{ item.id }}">
+                  <span class="admin-show-character-card__media">
+                    {% if item.hero_file_path %}
+                      <img alt="{{ item.name }}" loading="lazy" src="{{ item.hero_file_path }}">
+                    {% else %}
+                      <span>Фото скоро</span>
+                    {% endif %}
+                  </span>
+                  <span class="admin-show-character-card__body">
+                    <strong>{{ item.name }}</strong>
+                    <small>{{ item.category_label }} · {{ item.duplicate_label }}</small>
+                  </span>
+                </label>
+              {% endfor %}
+            </div>
+            <script>
+              (function () {
+                const grid = document.querySelector("[data-show-character-grid]");
+                const toggleBtn = document.querySelector("[data-show-character-toggle-all]");
+                const counter = document.querySelector("[data-show-character-counter]");
+                if (!grid || !toggleBtn) return;
+                const inputs = () => Array.from(grid.querySelectorAll('input[type="checkbox"][name="linked_character_ids"]'));
+                const updateState = () => {
+                  const all = inputs();
+                  const checked = all.filter(i => i.checked);
+                  toggleBtn.textContent = checked.length === all.length && all.length > 0 ? "Снять все" : "Выбрать всех";
+                  if (counter) counter.textContent = `Выбрано ${checked.length} из ${all.length}`;
+                };
+                toggleBtn.addEventListener("click", () => {
+                  const all = inputs();
+                  const allChecked = all.every(i => i.checked);
+                  all.forEach(i => { i.checked = !allChecked; });
+                  updateState();
+                });
+                grid.addEventListener("change", (e) => {
+                  if (e.target.matches('input[type="checkbox"][name="linked_character_ids"]')) updateState();
+                });
+                updateState();
+              })();
+            </script>
+          {% else %}
+            <div class="adm-empty">
+              <span class="adm-empty__icon"><svg class="adm-i"><use href="#i-mask"/></svg></span>
+              <h3>Активных персонажей пока нет</h3>
+              <p>Создайте или активируйте персонажей в каталоге, затем привяжите их к шоу.</p>
+              <a class="adm-btn adm-btn--sm" href="{{ url_for('admin_dashboard', tab='catalog') }}">Открыть каталог</a>
+            </div>
+          {% endif %}
+        </section>
+
+        <section class="adm-card">
+          <div class="adm-editor__section-head">
+            <span class="adm-editor__section-icon adm-editor__section-icon--grape"><svg class="adm-i"><use href="#i-tag"/></svg></span>
+            <div>
+              <div class="adm-card__eyebrow">Акции</div>
+              <h3 class="adm-card__title adm-card__title--sm">Что подсветить на карточке программы</h3>
+            </div>
+          </div>
+          <p class="adm-note">Акции отображаются жёлтым бейджем в каталоге шоу, на главной карточке шоу, на странице программы и в сборщике заказа.</p>
+          {% if available_promotions %}
+            <div class="admin-show-character-grid">
+              {% for promo in available_promotions %}
+                <label class="admin-show-character-card {% if promo.id in linked_promotion_ids %}is-selected{% endif %}">
+                  <input {% if promo.id in linked_promotion_ids %}checked{% endif %} name="linked_promotion_ids" type="checkbox" value="{{ promo.id }}">
+                  <span class="admin-show-character-card__body">
+                    <strong>{{ promo.title }}</strong>
+                    <small>{{ promo.badge_text or promo.short_text }}</small>
+                  </span>
+                </label>
+              {% endfor %}
+            </div>
+          {% else %}
+            <p class="adm-note">Сначала создайте акцию во вкладке «Акции».</p>
+          {% endif %}
+        </section>
+
+        <section class="adm-card" id="gifts">
+          <div class="adm-editor__section-head">
+            <span class="adm-editor__section-icon"><svg class="adm-i"><use href="#i-gift"/></svg></span>
+            <div>
+              <div class="adm-card__eyebrow">Бонусы · Доп. услуги</div>
+              <h3 class="adm-card__title adm-card__title--sm">Бесплатные подарки и платные услуги программы</h3>
+            </div>
+          </div>
+          <p class="adm-note adm-note--callout">Здесь настраивается то, что клиент увидит на странице программы и в сборщике заказа: бесплатные подарки (включённые в программу или на выбор) и платные доп. услуги.</p>
+
+          <div class="adm-help-grid">
+            <article class="adm-help-card">
+              <div class="adm-help-card__eyebrow">Подарок · Без подарка</div>
+              <p>Обычная платная доп. услуга. Клиент сам решает, добавлять или нет, и платит за неё отдельно.</p>
+            </article>
+            <article class="adm-help-card adm-help-card--accent">
+              <div class="adm-help-card__eyebrow">Подарок · На выбор</div>
+              <p>Клиент бесплатно выбирает <strong>один вариант</strong> из группы. Все аддоны с одинаковым значением поля «Группа подарка» становятся вариантами одного радио-выбора.</p>
+              <p><strong>Пример «маски ИЛИ шарики»:</strong> у обоих аддонов выставите Подарок = «На выбор», Группа подарка = <code>masks_or_balloons</code>. Клиент увидит радио-кнопки и выберет одно.</p>
+            </article>
+            <article class="adm-help-card">
+              <div class="adm-help-card__eyebrow">Подарок · Включено бесплатно</div>
+              <p>Подарок включён в программу без выбора. Отобразится клиенту как «Включено бесплатно: &lt;название&gt;» и автоматически попадёт в заказ.</p>
+            </article>
+          </div>
+
+          {% if available_addons %}
+            <div class="adm-addonlink-grid">
+              {% for addon in available_addons %}
+                {% set settings = addon_settings.get(addon.id) %}
+                {% set gift_mode = settings.gift_mode if settings else 'none' %}
+                {% set is_gift = gift_mode in ('choice_one', 'bundle_all') or (settings and settings.is_free_choice) %}
+                <article class="adm-addonlink {% if settings %}is-selected{% endif %} {% if is_gift %}is-gift{% endif %}">
+                  <label class="adm-addonlink__main">
+                    <input {% if settings %}checked{% endif %} name="addon_available" type="checkbox" value="{{ addon.id }}">
+                    <span>
+                      <strong>{{ addon.name }}</strong>
+                      <small>{{ addon.price_label }}{% if addon.duration_minutes %} · {{ addon.duration_label }}{% endif %}</small>
+                    </span>
+                    {% if is_gift %}<span class="adm-addonlink__gift">Подарок</span>{% endif %}
+                  </label>
+
+                  <div class="adm-addonlink__options">
+                    <div>
+                      <div class="adm-addonlink__group-title">Подарок</div>
+                      <div class="adm-addonlink__fields adm-addonlink__fields--2">
+                        <label class="adm-field">
+                          <span class="adm-field__label">Режим</span>
+                          <select class="adm-input" name="addon_gift_mode_{{ addon.id }}">
+                            <option {% if gift_mode == 'none' %}selected{% endif %} value="none">Без подарка (обычный платный аддон)</option>
+                            <option {% if gift_mode == 'choice_one' %}selected{% endif %} value="choice_one">На выбор (один из группы) — бесплатно</option>
+                            <option {% if gift_mode == 'bundle_all' %}selected{% endif %} value="bundle_all">Включено бесплатно (без выбора)</option>
+                          </select>
+                        </label>
+                        <label class="adm-field">
+                          <span class="adm-field__label">Группа подарка <span class="adm-field__hint">только для режима «На выбор»</span></span>
+                          <input class="adm-input" name="addon_gift_group_{{ addon.id }}" placeholder="masks_or_balloons" type="text" value="{{ settings.gift_group if settings else '' }}">
+                          <span class="adm-field__hint">Латиница без пробелов. Аддоны с одинаковой группой объединяются в один выбор. Примеры: <code>masks_or_balloons</code>, <code>gift_for_kid</code>.</span>
+                        </label>
+                      </div>
+                    </div>
+
+                    <div>
+                      <div class="adm-addonlink__group-title">Отображение</div>
+                      <div class="adm-addonlink__fields">
+                        <label class="adm-checkline">
+                          <input {% if settings and settings.is_recommended %}checked{% endif %} name="addon_recommended_{{ addon.id }}" type="checkbox">
+                          <span>Рекомендовать (выделить в сборщике)</span>
+                        </label>
+                        <label class="adm-checkline">
+                          <input {% if settings and settings.is_default %}checked{% endif %} name="addon_default_{{ addon.id }}" type="checkbox">
+                          <span>Выбрано по умолчанию</span>
+                        </label>
+                        <label class="adm-field" style="max-width:180px">
+                          <span class="adm-field__label">Порядок</span>
+                          <input class="adm-input" min="0" name="addon_sort_{{ addon.id }}" step="1" type="number" value="{{ settings.sort_order if settings else addon.sort_order or 0 }}">
+                        </label>
+                      </div>
+                    </div>
+
+                    <details class="adm-details">
+                      <summary style="font-size:13px">Legacy: старый чекбокс «бесплатно на выбор»</summary>
+                      <div class="adm-details__body">
+                        <label class="adm-checkline">
+                          <input {% if settings and settings.is_free_choice %}checked{% endif %} name="addon_free_choice_{{ addon.id }}" type="checkbox">
+                          <span>is_free_choice (нужно только для совместимости со старыми данными — для новых настроек используйте Подарок → «На выбор»)</span>
+                        </label>
+                      </div>
+                    </details>
+                  </div>
+                </article>
+              {% endfor %}
+            </div>
+          {% else %}
+            <div class="adm-empty">
+              <span class="adm-empty__icon"><svg class="adm-i"><use href="#i-gift"/></svg></span>
+              <h3>Активных доп. услуг пока нет</h3>
+              <p>Сначала создайте доп. услугу, затем она появится здесь для привязки к шоу.</p>
+              <a class="adm-btn adm-btn--sm" href="{{ url_for('admin_addon_create') }}">Добавить доп. услугу</a>
+            </div>
+          {% endif %}
+        </section>
+
+        <section class="adm-card">
+          <div class="adm-editor__section-head">
+            <span class="adm-editor__section-icon adm-editor__section-icon--ink"><svg class="adm-i"><use href="#i-search"/></svg></span>
+            <div>
+              <div class="adm-card__eyebrow">SEO</div>
+              <h3 class="adm-card__title adm-card__title--sm">Заголовок и описание для поиска</h3>
+            </div>
+          </div>
+          <div class="adm-form-grid">
+            <label class="adm-field">
+              <span class="adm-field__label">SEO-заголовок</span>
+              <input class="adm-input" name="seo_title" type="text" value="{{ character.seo_title }}">
+            </label>
+            <label class="adm-field">
+              <span class="adm-field__label">SEO-описание</span>
+              <textarea class="adm-input" name="seo_description">{{ character.seo_description }}</textarea>
+            </label>
+          </div>
+        </section>
+
+        <div class="adm-flex">
+          <button class="adm-btn" type="submit">
+            <svg class="adm-i"><use href="#i-check"/></svg>{% if is_new %}Создать шоу-программу{% else %}Сохранить шоу-программу{% endif %}
+          </button>
+          {% if not is_new %}
+            <a class="adm-btn adm-btn--ghost" href="{{ character.route }}" target="_blank" rel="noopener">
+              <svg class="adm-i"><use href="#i-eye"/></svg>Посмотреть на сайте
+            </a>
+          {% endif %}
+        </div>
+      </div>
+
+      <aside class="adm-editor__side">
+        <section class="adm-card">
+          <div class="adm-card__head">
+            <div>
+              <div class="adm-card__eyebrow">Предпросмотр</div>
+              <h3 class="adm-card__title adm-card__title--sm">Как выглядит карточка</h3>
+            </div>
+          </div>
+          <div class="adm-preview">
+            {% if character.hero_file_path %}
+              <img alt="{{ character.name or 'Шоу-программа' }}" src="{{ character.hero_file_path }}">
+            {% else %}
+              <div class="adm-preview__placeholder">Обложка появится после загрузки фото</div>
+            {% endif %}
+          </div>
+          <div class="adm-preview-card__content">
+            <h4>{{ character.name or 'Название шоу-программы' }}</h4>
+            <p>{{ character.short_description or character.description or 'Короткое описание появится здесь.' }}</p>
+            <div class="adm-chips">
+              <span class="adm-pill">{{ character.base_price or 0 }} сум</span>
+              <span class="adm-pill adm-pill--tag">{{ character.default_duration_minutes or 0 }} минут</span>
+              <span class="adm-pill {% if character.status != 'active' %}adm-pill--muted{% endif %}">
+                {{ show_status_labels.get(character.status, 'Черновик') }}
+              </span>
+            </div>
+          </div>
+        </section>
+
+        <section class="adm-card">
+          <div class="adm-card__head">
+            <div>
+              <div class="adm-card__eyebrow">Публикация</div>
+              <h3 class="adm-card__title adm-card__title--sm">Ссылка и видимость</h3>
+            </div>
+          </div>
+          <div class="adm-meta-list">
+            <div class="adm-meta-item">
+              <span>Статус</span>
+              <span>{{ show_status_labels.get(character.status, 'Черновик') }}</span>
+            </div>
+            <div class="adm-meta-item">
+              <span>Порядок</span>
+              <span>{{ character.sort_order or 0 }}</span>
+            </div>
+            <div class="adm-meta-item">
+              <span>Медиа</span>
+              <span>{{ character.media|length }}</span>
+            </div>
+          </div>
+          {% if not is_new %}
+            <div class="adm-stack adm-mt">
+              <a class="adm-btn adm-btn--full" href="{{ character.route }}" target="_blank" rel="noopener">
+                <svg class="adm-i"><use href="#i-eye"/></svg>Посмотреть на сайте
+              </a>
+              {% if character.status != 'active' %}
+                <p class="adm-note">Эта программа сейчас не видна клиентам. Чтобы открыть страницу, переведите статус в “Активна”.</p>
+              {% endif %}
+            </div>
+          {% endif %}
+        </section>
+      </aside>
+    </div>
+  </form>
+{% endblock %}

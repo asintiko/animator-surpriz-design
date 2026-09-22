@@ -1,0 +1,737 @@
+/* ============================================================
+   Surpriz — главная, волна 3: редакционная полировка (de-template)
+   Скоуп: только <main class="v3-home">. Базовая система — v2.css.
+   Палитра и шрифты прежние; приёмы — журнальные:
+   тонкие линии, спокойные тени, один доминирующий приём на секцию.
+   ============================================================ */
+
+/* ---------- Типографический надзаголовок с линией ---------- */
+
+.v3-overline {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin: 0 0 14px;
+  font-size: .8rem;
+  font-weight: 600;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+}
+
+.v3-overline::before {
+  content: "";
+  width: 34px;
+  height: 2px;
+  flex: 0 0 auto;
+  background: var(--tangerine);
+  border-radius: 2px;
+}
+
+/* Ссылка «смотреть всё» — текстовая, со стрелкой */
+
+.v3-home .v3-more {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 600;
+  font-size: .98rem;
+  color: var(--ink);
+  border-bottom: 2px solid rgba(255, 138, 61, .55);
+  padding-bottom: 3px;
+  transition: border-color .2s ease, color .2s ease;
+}
+
+.v3-home .v3-more:hover {
+  color: var(--tangerine-deep);
+  border-color: var(--tangerine);
+}
+
+.v3-more .v2-i {
+  transition: transform .25s var(--ease-out);
+}
+
+.v3-more:hover .v2-i {
+  transform: translateX(3px);
+}
+
+.v3-sechead {
+  margin-bottom: 44px;
+}
+
+/* ---------- Спокойные кнопки в пределах главной ---------- */
+
+.v3-home .v2-btn--primary {
+  background: var(--tangerine);
+  box-shadow: 0 2px 7px rgba(29, 53, 80, .1);
+}
+
+.v3-home a.v2-btn--primary,
+.v3-home a.v2-btn--primary:hover {
+  color: var(--ink);
+}
+
+.v3-home .v2-btn--primary:hover {
+  background: #f07a2a;
+  box-shadow: 0 6px 16px rgba(29, 53, 80, .13);
+}
+
+.v3-home .v2-btn--ghost {
+  border-color: rgba(29, 53, 80, .18);
+  box-shadow: none;
+}
+
+.v3-home a.v2-btn--ghost,
+.v3-home a.v2-btn--ghost:hover {
+  color: var(--ink);
+}
+
+/* ============================================================
+   1. HERO — крупнее, спокойнее, без визуального шума
+   ============================================================ */
+
+.v3-hero {
+  background:
+    radial-gradient(720px 480px at 88% -10%, rgba(255, 197, 61, .1), transparent 70%),
+    linear-gradient(180deg, #FFF6EA 0%, #FFF1E2 100%);
+}
+
+.v3-hero canvas[data-confetti] {
+  opacity: .5;
+}
+
+.v3-hero .v2-h1 {
+  font-size: clamp(2.4rem, 4.6vw, 4.5rem);
+  line-height: 1.04;
+  letter-spacing: 0;
+  margin: 0 0 .35em;
+  max-width: 12ch;
+}
+
+.v3-hero .v2-accent {
+  color: #B94E14;
+}
+
+.v3-hero .v2-sub {
+  max-width: 46ch;
+}
+
+.v3-hero .v2-hero-home__cta {
+  margin-top: 30px;
+}
+
+/* Быстрый заказ — спокойная белая карточка с тонкой рамкой */
+
+.v3-quick {
+  border: 1px solid rgba(29, 53, 80, .1);
+  box-shadow: 0 7px 20px rgba(29, 53, 80, .06);
+}
+
+.v3-quick .v2-quick__head .v2-i {
+  color: var(--tangerine);
+}
+
+/* Коллаж — фото без звёздочек и лишнего декора */
+
+.v3-collage .v2-collage__item {
+  box-shadow: 0 10px 28px rgba(29, 53, 80, .12);
+}
+
+/* Цифры доверия — редакционная строка с тонкой линией */
+
+.v3-trust {
+  border-top: 1px solid rgba(29, 53, 80, .14);
+  padding: 34px 0 54px;
+  gap: 28px;
+}
+
+.v3-trust .v2-trust__num {
+  background: none;
+  -webkit-background-clip: initial;
+  background-clip: initial;
+  -webkit-text-fill-color: var(--ink);
+  color: var(--ink);
+  font-size: clamp(2.1rem, 3.4vw, 2.9rem);
+}
+
+.v3-trust .v2-trust__label {
+  color: var(--ink-soft);
+}
+
+/* ============================================================
+   2. MARQUEE — фото-лента без пилюль
+   ============================================================ */
+
+.v3-marquee {
+  border-bottom: 1px solid rgba(29, 53, 80, .08);
+}
+
+.v3-marquee .v2-mq-card {
+  background: transparent;
+  border: 1px solid rgba(29, 53, 80, .1);
+  box-shadow: none;
+  color: var(--ink-soft);
+  font-weight: 500;
+}
+
+.v3-marquee .v2-mq-card:hover {
+  border-color: rgba(255, 138, 61, .6);
+  color: var(--ink);
+  transform: none;
+}
+
+/* ============================================================
+   3. ШОУ — журнальная подача: лид + сетка, мета-строка вместо бейджей
+   ============================================================ */
+
+.v3-lead {
+  display: grid;
+  grid-template-columns: 1.25fr 1fr;
+  gap: 44px;
+  align-items: center;
+  margin-bottom: 56px;
+}
+
+.v3-lead__media {
+  display: block;
+  border-radius: 24px;
+  overflow: hidden;
+  aspect-ratio: 16/10;
+  box-shadow: 0 10px 28px rgba(29, 53, 80, .1);
+}
+
+.v3-lead__media img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  transition: transform .6s var(--ease-out);
+}
+
+.v3-lead:hover .v3-lead__media img {
+  transform: scale(1.03);
+}
+
+.v3-lead__title {
+  font-family: var(--font-display);
+  font-size: clamp(1.6rem, 2.6vw, 2.15rem);
+  line-height: 1.12;
+  margin: 0 0 .4em;
+}
+
+.v3-home .v3-lead__title a {
+  color: var(--ink);
+}
+
+.v3-home .v3-lead__title a:hover {
+  color: var(--tangerine-deep);
+}
+
+.v3-lead__text {
+  color: var(--ink-soft);
+  font-size: 1.04rem;
+  line-height: 1.65;
+  max-width: 44ch;
+}
+
+/* Мета-строка: цена · длительность · возраст */
+
+.v3-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  margin: 14px 0 0;
+  font-size: .92rem;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.v3-meta__dot {
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: var(--tangerine);
+  flex: 0 0 auto;
+}
+
+.v3-show-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 18px;
+  margin-top: 22px;
+}
+
+.v3-show-actions .v3-more {
+  margin-top: 0;
+}
+
+/* Сетка остальных шоу — воздушные карточки, тонкая рамка */
+
+.v3-shows-grid .v3-show {
+  border: 1px solid rgba(29, 53, 80, .09);
+  box-shadow: 0 3px 12px rgba(29, 53, 80, .045);
+  transition: box-shadow .3s ease, transform .3s ease;
+}
+
+.v3-shows-grid .v3-show:hover {
+  box-shadow: 0 8px 22px rgba(29, 53, 80, .085);
+}
+
+.v3-shows-grid .v2-show-card__body {
+  display: flex;
+  flex-direction: column;
+  padding: 20px 22px 24px;
+}
+
+.v3-shows-grid .v3-show .v3-show-actions {
+  margin-top: auto;
+  padding-top: 20px;
+}
+
+.v3-home .v3-shows-grid .v2-show-card__title a {
+  color: var(--ink);
+}
+
+.v3-home .v3-shows-grid .v2-show-card__title a:hover {
+  color: var(--tangerine-deep);
+}
+
+/* ============================================================
+   4. ПЕРСОНАЖИ — асимметрия: липкая колонка + сетка
+   ============================================================ */
+
+.v3-chars__layout {
+  display: grid;
+  grid-template-columns: 300px 1fr;
+  gap: 56px;
+  align-items: start;
+}
+
+.v3-chars__side {
+  position: sticky;
+  top: calc(var(--header-h) + 24px);
+  min-width: 0;
+}
+
+.v3-chars__side .v2-h2 {
+  font-size: clamp(1.6rem, 2.4vw, 2.05rem);
+}
+
+.v3-chars__side .v2-sub {
+  font-size: .98rem;
+}
+
+.v3-pills {
+  margin: 26px 0 30px;
+}
+
+.v3-chars .v2-chip {
+  background: transparent;
+  border-width: 1px;
+  font-weight: 500;
+  color: var(--ink-soft);
+}
+
+.v3-chars .v2-chip:hover {
+  border-color: var(--tangerine-deep);
+  color: var(--ink);
+  transform: none;
+}
+
+.v3-chars__grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 26px 22px;
+  min-width: 0;
+}
+
+/* Карточка персонажа — фото и типографика, без пилюль */
+
+.v3-home .v3-char,
+.v3-home .v3-char:hover {
+  color: var(--ink);
+}
+
+.v3-char {
+  align-items: flex-start;
+  text-align: left;
+  gap: 8px;
+  min-width: 0;
+}
+
+.v3-char .v2-char-card__media {
+  border-radius: 18px;
+  box-shadow: 0 5px 16px rgba(29, 53, 80, .07);
+}
+
+.v3-char:hover {
+  transform: translateY(-3px);
+}
+
+.v3-char .v2-char-card__name {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 1rem;
+  color: var(--ink);
+  line-height: 1.25;
+  max-width: 100%;
+  overflow-wrap: anywhere;
+}
+
+.v3-char .v2-char-card__cat {
+  background: none;
+  padding: 0;
+  font-size: .82rem;
+  font-weight: 500;
+  color: var(--ink-soft);
+  max-width: 100%;
+  overflow-wrap: anywhere;
+}
+
+/* ============================================================
+   5. КАК ЗАКАЗАТЬ — вертикальный timeline + липкий заголовок
+   ============================================================ */
+
+.v3-how__layout {
+  display: grid;
+  grid-template-columns: 380px 1fr;
+  gap: 72px;
+  align-items: start;
+}
+
+.v3-how__side {
+  position: sticky;
+  top: calc(var(--header-h) + 24px);
+}
+
+.v3-how__side .v2-btn {
+  margin-top: 26px;
+}
+
+.v3-paynote {
+  margin-top: 30px;
+  padding: 18px 20px;
+  border-left: 3px solid var(--sun);
+  background: rgba(255, 197, 61, .1);
+  border-radius: 0 14px 14px 0;
+}
+
+.v3-paynote strong {
+  display: block;
+  font-family: var(--font-display);
+  font-size: 1.02rem;
+  margin-bottom: 4px;
+}
+
+.v3-paynote p {
+  margin: 0;
+  color: var(--ink-soft);
+  font-size: .94rem;
+}
+
+/* Timeline */
+
+.v3-tl {
+  list-style: none;
+  margin: 0;
+  padding: 6px 0 0;
+  position: relative;
+}
+
+.v3-tl::before {
+  content: "";
+  position: absolute;
+  left: 25px;
+  top: 20px;
+  bottom: 40px;
+  width: 2px;
+  background: linear-gradient(180deg, rgba(29, 53, 80, .18), rgba(29, 53, 80, .06));
+  border-radius: 2px;
+}
+
+.v3-tl__item {
+  position: relative;
+  display: flex;
+  gap: 28px;
+  padding: 22px 0 34px;
+}
+
+.v3-tl__item:last-child {
+  padding-bottom: 6px;
+}
+
+.v3-tl__num {
+  position: relative;
+  z-index: 1;
+  flex: 0 0 auto;
+  width: 52px;
+  height: 52px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--paper, #fff);
+  background: #fff;
+  border: 2px solid var(--sun);
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 1.3rem;
+  color: var(--ink);
+}
+
+.v3-tl__title {
+  font-family: var(--font-display);
+  font-size: 1.3rem;
+  margin: 10px 0 8px;
+}
+
+.v3-tl__body p {
+  margin: 0;
+  color: var(--ink-soft);
+  max-width: 52ch;
+  line-height: 1.65;
+}
+
+/* ============================================================
+   6. АКЦИИ — спокойные карточки с акцентной кромкой
+   ============================================================ */
+
+.v3-promos__grid .v3-promo {
+  border: 1px solid rgba(29, 53, 80, .09);
+  border-left: 3px solid var(--tangerine);
+  box-shadow: 0 3px 12px rgba(29, 53, 80, .04);
+}
+
+.v3-promo__badge {
+  margin: 0 0 10px;
+  font-size: .8rem;
+  font-weight: 700;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: var(--tangerine-deep);
+}
+
+/* ============================================================
+   7. ПОЧЕМУ SURPRIZ — нумерованные строки с тонкими линиями
+   ============================================================ */
+
+.v3-facts {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0 64px;
+}
+
+.v3-fact {
+  display: flex;
+  gap: 22px;
+  padding: 26px 0;
+  border-top: 1px solid rgba(29, 53, 80, .12);
+}
+
+.v3-fact__num {
+  flex: 0 0 auto;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 1rem;
+  color: var(--tangerine-deep);
+  padding-top: 3px;
+}
+
+.v3-fact h3 {
+  font-family: var(--font-display);
+  font-size: 1.18rem;
+  margin: 0 0 6px;
+}
+
+.v3-fact p {
+  margin: 0;
+  color: var(--ink-soft);
+  font-size: .96rem;
+  line-height: 1.6;
+}
+
+/* ============================================================
+   8. ГАЛЕРЕЯ — спокойная фото-лента
+   ============================================================ */
+
+.v3-gallery .v2-gallery__item {
+  border-radius: 18px;
+  box-shadow: 0 5px 16px rgba(29, 53, 80, .075);
+}
+
+/* ============================================================
+   9. FAQ — тонкие разделители вместо карточек
+   ============================================================ */
+
+.v3-faq .v2-faq {
+  background: transparent;
+  border: none;
+  box-shadow: none;
+}
+
+.v3-faq .v2-faq__item {
+  background: transparent;
+  border: none;
+  border-radius: 0;
+  box-shadow: none;
+  border-top: 1px solid rgba(29, 53, 80, .14);
+  padding: 0;
+}
+
+.v3-faq .v2-faq__item:last-child {
+  border-bottom: 1px solid rgba(29, 53, 80, .14);
+}
+
+.v3-faq .v2-faq__btn {
+  padding: 22px 4px;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 1.12rem;
+  color: var(--ink);
+}
+
+.v3-faq .v2-faq__btn:hover {
+  color: var(--tangerine-deep);
+}
+
+.v3-faq .v2-faq__btn .v2-i {
+  color: var(--ink-soft);
+}
+
+.v3-faq .v2-faq__panel {
+  padding: 0 4px;
+}
+
+.v3-faq .v2-faq__item.is-open .v2-faq__panel {
+  padding: 0 4px 24px;
+}
+
+.v3-faq .v2-faq__panel p {
+  margin: 0;
+  color: var(--ink-soft);
+  line-height: 1.7;
+  max-width: 68ch;
+}
+
+/* ============================================================
+   10. КОНТАКТЫ-ПОЛОСА — тонкие разделители, без плиток
+   ============================================================ */
+
+.v3-contacts {
+  border-top: 1px solid rgba(29, 53, 80, .08);
+}
+
+.v3-contacts__row .v2-contact-mini {
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  padding: 6px 0;
+}
+
+.v3-home .v3-contacts__row a.v2-contact-mini,
+.v3-home .v3-contacts__row a.v2-contact-mini:hover {
+  color: var(--ink);
+}
+
+.v3-contacts__row .v2-contact-mini__body small {
+  color: var(--ink-soft);
+}
+
+.v3-contacts__row .v2-contact-mini + .v2-contact-mini {
+  border-left: 1px solid rgba(29, 53, 80, .1);
+  padding-left: 26px;
+}
+
+.v3-contacts__row .v2-contact-mini__icon {
+  background: rgba(24, 184, 201, .1);
+  color: var(--teal);
+  box-shadow: none;
+}
+
+/* ============================================================
+   Адаптив
+   ============================================================ */
+
+@media (max-width: 1024px) {
+  .v3-chars__layout {
+    grid-template-columns: 1fr;
+    gap: 36px;
+  }
+
+  .v3-chars__side {
+    position: static;
+  }
+
+  .v3-chars__grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+
+  .v3-how__layout {
+    grid-template-columns: 1fr;
+    gap: 40px;
+  }
+
+  .v3-how__side {
+    position: static;
+  }
+
+  .v3-lead {
+    grid-template-columns: 1fr;
+    gap: 26px;
+  }
+
+  .v3-facts {
+    grid-template-columns: 1fr;
+    gap: 0;
+  }
+}
+
+@media (max-width: 720px) {
+  .v3-hero .v2-h1 {
+    font-size: clamp(2rem, 8.6vw, 2.6rem);
+    max-width: none;
+  }
+
+  .v3-trust {
+    grid-template-columns: repeat(2, 1fr);
+    padding-bottom: 40px;
+  }
+
+  .v3-chars__grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 22px 16px;
+  }
+
+  .v3-chars__cta {
+    width: 100%;
+    min-width: 0;
+    padding-inline: 20px;
+    white-space: normal;
+  }
+
+  .v3-chars__cta span {
+    min-width: 0;
+    overflow-wrap: anywhere;
+  }
+
+  .v3-tl__item {
+    gap: 18px;
+  }
+
+  .v3-tl::before {
+    left: 21px;
+  }
+
+  .v3-tl__num {
+    width: 44px;
+    height: 44px;
+    font-size: 1.1rem;
+  }
+
+  .v3-contacts__row .v2-contact-mini + .v2-contact-mini {
+    border-left: none;
+    padding-left: 0;
+    border-top: 1px solid rgba(29, 53, 80, .1);
+    padding-top: 16px;
+  }
+}

@@ -1,0 +1,127 @@
+<main class="v2-main v2-account" id="content">
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      <div class="v2-container v2-flashes" role="status">
+        {% for category, message in messages %}
+          <div class="customer-flash customer-flash--{{ category }}">{{ message }}</div>
+        {% endfor %}
+      </div>
+    {% endif %}
+  {% endwith %}
+
+  <section class="v2-account-body">
+    <div class="v2-container">
+      <nav class="v2-breadcrumbs" aria-label="Хлебные крошки">
+        <a class="v2-breadcrumbs__link" href="{{ url_for('customer_account') }}">
+          <svg class="v2-i" aria-hidden="true"><use href="#i-user"/></svg>
+          <span>Личный кабинет</span>
+        </a>
+        <svg class="v2-i v2-breadcrumbs__sep" aria-hidden="true"><use href="#i-arrow-right"/></svg>
+        <span class="v2-breadcrumbs__current">{{ order.public_id }}</span>
+      </nav>
+
+      <article class="v2-order-detail">
+        <div class="v2-order-detail__head">
+          <div class="v2-order-detail__head-copy">
+            <span class="v2-eyebrow"><svg class="v2-i" aria-hidden="true"><use href="#i-gift"/></svg>Детали заказа</span>
+            <h1 class="v2-h1 v2-order-detail__title">{{ order.public_id }}</h1>
+          </div>
+          <span class="v2-status v2-status--{{ order.display_status }}">{{ order.status_label }}</span>
+        </div>
+
+        <div class="v2-detail-grid v2-order-detail__grid">
+          <article class="v2-detail-block">
+            <h2 class="v2-detail-block__title">
+              <svg class="v2-i" aria-hidden="true"><use href="#i-sparkles"/></svg>
+              Программа и персонажи
+            </h2>
+            {% if order.program_name %}
+              <p><strong>Шоу-программа:</strong> {{ order.program_name }}</p>
+              <p><strong>Стоимость программы:</strong> {{ order.program_price_label }}</p>
+            {% endif %}
+            {% if order.character_names %}
+              <p><strong>Персонажи:</strong> {{ order.character_names | join(', ') }}</p>
+            {% else %}
+              <p>Персонажи не выбраны.</p>
+            {% endif %}
+            {% if order.addons %}
+              <p><strong>Дополнительные услуги:</strong></p>
+              <ul class="v2-addon-list">
+                {% for addon in order.addons %}
+                  <li>
+                    <span class="v2-addon-list__name">{{ addon.name }}{% if addon.duration_label %}<small>+ {{ addon.duration_label }}</small>{% endif %}</span>
+                    <strong class="v2-addon-list__price">{{ addon.price_label }}</strong>
+                  </li>
+                {% endfor %}
+              </ul>
+              <p><strong>Дополнительные услуги:</strong> {{ order.addon_total_label }}</p>
+            {% endif %}
+            <p><strong>Итого:</strong> {{ order.total_price_label }}</p>
+          </article>
+
+          <article class="v2-detail-block">
+            <h2 class="v2-detail-block__title">
+              <svg class="v2-i" aria-hidden="true"><use href="#i-calendar"/></svg>
+              Дата и время
+            </h2>
+            <p><strong>Дата:</strong> {{ order.celebration_date_label or order.celebration_date }}</p>
+            <p><strong>Интервал:</strong> {{ order.time_from }} - {{ order.time_to }}</p>
+            {% if order.duration_minutes %}
+              <p><strong>Длительность:</strong> {{ order.duration_minutes }} мин.</p>
+            {% endif %}
+            <p><strong>Оплата:</strong> {{ order.payment_method_label }}</p>
+          </article>
+
+          <article class="v2-detail-block">
+            <h2 class="v2-detail-block__title">
+              <svg class="v2-i" aria-hidden="true"><use href="#i-cake"/></svg>
+              Праздник
+            </h2>
+            {% if order.celebrant_name %}
+              <p><strong>Именинник:</strong> {{ order.celebrant_name }}{% if order.celebrant_age %}, {{ order.celebrant_age }} лет{% endif %}</p>
+            {% endif %}
+            {% if order.children_count is not none %}
+              <p><strong>Детей:</strong> {{ order.children_count }}</p>
+            {% endif %}
+            <p><strong>Адрес:</strong> {{ order.address_text }}</p>
+            {% if order.location_label %}
+              <p><strong>Точка на карте:</strong> {{ order.location_label }}</p>
+            {% endif %}
+            {% if order.yandex_map_url %}
+              <p>
+                <a class="v2-detail-block__map-link" href="{{ order.yandex_map_url }}" rel="noopener noreferrer" target="_blank">
+                  <svg class="v2-i" aria-hidden="true"><use href="#i-map-pin"/></svg>
+                  Открыть подтверждённую точку на карте
+                </a>
+              </p>
+            {% endif %}
+          </article>
+
+          <article class="v2-detail-block">
+            <h2 class="v2-detail-block__title">
+              <svg class="v2-i" aria-hidden="true"><use href="#i-note"/></svg>
+              Комментарий
+            </h2>
+            {% if order.notes %}
+              <p>{{ order.notes }}</p>
+            {% else %}
+              <p>Комментарий не добавлен.</p>
+            {% endif %}
+            <p><strong>Создан:</strong> {{ order.created_at_label or order.created_at }}</p>
+          </article>
+        </div>
+
+        <div class="v2-order-detail__footer">
+          <a class="v2-btn v2-btn--ghost v2-btn--md" href="{{ url_for('customer_account') }}">
+            <svg class="v2-i" aria-hidden="true"><use href="#i-arrow-left"/></svg>
+            <span>Все заказы</span>
+          </a>
+          <a class="v2-btn v2-btn--primary v2-btn--md" href="{{ url_for('customer_party_builder') }}">
+            <svg class="v2-i" aria-hidden="true"><use href="#i-party-hat"/></svg>
+            <span>Новый праздник</span>
+          </a>
+        </div>
+      </article>
+    </div>
+  </section>
+</main>

@@ -1,0 +1,489 @@
+{% extends "admin/base.html" %}
+
+{% block content %}
+  <form enctype="multipart/form-data" method="post">
+    <div class="adm-editor">
+      <div class="adm-editor__main">
+
+        <section class="adm-card">
+          <div class="adm-card__head">
+            <span class="adm-editor__section-icon"><svg class="adm-i"><use href="#i-mask"/></svg></span>
+            <div>
+              <div class="adm-card__eyebrow">Каталог</div>
+              <h2 class="adm-card__title">
+                {% if is_new %}
+                  {{ entity_labels.new_title }}
+                {% else %}
+                  {{ character.name }}
+                {% endif %}
+              </h2>
+            </div>
+            <div class="adm-card__head-actions">
+              <a class="adm-btn adm-btn--ghost adm-btn--sm" href="{{ url_for('admin_dashboard', tab=entity_labels.tab) }}">
+                <svg class="adm-i"><use href="#i-arrow-left"/></svg>{{ entity_labels.back_label }}
+              </a>
+            </div>
+          </div>
+        </section>
+
+        <section class="adm-card">
+          <div class="adm-editor__section-head">
+            <span class="adm-editor__section-icon adm-editor__section-icon--teal"><svg class="adm-i"><use href="#i-edit"/></svg></span>
+            <div>
+              <div class="adm-card__eyebrow">Основа карточки</div>
+              <h3 class="adm-card__title adm-card__title--sm">Название, описание и статус</h3>
+            </div>
+          </div>
+          <div class="adm-stack">
+            <div class="adm-form-grid">
+              <label class="adm-field">
+                <span class="adm-field__label">Название</span>
+                <input class="adm-input" name="name" required type="text" value="{{ character.name }}">
+              </label>
+              <label class="adm-field">
+                <span class="adm-field__label">Slug</span>
+                <input class="adm-input" name="slug" placeholder="optional" type="text" value="{{ character.slug }}">
+              </label>
+            </div>
+
+            <div class="adm-form-grid">
+              <label class="adm-field">
+                <span class="adm-field__label">Короткое описание</span>
+                <textarea class="adm-input" name="short_description" rows="5">{{ character.short_description }}</textarea>
+              </label>
+              <label class="adm-field">
+                <span class="adm-field__label">Полное описание</span>
+                <textarea class="adm-input" name="description" rows="5">{{ character.description }}</textarea>
+              </label>
+            </div>
+
+            <div class="adm-form-grid">
+              <label class="adm-field">
+                <span class="adm-field__label">Телефон</span>
+                <input class="adm-input" name="contact_phone" type="text" value="{{ character.contact_phone }}">
+              </label>
+              <label class="adm-field">
+                <span class="adm-field__label">Telegram URL</span>
+                <input class="adm-input" name="telegram_url" type="text" value="{{ character.telegram_url }}">
+              </label>
+            </div>
+
+            {% if entity_type == 'show_program' %}
+              <div class="adm-form-grid">
+                <label class="adm-field">
+                  <span class="adm-field__label">Цена, сум</span>
+                  <input class="adm-input" min="0" name="base_price" step="1000" type="number" value="{{ character.base_price }}">
+                </label>
+                <label class="adm-field">
+                  <span class="adm-field__label">Длительность, минут</span>
+                  <input class="adm-input" min="0" name="default_duration_minutes" step="5" type="number" value="{{ character.default_duration_minutes }}">
+                </label>
+              </div>
+            {% endif %}
+          </div>
+        </section>
+
+        {% if show_taxonomy %}
+          <section class="adm-card">
+            <div class="adm-editor__section-head">
+              <span class="adm-editor__section-icon adm-editor__section-icon--grape"><svg class="adm-i"><use href="#i-tag"/></svg></span>
+              <div>
+                <div class="adm-card__eyebrow">Фильтры каталога</div>
+                <h3 class="adm-card__title adm-card__title--sm">Назначение через связанные теги</h3>
+              </div>
+            </div>
+
+            <p class="adm-note adm-note--callout">Чтобы показать персонажа в фильтре каталога, выберите ниже технический тег, связанный с этим фильтром. Фильтры вычисляются автоматически после сохранения — вручную назначать их отдельно не нужно.</p>
+
+            <div class="adm-grid adm-grid--2" style="margin-bottom:14px">
+              <div>
+                <div class="adm-carditem__label">Текущие фильтры каталога <span class="adm-field__hint">вычисляются по тегам</span></div>
+                <div class="adm-chips">
+                  {% set visible_categories = [] %}
+                  {% for category in character.categories %}
+                    {% if category.slug != 'all' %}
+                      {% set _ = visible_categories.append(category) %}
+                    {% endif %}
+                  {% endfor %}
+                  {% if visible_categories %}
+                    {% for category in visible_categories %}
+                      <span class="adm-pill">{{ category.name }}</span>
+                    {% endfor %}
+                  {% else %}
+                    <span class="adm-pill adm-pill--muted">Публичные фильтры не определены</span>
+                  {% endif %}
+                </div>
+                <p class="adm-note adm-mt">Этот список нельзя редактировать вручную: он обновляется по выбранным тегам.</p>
+              </div>
+
+              <div>
+                <div class="adm-carditem__label">Назначенные технические теги</div>
+                <div class="adm-chips">
+                  {% set visible_tags = [] %}
+                  {% for tag in character.tags %}
+                    {% if tag.slug != 'all' %}
+                      {% set _ = visible_tags.append(tag) %}
+                    {% endif %}
+                  {% endfor %}
+                  {% if visible_tags %}
+                    {% for tag in visible_tags %}
+                      <span class="adm-pill adm-pill--tag">#{{ tag.name }}</span>
+                    {% endfor %}
+                  {% else %}
+                    <span class="adm-pill adm-pill--muted">Теги ещё не назначены</span>
+                  {% endif %}
+                </div>
+              </div>
+            </div>
+
+            <details class="adm-details" {% if is_new %}open{% endif %}>
+              <summary>
+                <svg class="adm-i" style="color:var(--tangerine)"><use href="#i-plus"/></svg>
+                Выбрать технические теги для фильтров
+              </summary>
+              <div class="adm-details__body">
+                <p class="adm-note">У тега указано, какой публичный фильтр он наполняет. Можно выбрать несколько тегов — персонаж появится во всех связанных фильтрах.</p>
+                <div class="adm-checkgrid">
+                  {% for tag in tags %}
+                    {% if not tag.is_system %}
+                      {% set linked_filters = [] %}
+                      {% for category in categories %}
+                        {% if category.slug != 'all' and category.linked_tag_id == tag.id %}
+                          {% set _ = linked_filters.append(category.name) %}
+                        {% endif %}
+                      {% endfor %}
+                      <label class="adm-checkcard">
+                        <input {% if tag.id in character.tag_ids %}checked{% endif %} name="tag_ids" type="checkbox" value="{{ tag.id }}">
+                        <span class="adm-checkcard__label">
+                          <strong>{{ tag.name }}</strong>
+                          {% if linked_filters %}
+                            <small>Фильтр: {{ linked_filters | join(', ') }}</small>
+                          {% else %}
+                            <small>Без публичного фильтра</small>
+                          {% endif %}
+                        </span>
+                      </label>
+                    {% endif %}
+                  {% endfor %}
+                </div>
+              </div>
+            </details>
+          </section>
+        {% endif %}
+
+        {% if entity_type == 'character' %}
+          <section class="adm-card">
+            <div class="adm-editor__section-head">
+              <span class="adm-editor__section-icon adm-editor__section-icon--ink"><svg class="adm-i"><use href="#i-search"/></svg></span>
+              <div>
+                <div class="adm-card__eyebrow">Поиск</div>
+                <h3 class="adm-card__title adm-card__title--sm">Вспомогательные слова для костюма</h3>
+              </div>
+            </div>
+            <label class="adm-field">
+              <span class="adm-field__label">Мини-словарь поиска</span>
+              <textarea class="adm-input" name="search_terms" placeholder="Например: ladybug, lady bug, леди баг, супер кот, miraculous">{{ character.search_terms }}</textarea>
+            </label>
+            <p class="adm-note adm-mt">Укажите слова, по которым клиент может искать этот костюм. Можно писать через запятую или с новой строки, кириллицей и латиницей.</p>
+          </section>
+
+          <section class="adm-card">
+            <div class="adm-editor__section-head">
+              <span class="adm-editor__section-icon adm-editor__section-icon--coral"><svg class="adm-i"><use href="#i-users"/></svg></span>
+              <div>
+                <div class="adm-card__eyebrow">Занятость</div>
+                <h3 class="adm-card__title adm-card__title--sm">Дубликаты костюма</h3>
+              </div>
+            </div>
+            <label class="adm-field">
+              <span class="adm-field__label">Сколько дополнительных копий есть</span>
+              <span class="admin-number-stepper" data-duplicate-stepper>
+                <button data-duplicate-step="-1" type="button" aria-label="Меньше">−</button>
+                <input class="adm-input" min="0" name="duplicate_count" step="1" type="number" value="{{ character.duplicate_count or 0 }}">
+                <button data-duplicate-step="1" type="button" aria-label="Больше">+</button>
+              </span>
+            </label>
+            <p class="adm-note adm-mt">0 означает один основной костюм. Если указать 1 дубликат, сайт разрешит два подтверждённых заказа с этим персонажем на одно время.</p>
+          </section>
+
+          <section class="adm-card">
+            <div class="adm-editor__section-head">
+              <span class="adm-editor__section-icon adm-editor__section-icon--coral"><svg class="adm-i"><use href="#i-users"/></svg></span>
+              <div>
+                <div class="adm-card__eyebrow">Состав</div>
+                <h3 class="adm-card__title adm-card__title--sm">Группа героев в одной карточке</h3>
+              </div>
+            </div>
+            <label class="adm-field">
+              <span class="adm-field__label">Герои в составе</span>
+              <textarea class="adm-input" name="ensemble_members" placeholder="Например: Анна, Эльза, Олаф">{{ character.ensemble_members | join(', ') }}</textarea>
+            </label>
+            <div class="adm-form-grid">
+              <label class="adm-field">
+                <span class="adm-field__label">Сколько входит в базовую цену</span>
+                <input class="adm-input" min="0" name="ensemble_included_count" step="1" type="number" value="{{ character.ensemble_included_count }}">
+              </label>
+              <label class="adm-field">
+                <span class="adm-field__label">Доплата за каждого следующего, сум</span>
+                <input class="adm-input" min="0" name="ensemble_extra_member_price" step="1000" type="number" value="{{ character.ensemble_extra_member_price }}">
+              </label>
+            </div>
+            <p class="adm-note adm-mt">Заполняйте, только если в одной карточке несколько героев. Клиент отметит галочками, кого хочет: указанное количество входит в цену, каждый следующий добавляет доплату. Оставьте поле пустым, если персонаж один.</p>
+          </section>
+        {% endif %}
+
+        <section class="adm-card">
+          <div class="adm-editor__section-head">
+            <span class="adm-editor__section-icon adm-editor__section-icon--ink"><svg class="adm-i"><use href="#i-search"/></svg></span>
+            <div>
+              <div class="adm-card__eyebrow">SEO</div>
+              <h3 class="adm-card__title adm-card__title--sm">Поиск и выдача</h3>
+            </div>
+          </div>
+          <div class="adm-form-grid">
+            <label class="adm-field">
+              <span class="adm-field__label">SEO title</span>
+              <input class="adm-input" name="seo_title" type="text" value="{{ character.seo_title }}">
+            </label>
+            <label class="adm-field">
+              <span class="adm-field__label">SEO description</span>
+              <textarea class="adm-input" name="seo_description">{{ character.seo_description }}</textarea>
+            </label>
+          </div>
+        </section>
+
+        {% if character.media %}
+          <section class="adm-card">
+            <div class="adm-editor__section-head">
+              <span class="adm-editor__section-icon adm-editor__section-icon--coral"><svg class="adm-i"><use href="#i-image"/></svg></span>
+              <div>
+                <div class="adm-card__eyebrow">Медиа</div>
+                <h3 class="adm-card__title adm-card__title--sm">Фото и видео {{ entity_labels.singular }}</h3>
+              </div>
+            </div>
+            <div class="adm-media-grid">
+              {% for media in character.media %}
+                <article class="adm-media-card">
+                  <label class="adm-media-card__cover">
+                    <input {% if media.id == character.hero_media_id %}checked{% endif %} name="hero_media_id" type="radio" value="{{ media.id }}">
+                    <span>Сделать обложкой карточки</span>
+                  </label>
+
+                  <div class="adm-media-card__preview">
+                    {% if media.media_type == 'video' %}
+                      {% if 'youtube.com' in media.file_path or 'youtu.be' in media.file_path or 'vimeo.com' in media.file_path %}
+                        <iframe loading="lazy" src="{{ media.file_path }}" title="{{ media.alt_text or character.name }}"></iframe>
+                      {% else %}
+                        <video controls preload="metadata" src="{{ media.file_path }}"></video>
+                      {% endif %}
+                    {% else %}
+                      <img alt="{{ media.alt_text or character.name }}" loading="lazy" src="{{ media.file_path }}">
+                    {% endif %}
+                  </div>
+
+                  <label class="adm-field">
+                    <span class="adm-field__label">Alt</span>
+                    <input class="adm-input" name="media_alt_{{ media.id }}" type="text" value="{{ media.alt_text }}">
+                  </label>
+                  <label class="adm-field">
+                    <span class="adm-field__label">Подпись</span>
+                    <textarea class="adm-input" name="media_caption_{{ media.id }}">{{ media.caption }}</textarea>
+                  </label>
+                  <label class="adm-field">
+                    <span class="adm-field__label">Порядок</span>
+                    <input class="adm-input" name="media_sort_{{ media.id }}" type="number" value="{{ media.sort_order }}">
+                  </label>
+
+                  <div class="adm-flex">
+                    <a class="adm-btn adm-btn--ghost adm-btn--sm" href="{{ media.file_path }}" target="_blank">Открыть</a>
+                    <button class="adm-btn adm-btn--danger adm-btn--sm" formaction="{% if entity_type == 'show_program' %}{{ url_for('admin_show_program_media_delete', character_id=character.id, media_id=media.id) }}{% else %}{{ url_for('admin_character_media_delete', character_id=character.id, media_id=media.id) }}{% endif %}" formmethod="post" onclick="return confirm('{{ entity_labels.media_delete_confirm }}');" type="submit">Удалить</button>
+                  </div>
+                </article>
+              {% endfor %}
+            </div>
+          </section>
+        {% endif %}
+
+        <div class="adm-flex">
+          <button class="adm-btn" type="submit">
+            <svg class="adm-i"><use href="#i-check"/></svg>{% if is_new %}{{ entity_labels.submit_create }}{% else %}{{ entity_labels.submit_save }}{% endif %}
+          </button>
+          {% if not is_new %}
+            <a class="adm-btn adm-btn--ghost" href="{{ character.route }}" target="_blank">
+              <svg class="adm-i"><use href="#i-eye"/></svg>Открыть на сайте
+            </a>
+          {% endif %}
+        </div>
+      </div>
+
+      <aside class="adm-editor__side">
+        <section class="adm-card">
+          <div class="adm-card__head">
+            <div>
+              <div class="adm-card__eyebrow">Быстрый обзор</div>
+              <h3 class="adm-card__title adm-card__title--sm">Карточка {{ entity_labels.singular }}</h3>
+            </div>
+          </div>
+
+          <div class="adm-preview">
+            {% if character.hero_file_path %}
+              <img alt="{{ character.name or entity_labels.singular_title }}" src="{{ character.hero_file_path }}">
+            {% else %}
+              <div class="adm-preview__placeholder">Обложка появится после загрузки первого фото</div>
+            {% endif %}
+          </div>
+
+          <div class="adm-stack adm-mt">
+            <label class="adm-field">
+              <span class="adm-field__label">Статус</span>
+              <select class="adm-input" name="status">
+                <option {% if character.status == 'active' %}selected{% endif %} value="active">Активный</option>
+                <option {% if character.status == 'draft' %}selected{% endif %} value="draft">Черновик</option>
+                <option {% if character.status == 'hidden' %}selected{% endif %} value="hidden">Скрытый</option>
+              </select>
+            </label>
+
+            <label class="adm-field">
+              <span class="adm-field__label">Добавить фото / видео</span>
+              <input class="adm-input adm-input--file" data-media-input multiple name="media_files" type="file">
+            </label>
+
+            <div class="admin-media-preview" data-media-preview hidden>
+              <div class="admin-media-preview__head">
+                <span class="admin-media-preview__title">Предпросмотр карточки</span>
+                <div class="admin-media-preview__fit-toggle" role="tablist" aria-label="Режим обрезки">
+                  <button class="{% if (character.cover_fit or 'cover') == 'cover' %}is-active{% endif %}" data-fit="cover" type="button">Заполнить</button>
+                  <button class="{% if character.cover_fit == 'contain' %}is-active{% endif %}" data-fit="contain" type="button">Целиком</button>
+                </div>
+              </div>
+              <div class="admin-media-preview__frames">
+                <div class="admin-media-preview__frame admin-media-preview__frame--desktop" data-device="desktop">
+                  <div class="admin-media-preview__device-label">PC · карточка 320×400</div>
+                  <div class="admin-media-preview__photo">
+                    <img alt="" data-preview-img>
+                  </div>
+                  <div class="admin-media-preview__caption">
+                    <div>{{ character.name or 'Имя персонажа' }}</div>
+                  </div>
+                </div>
+                <div class="admin-media-preview__frame admin-media-preview__frame--mobile" data-device="mobile">
+                  <div class="admin-media-preview__device-label">Mobile · 180×260</div>
+                  <div class="admin-media-preview__photo">
+                    <img alt="" data-preview-img>
+                  </div>
+                  <div class="admin-media-preview__caption">
+                    <div>{{ character.name or 'Имя' }}</div>
+                  </div>
+                </div>
+              </div>
+              <div class="admin-media-preview__sliders">
+                <label class="adm-field">
+                  <span class="adm-field__label">Сдвиг по горизонтали: <output data-cover-x-out>{{ character.cover_offset_x or 50 }}</output>%</span>
+                  <input class="adm-input" data-cover-x max="100" min="0" name="cover_offset_x" step="1" type="range" value="{{ character.cover_offset_x or 50 }}">
+                </label>
+                <label class="adm-field">
+                  <span class="adm-field__label">Сдвиг по вертикали: <output data-cover-y-out>{{ character.cover_offset_y or 50 }}</output>%</span>
+                  <input class="adm-input" data-cover-y max="100" min="0" name="cover_offset_y" step="1" type="range" value="{{ character.cover_offset_y or 50 }}">
+                </label>
+              </div>
+              <input type="hidden" name="cover_fit" data-cover-fit-input value="{{ character.cover_fit or 'cover' }}">
+              <p class="admin-media-preview__hint">Двигайте ползунками — позиция фото в карточке каталога обновится моментально. «Заполнить» = обрезка по карточке, «Целиком» = вписать без обрезки.</p>
+            </div>
+
+            {% if not is_new %}
+              <div class="adm-meta-list">
+                <div class="adm-meta-item">
+                  <span>Ссылка</span>
+                  <span>/{{ character.slug }}/</span>
+                </div>
+                <div class="adm-meta-item">
+                  <span>Медиа</span>
+                  <span>{{ character.media|length }}</span>
+                </div>
+              </div>
+            {% endif %}
+          </div>
+        </section>
+      </aside>
+    </div>
+  </form>
+  <script>
+    document.querySelectorAll("[data-duplicate-step]").forEach((button) => {
+      button.addEventListener("click", () => {
+        const shell = button.closest("[data-duplicate-stepper]");
+        const input = shell?.querySelector('input[name="duplicate_count"]');
+        if (!input) {
+          return;
+        }
+        const step = Number(button.dataset.duplicateStep || 0);
+        const current = Number(input.value || 0);
+        input.value = String(Math.max(0, current + step));
+      });
+    });
+
+    // Live preview of uploaded media + cover offset sliders + fit toggle.
+    (() => {
+      const input = document.querySelector('[data-media-input]');
+      const wrap = document.querySelector('[data-media-preview]');
+      if (!wrap) return;
+      const imgs = wrap.querySelectorAll('[data-preview-img]');
+      const photoBoxes = wrap.querySelectorAll('.admin-media-preview__photo');
+      const fitButtons = wrap.querySelectorAll('.admin-media-preview__fit-toggle button');
+      const xSlider = wrap.querySelector('[data-cover-x]');
+      const ySlider = wrap.querySelector('[data-cover-y]');
+      const xOut = wrap.querySelector('[data-cover-x-out]');
+      const yOut = wrap.querySelector('[data-cover-y-out]');
+      const fitInput = wrap.querySelector('[data-cover-fit-input]');
+      const existingHero = {{ (character.hero_file_path or '')|tojson }};
+      let currentObjectUrl = null;
+
+      const applyOffset = () => {
+        const x = Math.max(0, Math.min(100, Number(xSlider?.value || 50)));
+        const y = Math.max(0, Math.min(100, Number(ySlider?.value || 50)));
+        if (xOut) xOut.textContent = String(x);
+        if (yOut) yOut.textContent = String(y);
+        imgs.forEach((img) => {
+          img.style.objectPosition = `${x}% ${y}%`;
+        });
+      };
+
+      const setFit = (fit) => {
+        const safe = fit === 'contain' ? 'contain' : 'cover';
+        photoBoxes.forEach((box) => { box.dataset.fit = safe; });
+        imgs.forEach((img) => { img.style.objectFit = safe; });
+        fitButtons.forEach((b) => {
+          b.classList.toggle('is-active', b.dataset.fit === safe);
+        });
+        if (fitInput) fitInput.value = safe;
+      };
+
+      const showImage = (src) => {
+        imgs.forEach((img) => { img.src = src; });
+        wrap.hidden = false;
+        applyOffset();
+      };
+
+      // Init from existing hero (edit mode) or defaults
+      if (existingHero) {
+        showImage(existingHero);
+      }
+      const initialFit = fitInput?.value || 'cover';
+      setFit(initialFit);
+      applyOffset();
+
+      fitButtons.forEach((b) => {
+        b.addEventListener('click', () => setFit(b.dataset.fit));
+      });
+      xSlider?.addEventListener('input', applyOffset);
+      ySlider?.addEventListener('input', applyOffset);
+
+      input?.addEventListener('change', () => {
+        const file = input.files && input.files[0];
+        if (!file || !file.type.startsWith('image/')) return;
+        if (currentObjectUrl) URL.revokeObjectURL(currentObjectUrl);
+        currentObjectUrl = URL.createObjectURL(file);
+        showImage(currentObjectUrl);
+      });
+    })();
+  </script>
+{% endblock %}

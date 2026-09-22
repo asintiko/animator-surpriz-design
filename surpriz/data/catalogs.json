@@ -1,0 +1,1722 @@
+{
+  "version": 3,
+  "settings": {
+    "autoplay_enabled": true,
+    "autoplay_speed": 18,
+    "character_booking_rules": {
+      "fixed_pairs_include_all_members": true,
+      "selectable_groups_include_members": 2,
+      "selectable_group_extra_member_price": 0,
+      "selectable_group_extra_member_pricing": "selected_show_program",
+      "growth_costume_rule": "К ростовому персонажу требуется минимум два открытых говорящих костюма.",
+      "outside_character_price_note": "Каждый артист сверх лимита оплачивается по тарифу выбранной шоу-программы."
+    }
+  },
+  "characters": [
+    {
+      "id": "character-zootopia",
+      "title": "Ник и Джуди",
+      "description": "Весёлое расследование, игры и танцы с героями Зверополиса.",
+      "image": "assets/img/characters/zootopia-1200.webp",
+      "alt": "Ник и Джуди",
+      "cta_label": "Заказать",
+      "href": "/party-builder/?character=zootopia",
+      "active": true,
+      "title_color": "#21165b",
+      "image_position": {
+        "x": 50,
+        "y": 50
+      },
+      "image_zoom": 100,
+      "categories": [
+        "boys",
+        "girls",
+        "cartoons"
+      ],
+      "placements": [
+        "homepage",
+        "catalog",
+        "party_builder"
+      ],
+      "ensemble_members": [
+        "Ник",
+        "Джуди"
+      ],
+      "ensemble_included_count": 2,
+      "ensemble_extra_member_price": 0,
+      "ensemble_mode": "fixed_pair",
+      "base_price": 1050000,
+      "included_items": "Игрушка входит в комплект"
+    },
+    {
+      "id": "character-paw-patrol",
+      "title": "Скай и Гонщик",
+      "description": "Командные задания и спасательная миссия Щенячьего патруля.",
+      "image": "assets/img/characters/paw-patrol-1200.webp",
+      "alt": "Скай и Гонщик",
+      "cta_label": "Заказать",
+      "href": "/party-builder/?character=paw-patrol",
+      "active": true,
+      "title_color": "#21165b",
+      "image_position": {
+        "x": 50,
+        "y": 50
+      },
+      "image_zoom": 100,
+      "categories": [
+        "boys",
+        "girls",
+        "cartoons"
+      ],
+      "placements": [
+        "homepage",
+        "catalog",
+        "party_builder"
+      ],
+      "ensemble_members": [
+        "Скай",
+        "Гонщик"
+      ],
+      "ensemble_included_count": 2,
+      "ensemble_extra_member_price": 0,
+      "ensemble_mode": "fixed_pair"
+    },
+    {
+      "id": "character-among-us",
+      "title": "Among Us",
+      "description": "Космическая миссия с жёлтым и розовым членами экипажа.",
+      "image": "assets/img/characters/among-us-1200.webp",
+      "alt": "Among Us",
+      "cta_label": "Заказать",
+      "href": "/party-builder/?character=among-us",
+      "active": true,
+      "title_color": "#21165b",
+      "image_position": {
+        "x": 50,
+        "y": 50
+      },
+      "image_zoom": 100,
+      "categories": [
+        "boys",
+        "girls",
+        "cartoons"
+      ],
+      "placements": [
+        "homepage",
+        "catalog",
+        "party_builder"
+      ],
+      "ensemble_members": [
+        "Жёлтый Among Us",
+        "Розовый Among Us"
+      ],
+      "ensemble_included_count": 2,
+      "ensemble_extra_member_price": 0,
+      "ensemble_mode": "fixed_pair"
+    },
+    {
+      "id": "character-ladybug-cat-noir",
+      "title": "Леди Баг и Супер-Кот",
+      "description": "Супергеройские испытания и спасение праздничного Парижа.",
+      "image": "assets/img/characters/ladybug-cat-noir-1200.webp",
+      "alt": "Леди Баг и Супер-Кот",
+      "cta_label": "Заказать",
+      "href": "/party-builder/?character=ladybug-cat-noir",
+      "active": true,
+      "title_color": "#21165b",
+      "image_position": {
+        "x": 50,
+        "y": 50
+      },
+      "image_zoom": 100,
+      "categories": [
+        "superheroes",
+        "boys",
+        "girls"
+      ],
+      "placements": [
+        "homepage",
+        "catalog",
+        "party_builder"
+      ],
+      "ensemble_members": [
+        "Леди Баг",
+        "Супер-Кот"
+      ],
+      "ensemble_included_count": 2,
+      "ensemble_extra_member_price": 0,
+      "ensemble_mode": "fixed_pair"
+    },
+    {
+      "id": "character-naruto",
+      "title": "Наруто и Сакура",
+      "description": "Ниндзя-испытания, командные задания и яркое аниме-приключение.",
+      "image": "assets/img/characters/naruto-1200.webp",
+      "alt": "Наруто и Сакура",
+      "cta_label": "Заказать",
+      "href": "/party-builder/?character=naruto",
+      "active": true,
+      "title_color": "#21165b",
+      "image_position": {
+        "x": 50,
+        "y": 50
+      },
+      "image_zoom": 100,
+      "categories": [
+        "boys",
+        "girls",
+        "cartoons"
+      ],
+      "placements": [
+        "homepage",
+        "catalog",
+        "party_builder"
+      ],
+      "ensemble_members": [
+        "Наруто",
+        "Сакура"
+      ],
+      "ensemble_included_count": 2,
+      "ensemble_extra_member_price": 0,
+      "ensemble_mode": "fixed_pair"
+    },
+    {
+      "id": "character-rumi-jinu",
+      "title": "Руми и Джину",
+      "description": "Музыкальная миссия, танцы и приключение любимых героев.",
+      "image": "assets/img/characters/rumi-jinu-1200.webp",
+      "alt": "Руми и Джину",
+      "cta_label": "Заказать",
+      "href": "/party-builder/?character=rumi-jinu",
+      "active": true,
+      "title_color": "#21165b",
+      "image_position": {
+        "x": 50,
+        "y": 50
+      },
+      "image_zoom": 100,
+      "categories": [
+        "boys",
+        "girls",
+        "cartoons"
+      ],
+      "placements": [
+        "homepage",
+        "catalog",
+        "party_builder"
+      ],
+      "ensemble_members": [
+        "Руми",
+        "Джину"
+      ],
+      "ensemble_included_count": 2,
+      "ensemble_extra_member_price": 0,
+      "ensemble_mode": "fixed_pair"
+    },
+    {
+      "id": "character-amy-sonic",
+      "title": "Эми и Соник",
+      "description": "Скоростные эстафеты и активные игры с героями Соника.",
+      "image": "assets/img/characters/amy-sonic-1200.webp",
+      "alt": "Эми и Соник",
+      "cta_label": "Заказать",
+      "href": "/party-builder/?character=amy-sonic",
+      "active": true,
+      "title_color": "#21165b",
+      "image_position": {
+        "x": 50,
+        "y": 50
+      },
+      "image_zoom": 100,
+      "categories": [
+        "boys",
+        "girls",
+        "cartoons"
+      ],
+      "placements": [
+        "homepage",
+        "catalog",
+        "party_builder"
+      ],
+      "ensemble_members": [
+        "Эми",
+        "Соник"
+      ],
+      "ensemble_included_count": 2,
+      "ensemble_extra_member_price": 0,
+      "ensemble_mode": "fixed_pair"
+    },
+    {
+      "id": "character-steampunk",
+      "title": "Золотые игрушки",
+      "description": "Блестящая пара оживших игрушек для ярких игр и фотографий.",
+      "image": "assets/img/characters/steampunk-1200.webp",
+      "alt": "Золотые игрушки",
+      "cta_label": "Заказать",
+      "href": "/party-builder/?character=steampunk",
+      "active": true,
+      "title_color": "#21165b",
+      "image_position": {
+        "x": 50,
+        "y": 50
+      },
+      "image_zoom": 100,
+      "categories": [
+        "boys",
+        "girls",
+        "cartoons"
+      ],
+      "placements": [
+        "homepage",
+        "catalog",
+        "party_builder"
+      ],
+      "ensemble_members": [
+        "Золотая игрушка (мальчик)",
+        "Золотая игрушка (девочка)"
+      ],
+      "ensemble_included_count": 2,
+      "ensemble_extra_member_price": 0,
+      "ensemble_mode": "fixed_pair"
+    },
+    {
+      "id": "character-gingerbread",
+      "title": "Печеньки",
+      "description": "Озорные Печеньки проводят сладкие испытания и танцы.",
+      "image": "assets/img/characters/gingerbread-1200.webp",
+      "alt": "Печеньки",
+      "cta_label": "Заказать",
+      "href": "/party-builder/?character=gingerbread",
+      "active": true,
+      "title_color": "#21165b",
+      "image_position": {
+        "x": 50,
+        "y": 50
+      },
+      "image_zoom": 100,
+      "categories": [
+        "boys",
+        "girls",
+        "cartoons"
+      ],
+      "placements": [
+        "homepage",
+        "catalog",
+        "party_builder"
+      ],
+      "ensemble_members": [
+        "Печенька (мальчик)",
+        "Печенька (девочка)"
+      ],
+      "ensemble_included_count": 2,
+      "ensemble_extra_member_price": 0,
+      "ensemble_mode": "fixed_pair"
+    },
+    {
+      "id": "character-hosts-mickey-minnie",
+      "title": "Микки Маус и Минни Маус",
+      "description": "Открытые говорящие костюмы для игр, танцев и живого общения.",
+      "image": "assets/img/characters/hosts-mickey-minnie-1200.webp",
+      "alt": "Микки Маус и Минни Маус",
+      "cta_label": "Заказать",
+      "href": "/party-builder/?character=hosts-mickey-minnie",
+      "active": true,
+      "title_color": "#21165b",
+      "image_position": {
+        "x": 50,
+        "y": 50
+      },
+      "image_zoom": 100,
+      "categories": [
+        "boys",
+        "girls",
+        "cartoons"
+      ],
+      "placements": [
+        "homepage",
+        "catalog",
+        "party_builder"
+      ],
+      "ensemble_members": [
+        "Микки Маус",
+        "Минни Маус"
+      ],
+      "ensemble_included_count": 2,
+      "ensemble_extra_member_price": 0,
+      "ensemble_mode": "fixed_pair"
+    },
+    {
+      "id": "character-the-fixies",
+      "title": "Симка и Нолик",
+      "description": "Познавательные игры, маленькие открытия и фиксики на празднике.",
+      "image": "assets/img/characters/the-fixies-1200.webp",
+      "alt": "Симка и Нолик",
+      "cta_label": "Заказать",
+      "href": "/party-builder/?character=the-fixies",
+      "active": true,
+      "title_color": "#21165b",
+      "image_position": {
+        "x": 50,
+        "y": 50
+      },
+      "image_zoom": 100,
+      "categories": [
+        "boys",
+        "girls",
+        "cartoons"
+      ],
+      "placements": [
+        "homepage",
+        "catalog",
+        "party_builder"
+      ],
+      "ensemble_members": [
+        "Симка",
+        "Нолик"
+      ],
+      "ensemble_included_count": 2,
+      "ensemble_extra_member_price": 0,
+      "ensemble_mode": "fixed_pair"
+    },
+    {
+      "id": "character-masha-and-the-bear",
+      "title": "Маша и Медведь",
+      "description": "Добрые шалости, танцы и лесные приключения.",
+      "image": "assets/img/characters/masha-and-the-bear-1200.webp",
+      "alt": "Маша и Медведь",
+      "cta_label": "Заказать",
+      "href": "/party-builder/?character=masha-and-the-bear",
+      "active": true,
+      "title_color": "#21165b",
+      "image_position": {
+        "x": 50,
+        "y": 50
+      },
+      "image_zoom": 100,
+      "categories": [
+        "boys",
+        "girls",
+        "cartoons"
+      ],
+      "placements": [
+        "homepage",
+        "catalog",
+        "party_builder"
+      ],
+      "ensemble_members": [
+        "Маша",
+        "Медведь"
+      ],
+      "ensemble_included_count": 2,
+      "ensemble_extra_member_price": 0,
+      "ensemble_mode": "fixed_pair"
+    },
+    {
+      "id": "character-mommy-baby-shark",
+      "title": "Baby Shark и Mommy Shark",
+      "description": "Морские танцы и весёлые игры всей акульей семьёй.",
+      "image": "assets/img/characters/mommy-baby-shark-1200.webp",
+      "alt": "Baby Shark и Mommy Shark",
+      "cta_label": "Заказать",
+      "href": "/party-builder/?character=mommy-baby-shark",
+      "active": true,
+      "title_color": "#21165b",
+      "image_position": {
+        "x": 50,
+        "y": 50
+      },
+      "image_zoom": 100,
+      "categories": [
+        "boys",
+        "girls",
+        "cartoons"
+      ],
+      "placements": [
+        "homepage",
+        "catalog",
+        "party_builder"
+      ],
+      "ensemble_members": [
+        "Baby Shark",
+        "Mommy Shark"
+      ],
+      "ensemble_included_count": 2,
+      "ensemble_extra_member_price": 0,
+      "ensemble_mode": "fixed_pair"
+    },
+    {
+      "id": "character-hawaiian-party",
+      "title": "Гавайская пара",
+      "description": "Тропические танцы, игры и солнечное настроение.",
+      "image": "assets/img/characters/hawaiian-party-1200.webp",
+      "alt": "Гавайская пара",
+      "cta_label": "Заказать",
+      "href": "/party-builder/?character=hawaiian-party",
+      "active": true,
+      "title_color": "#21165b",
+      "image_position": {
+        "x": 50,
+        "y": 50
+      },
+      "image_zoom": 100,
+      "categories": [
+        "boys",
+        "girls",
+        "cartoons"
+      ],
+      "placements": [
+        "homepage",
+        "catalog",
+        "party_builder"
+      ],
+      "ensemble_members": [
+        "Гаваец",
+        "Гавайка"
+      ],
+      "ensemble_included_count": 2,
+      "ensemble_extra_member_price": 0,
+      "ensemble_mode": "fixed_pair"
+    },
+    {
+      "id": "character-tribal-party",
+      "title": "Индейская пара",
+      "description": "Командные испытания, танцы и приключение племени.",
+      "image": "assets/img/characters/tribal-party-1200.webp",
+      "alt": "Индейская пара",
+      "cta_label": "Заказать",
+      "href": "/party-builder/?character=tribal-party",
+      "active": true,
+      "title_color": "#21165b",
+      "image_position": {
+        "x": 50,
+        "y": 50
+      },
+      "image_zoom": 100,
+      "categories": [
+        "boys",
+        "girls",
+        "cartoons"
+      ],
+      "placements": [
+        "homepage",
+        "catalog",
+        "party_builder"
+      ],
+      "ensemble_members": [
+        "Индеец",
+        "Индианка"
+      ],
+      "ensemble_included_count": 2,
+      "ensemble_extra_member_price": 0,
+      "ensemble_mode": "fixed_pair"
+    },
+    {
+      "id": "character-jasmine-aladdin",
+      "title": "Аладдин и Жасмин",
+      "description": "Восточная сказка, волшебные задания и танцы.",
+      "image": "assets/img/characters/jasmine-aladdin-1200.webp",
+      "alt": "Аладдин и Жасмин",
+      "cta_label": "Заказать",
+      "href": "/party-builder/?character=jasmine-aladdin",
+      "active": true,
+      "title_color": "#21165b",
+      "image_position": {
+        "x": 50,
+        "y": 50
+      },
+      "image_zoom": 100,
+      "categories": [
+        "princesses",
+        "boys",
+        "girls"
+      ],
+      "placements": [
+        "homepage",
+        "catalog",
+        "party_builder"
+      ],
+      "ensemble_members": [
+        "Аладдин",
+        "Жасмин"
+      ],
+      "ensemble_included_count": 2,
+      "ensemble_extra_member_price": 0,
+      "ensemble_mode": "fixed_pair"
+    },
+    {
+      "id": "character-sailors",
+      "title": "Моряк и Морячка",
+      "description": "Морские эстафеты и путешествие отважной команды.",
+      "image": "assets/img/characters/sailors-1200.webp",
+      "alt": "Моряк и Морячка",
+      "cta_label": "Заказать",
+      "href": "/party-builder/?character=sailors",
+      "active": true,
+      "title_color": "#21165b",
+      "image_position": {
+        "x": 50,
+        "y": 50
+      },
+      "image_zoom": 100,
+      "categories": [
+        "boys",
+        "girls",
+        "cartoons"
+      ],
+      "placements": [
+        "homepage",
+        "catalog",
+        "party_builder"
+      ],
+      "ensemble_members": [
+        "Моряк",
+        "Морячка"
+      ],
+      "ensemble_included_count": 2,
+      "ensemble_extra_member_price": 0,
+      "ensemble_mode": "fixed_pair"
+    },
+    {
+      "id": "character-stitch-angel",
+      "title": "Стич и Энджел",
+      "description": "Космические шалости, объятия и зажигательные танцы.",
+      "image": "assets/img/characters/stitch-angel-1200.webp",
+      "alt": "Стич и Энджел",
+      "cta_label": "Заказать",
+      "href": "/party-builder/?character=stitch-angel",
+      "active": true,
+      "title_color": "#21165b",
+      "image_position": {
+        "x": 50,
+        "y": 50
+      },
+      "image_zoom": 100,
+      "categories": [
+        "boys",
+        "girls",
+        "cartoons"
+      ],
+      "placements": [
+        "homepage",
+        "catalog",
+        "party_builder"
+      ],
+      "ensemble_members": [
+        "Стич",
+        "Энджел"
+      ],
+      "ensemble_included_count": 2,
+      "ensemble_extra_member_price": 0,
+      "ensemble_mode": "fixed_pair"
+    },
+    {
+      "id": "character-neon-jesters-pair",
+      "title": "Неоновые ведущие",
+      "description": "Парные неоновые ведущие для светящихся игр, танцев и яркого шоу.",
+      "image": "assets/img/characters/neon-jesters-1200.webp",
+      "alt": "Неоновые ведущие",
+      "cta_label": "Заказать",
+      "href": "/party-builder/?character=neon-jesters-pair",
+      "active": true,
+      "title_color": "#21165b",
+      "image_position": {
+        "x": 50,
+        "y": 50
+      },
+      "image_zoom": 100,
+      "categories": [
+        "boys",
+        "girls",
+        "cartoons"
+      ],
+      "placements": [
+        "homepage",
+        "catalog",
+        "party_builder"
+      ],
+      "ensemble_members": [
+        "Неоновый ведущий",
+        "Неоновая ведущая"
+      ],
+      "ensemble_included_count": 2,
+      "ensemble_extra_member_price": 0,
+      "ensemble_mode": "fixed_pair"
+    },
+    {
+      "id": "character-mcqueen-assistant",
+      "title": "Маквин и Помощница",
+      "description": "Гоночные задания, скорость и настоящий пит-стоп.",
+      "image": "assets/img/characters/mcqueen-assistant-1200.webp",
+      "alt": "Маквин и Помощница",
+      "cta_label": "Заказать",
+      "href": "/party-builder/?character=mcqueen-assistant",
+      "active": true,
+      "title_color": "#21165b",
+      "image_position": {
+        "x": 50,
+        "y": 50
+      },
+      "image_zoom": 100,
+      "categories": [
+        "boys",
+        "girls",
+        "cartoons"
+      ],
+      "placements": [
+        "homepage",
+        "catalog",
+        "party_builder"
+      ],
+      "ensemble_members": [
+        "Маквин",
+        "Помощница"
+      ],
+      "ensemble_included_count": 2,
+      "ensemble_extra_member_price": 0,
+      "ensemble_mode": "fixed_pair"
+    },
+    {
+      "id": "character-pink-blue-fairies",
+      "title": "Розовая и Голубая феи",
+      "description": "Воздушная сказка, волшебные задания и красивые танцы.",
+      "image": "assets/img/characters/pink-blue-fairies-1200.webp",
+      "alt": "Розовая и Голубая феи",
+      "cta_label": "Заказать",
+      "href": "/party-builder/?character=pink-blue-fairies",
+      "active": true,
+      "title_color": "#21165b",
+      "image_position": {
+        "x": 50,
+        "y": 50
+      },
+      "image_zoom": 100,
+      "categories": [
+        "princesses",
+        "girls"
+      ],
+      "placements": [
+        "homepage",
+        "catalog",
+        "party_builder"
+      ],
+      "ensemble_members": [
+        "Розовая фея",
+        "Голубая фея"
+      ],
+      "ensemble_included_count": 2,
+      "ensemble_extra_member_price": 0,
+      "ensemble_mode": "fixed_pair"
+    },
+    {
+      "id": "character-superman-supergirl",
+      "title": "Супермен и Супервумен",
+      "description": "Команда супергероев тренирует силу, ловкость и смелость.",
+      "image": "assets/img/characters/superman-supergirl-1200.webp",
+      "alt": "Супермен и Супервумен",
+      "cta_label": "Заказать",
+      "href": "/party-builder/?character=superman-supergirl",
+      "active": true,
+      "title_color": "#21165b",
+      "image_position": {
+        "x": 50,
+        "y": 50
+      },
+      "image_zoom": 100,
+      "categories": [
+        "superheroes",
+        "boys",
+        "girls"
+      ],
+      "placements": [
+        "homepage",
+        "catalog",
+        "party_builder"
+      ],
+      "ensemble_members": [
+        "Супермен",
+        "Супервумен"
+      ],
+      "ensemble_included_count": 2,
+      "ensemble_extra_member_price": 0,
+      "ensemble_mode": "fixed_pair"
+    },
+    {
+      "id": "character-kuromi-melody",
+      "title": "Куроми и Мелоди",
+      "description": "Стильная розово-фиолетовая вечеринка с играми и танцами.",
+      "image": "assets/img/characters/kuromi-melody-1200.webp",
+      "alt": "Куроми и Мелоди",
+      "cta_label": "Заказать",
+      "href": "/party-builder/?character=kuromi-melody",
+      "active": true,
+      "title_color": "#21165b",
+      "image_position": {
+        "x": 50,
+        "y": 50
+      },
+      "image_zoom": 100,
+      "categories": [
+        "boys",
+        "girls",
+        "cartoons"
+      ],
+      "placements": [
+        "homepage",
+        "catalog",
+        "party_builder"
+      ],
+      "ensemble_members": [
+        "Куроми",
+        "Мелоди"
+      ],
+      "ensemble_included_count": 2,
+      "ensemble_extra_member_price": 0,
+      "ensemble_mode": "fixed_pair"
+    },
+    {
+      "id": "character-youtube-tiktok",
+      "title": "Ютуб и ТикТок",
+      "description": "Трендовая пара ведущих устроит музыкальные челленджи, танцы и яркие командные игры.",
+      "image": "assets/img/characters/youtube-tiktok-1200.webp",
+      "alt": "Ютуб и ТикТок",
+      "cta_label": "Заказать",
+      "href": "/party-builder/?character=youtube-tiktok",
+      "active": true,
+      "title_color": "#21165b",
+      "image_position": {
+        "x": 50,
+        "y": 50
+      },
+      "image_zoom": 100,
+      "categories": [
+        "boys",
+        "girls"
+      ],
+      "placements": [
+        "homepage",
+        "catalog",
+        "party_builder"
+      ],
+      "ensemble_members": [
+        "Ютуб",
+        "ТикТок"
+      ],
+      "ensemble_included_count": 2,
+      "ensemble_extra_member_price": 0,
+      "ensemble_mode": "fixed_pair"
+    },
+    {
+      "id": "character-harry-hermione",
+      "title": "Гарри Поттер и Гермиона",
+      "description": "Урок волшебства с заклинаниями, загадками и командными испытаниями для юных магов.",
+      "image": "assets/img/characters/harry-hermione-1200.webp",
+      "alt": "Гарри Поттер и Гермиона",
+      "cta_label": "Заказать",
+      "href": "/party-builder/?character=harry-hermione",
+      "active": true,
+      "title_color": "#21165b",
+      "image_position": {
+        "x": 50,
+        "y": 50
+      },
+      "image_zoom": 100,
+      "categories": [
+        "boys",
+        "girls"
+      ],
+      "placements": [
+        "homepage",
+        "catalog",
+        "party_builder"
+      ],
+      "ensemble_members": [
+        "Гарри Поттер",
+        "Гермиона"
+      ],
+      "ensemble_included_count": 2,
+      "ensemble_extra_member_price": 0,
+      "ensemble_mode": "fixed_pair"
+    },
+    {
+      "id": "character-spiderman-n1",
+      "title": "Человек-паук №1",
+      "description": "Супергеройские задания, ловкость и паутина.",
+      "image": "assets/img/characters/spiderman-n1-1200.webp",
+      "alt": "Человек-паук №1",
+      "cta_label": "Заказать",
+      "href": "/party-builder/?character=spiderman-n1",
+      "active": true,
+      "title_color": "#21165b",
+      "image_position": {
+        "x": 50,
+        "y": 50
+      },
+      "image_zoom": 100,
+      "categories": [
+        "superheroes",
+        "boys"
+      ],
+      "placements": [
+        "homepage",
+        "catalog",
+        "party_builder"
+      ]
+    },
+    {
+      "id": "character-spiderman-n2",
+      "title": "Человек-паук №2",
+      "description": "Ещё один костюм героя для командной супергеройской программы.",
+      "image": "assets/img/characters/spiderman-n2-1200.webp",
+      "alt": "Человек-паук №2",
+      "cta_label": "Заказать",
+      "href": "/party-builder/?character=spiderman-n2",
+      "active": true,
+      "title_color": "#21165b",
+      "image_position": {
+        "x": 50,
+        "y": 50
+      },
+      "image_zoom": 100,
+      "categories": [
+        "superheroes",
+        "boys"
+      ],
+      "placements": [
+        "homepage",
+        "catalog",
+        "party_builder"
+      ]
+    },
+    {
+      "id": "character-hulk",
+      "title": "Халк (ростовой)",
+      "description": "Сила, эстафеты и эффектное появление зелёного великана.",
+      "image": "assets/img/characters/hulk-1200.webp",
+      "alt": "Халк (ростовой)",
+      "cta_label": "Заказать",
+      "href": "/party-builder/?character=hulk",
+      "active": true,
+      "title_color": "#21165b",
+      "image_position": {
+        "x": 50,
+        "y": 50
+      },
+      "image_zoom": 100,
+      "categories": [
+        "superheroes",
+        "boys"
+      ],
+      "placements": [
+        "homepage",
+        "catalog",
+        "party_builder"
+      ],
+      "service_notes": [
+        "Ростовой персонаж выступает минимум с двумя открытыми говорящими ведущими."
+      ]
+    },
+    {
+      "id": "character-captain-america",
+      "title": "Капитан Америка",
+      "description": "Тренировка героев, щит и командные испытания.",
+      "image": "assets/img/characters/captain-america-1200.webp",
+      "alt": "Капитан Америка",
+      "cta_label": "Заказать",
+      "href": "/party-builder/?character=captain-america",
+      "active": true,
+      "title_color": "#21165b",
+      "image_position": {
+        "x": 50,
+        "y": 50
+      },
+      "image_zoom": 100,
+      "categories": [
+        "superheroes",
+        "boys"
+      ],
+      "placements": [
+        "homepage",
+        "catalog",
+        "party_builder"
+      ]
+    },
+    {
+      "id": "character-deadpool",
+      "title": "Дэдпул",
+      "description": "Драйвовые задания и яркая супергеройская программа.",
+      "image": "assets/img/characters/deadpool-1200.webp",
+      "alt": "Дэдпул",
+      "cta_label": "Заказать",
+      "href": "/party-builder/?character=deadpool",
+      "active": true,
+      "title_color": "#21165b",
+      "image_position": {
+        "x": 50,
+        "y": 50
+      },
+      "image_zoom": 100,
+      "categories": [
+        "superheroes",
+        "boys"
+      ],
+      "placements": [
+        "homepage",
+        "catalog",
+        "party_builder"
+      ]
+    },
+    {
+      "id": "character-black-panther",
+      "title": "Чёрная Пантера",
+      "description": "Ловкость, тайные миссии и сила Ваканды.",
+      "image": "assets/img/characters/black-panther-1200.webp",
+      "alt": "Чёрная Пантера",
+      "cta_label": "Заказать",
+      "href": "/party-builder/?character=black-panther",
+      "active": true,
+      "title_color": "#21165b",
+      "image_position": {
+        "x": 50,
+        "y": 50
+      },
+      "image_zoom": 100,
+      "categories": [
+        "superheroes",
+        "boys"
+      ],
+      "placements": [
+        "homepage",
+        "catalog",
+        "party_builder"
+      ]
+    },
+    {
+      "id": "character-digital-circus",
+      "title": "Помни",
+      "description": "Необычные игры из мира Удивительного цифрового цирка.",
+      "image": "assets/img/characters/digital-circus-1200.webp",
+      "alt": "Помни",
+      "cta_label": "Заказать",
+      "href": "/party-builder/?character=digital-circus",
+      "active": true,
+      "title_color": "#21165b",
+      "image_position": {
+        "x": 50,
+        "y": 50
+      },
+      "image_zoom": 100,
+      "categories": [
+        "boys",
+        "girls",
+        "cartoons"
+      ],
+      "placements": [
+        "homepage",
+        "catalog",
+        "party_builder"
+      ]
+    },
+    {
+      "id": "character-lol-mascot",
+      "title": "Кукла L.O.L. (ростовая)",
+      "description": "Яркая модная героиня для танцев и фотографий.",
+      "image": "assets/img/characters/lol-mascot-1200.webp",
+      "alt": "Кукла L.O.L. (ростовая)",
+      "cta_label": "Заказать",
+      "href": "/party-builder/?character=lol-mascot",
+      "active": true,
+      "title_color": "#21165b",
+      "image_position": {
+        "x": 50,
+        "y": 50
+      },
+      "image_zoom": 100,
+      "categories": [
+        "boys",
+        "girls",
+        "cartoons"
+      ],
+      "placements": [
+        "homepage",
+        "catalog",
+        "party_builder"
+      ],
+      "service_notes": [
+        "Ростовой персонаж выступает минимум с двумя открытыми говорящими ведущими."
+      ]
+    },
+    {
+      "id": "character-gingerbread-mascot",
+      "title": "Печенька (ростовой)",
+      "description": "Большая весёлая Печенька для эффектного появления.",
+      "image": "assets/img/characters/gingerbread-mascot-1200.webp",
+      "alt": "Печенька (ростовой)",
+      "cta_label": "Заказать",
+      "href": "/party-builder/?character=gingerbread-mascot",
+      "active": true,
+      "title_color": "#21165b",
+      "image_position": {
+        "x": 50,
+        "y": 50
+      },
+      "image_zoom": 100,
+      "categories": [
+        "boys",
+        "girls",
+        "cartoons"
+      ],
+      "placements": [
+        "homepage",
+        "catalog",
+        "party_builder"
+      ],
+      "service_notes": [
+        "Ростовой персонаж выступает минимум с двумя открытыми говорящими ведущими."
+      ]
+    },
+    {
+      "id": "character-tiger-mascot",
+      "title": "Тигр (ростовой)",
+      "description": "Добрый полосатый герой для танцев и активных игр.",
+      "image": "assets/img/characters/tiger-mascot-1200.webp",
+      "alt": "Тигр (ростовой)",
+      "cta_label": "Заказать",
+      "href": "/party-builder/?character=tiger-mascot",
+      "active": true,
+      "title_color": "#21165b",
+      "image_position": {
+        "x": 50,
+        "y": 50
+      },
+      "image_zoom": 100,
+      "categories": [
+        "boys",
+        "girls",
+        "cartoons"
+      ],
+      "placements": [
+        "homepage",
+        "catalog",
+        "party_builder"
+      ],
+      "service_notes": [
+        "Ростовой персонаж выступает минимум с двумя открытыми говорящими ведущими."
+      ]
+    },
+    {
+      "id": "character-winnie-pooh",
+      "title": "Винни-Пух",
+      "description": "Добрые игры и тёплая встреча с любимым медвежонком.",
+      "image": "assets/img/characters/winnie-tigger-1200.webp",
+      "alt": "Винни-Пух",
+      "cta_label": "Заказать",
+      "href": "/party-builder/?character=winnie-pooh",
+      "active": true,
+      "title_color": "#21165b",
+      "image_position": {
+        "x": 50,
+        "y": 50
+      },
+      "image_zoom": 100,
+      "categories": [
+        "boys",
+        "girls",
+        "cartoons"
+      ],
+      "placements": [
+        "homepage",
+        "catalog",
+        "party_builder"
+      ],
+      "costume_type": "ростовой"
+    },
+    {
+      "id": "character-rapunzel",
+      "title": "Рапунцель",
+      "description": "Сказочные задания, танцы и мечта о волшебных фонариках.",
+      "image": "assets/img/characters/rapunzel-1200.webp",
+      "alt": "Рапунцель",
+      "cta_label": "Заказать",
+      "href": "/party-builder/?character=rapunzel",
+      "active": true,
+      "title_color": "#21165b",
+      "image_position": {
+        "x": 50,
+        "y": 50
+      },
+      "image_zoom": 100,
+      "categories": [
+        "princesses",
+        "girls"
+      ],
+      "placements": [
+        "homepage",
+        "catalog",
+        "party_builder"
+      ]
+    },
+    {
+      "id": "character-belle",
+      "title": "Белоснежка",
+      "description": "Добрая сказка, музыкальные игры и королевские танцы.",
+      "image": "assets/img/characters/belle-1200.webp",
+      "alt": "Белоснежка",
+      "cta_label": "Заказать",
+      "href": "/party-builder/?character=belle",
+      "active": true,
+      "title_color": "#21165b",
+      "image_position": {
+        "x": 50,
+        "y": 50
+      },
+      "image_zoom": 100,
+      "categories": [
+        "princesses",
+        "girls"
+      ],
+      "placements": [
+        "homepage",
+        "catalog",
+        "party_builder"
+      ]
+    },
+    {
+      "id": "character-sasuke",
+      "title": "Саске",
+      "description": "Ниндзя-тренировка, ловкость и командные испытания.",
+      "image": "assets/img/characters/sasuke-1200.webp",
+      "alt": "Саске",
+      "cta_label": "Заказать",
+      "href": "/party-builder/?character=sasuke",
+      "active": true,
+      "title_color": "#21165b",
+      "image_position": {
+        "x": 50,
+        "y": 50
+      },
+      "image_zoom": 100,
+      "categories": [
+        "boys",
+        "girls",
+        "cartoons"
+      ],
+      "placements": [
+        "homepage",
+        "catalog",
+        "party_builder"
+      ]
+    },
+    {
+      "id": "character-little-ponies",
+      "title": "Радужная фея",
+      "description": "Волшебные игры, блёстки и радужное настроение.",
+      "image": "assets/img/characters/little-ponies-1200.webp",
+      "alt": "Радужная фея",
+      "cta_label": "Заказать",
+      "href": "/party-builder/?character=little-ponies",
+      "active": true,
+      "title_color": "#21165b",
+      "image_position": {
+        "x": 50,
+        "y": 50
+      },
+      "image_zoom": 100,
+      "categories": [
+        "princesses",
+        "girls"
+      ],
+      "placements": [
+        "homepage",
+        "catalog",
+        "party_builder"
+      ]
+    },
+    {
+      "id": "character-mickey-mascot",
+      "title": "Микки Маус (ростовой)",
+      "description": "Большой Микки для яркой встречи и фотографий.",
+      "image": "assets/img/characters/mickey-mascot-1200.webp",
+      "alt": "Микки Маус (ростовой)",
+      "cta_label": "Заказать",
+      "href": "/party-builder/?character=mickey-mascot",
+      "active": true,
+      "title_color": "#21165b",
+      "image_position": {
+        "x": 50,
+        "y": 50
+      },
+      "image_zoom": 100,
+      "categories": [
+        "boys",
+        "girls",
+        "cartoons"
+      ],
+      "placements": [
+        "homepage",
+        "catalog",
+        "party_builder"
+      ],
+      "service_notes": [
+        "Ростовой персонаж выступает минимум с двумя открытыми говорящими ведущими."
+      ]
+    },
+    {
+      "id": "character-minnie-mascot",
+      "title": "Минни Маус (ростовая)",
+      "description": "Большая Минни для танцев и памятных фотографий.",
+      "image": "assets/img/characters/minnie-mascot-1200.webp",
+      "alt": "Минни Маус (ростовая)",
+      "cta_label": "Заказать",
+      "href": "/party-builder/?character=minnie-mascot",
+      "active": true,
+      "title_color": "#21165b",
+      "image_position": {
+        "x": 50,
+        "y": 50
+      },
+      "image_zoom": 100,
+      "categories": [
+        "boys",
+        "girls",
+        "cartoons"
+      ],
+      "placements": [
+        "homepage",
+        "catalog",
+        "party_builder"
+      ],
+      "service_notes": [
+        "Ростовой персонаж выступает минимум с двумя открытыми говорящими ведущими."
+      ]
+    },
+    {
+      "id": "character-ronaldo-mascot",
+      "title": "Роналду (ростовой)",
+      "description": "Футбольные эмоции и встреча со звездой поля.",
+      "image": "assets/img/characters/ronaldo-mascot-1200.webp",
+      "alt": "Роналду (ростовой)",
+      "cta_label": "Заказать",
+      "href": "/party-builder/?character=ronaldo-mascot",
+      "active": true,
+      "title_color": "#21165b",
+      "image_position": {
+        "x": 50,
+        "y": 50
+      },
+      "image_zoom": 100,
+      "categories": [
+        "boys"
+      ],
+      "placements": [
+        "homepage",
+        "catalog",
+        "party_builder"
+      ],
+      "service_notes": [
+        "Ростовой персонаж выступает минимум с двумя открытыми говорящими ведущими."
+      ]
+    },
+    {
+      "id": "character-messi-mascot",
+      "title": "Месси (ростовой)",
+      "description": "Футбольные задания и эффектное появление легенды.",
+      "image": "assets/img/characters/messi-mascot-1200.webp",
+      "alt": "Месси (ростовой)",
+      "cta_label": "Заказать",
+      "href": "/party-builder/?character=messi-mascot",
+      "active": true,
+      "title_color": "#21165b",
+      "image_position": {
+        "x": 50,
+        "y": 50
+      },
+      "image_zoom": 100,
+      "categories": [
+        "boys"
+      ],
+      "placements": [
+        "homepage",
+        "catalog",
+        "party_builder"
+      ],
+      "service_notes": [
+        "Ростовой персонаж выступает минимум с двумя открытыми говорящими ведущими."
+      ]
+    },
+    {
+      "id": "character-cheerleader-yellow",
+      "title": "Черлидерша (жёлтая)",
+      "description": "Энергичная поддержка, танцы и командные кричалки.",
+      "image": "assets/img/characters/cheerleader-yellow-1200.webp",
+      "alt": "Черлидерша (жёлтая)",
+      "cta_label": "Заказать",
+      "href": "/party-builder/?character=cheerleader-yellow",
+      "active": true,
+      "title_color": "#21165b",
+      "image_position": {
+        "x": 50,
+        "y": 50
+      },
+      "image_zoom": 100,
+      "categories": [
+        "girls"
+      ],
+      "placements": [
+        "homepage",
+        "catalog",
+        "party_builder"
+      ]
+    },
+    {
+      "id": "character-cheerleader-red",
+      "title": "Черлидерша (красная)",
+      "description": "Спортивный драйв, танцы и яркие командные игры.",
+      "image": "assets/img/characters/cheerleader-red-1200.webp",
+      "alt": "Черлидерша (красная)",
+      "cta_label": "Заказать",
+      "href": "/party-builder/?character=cheerleader-red",
+      "active": true,
+      "title_color": "#21165b",
+      "image_position": {
+        "x": 50,
+        "y": 50
+      },
+      "image_zoom": 100,
+      "categories": [
+        "girls"
+      ],
+      "placements": [
+        "homepage",
+        "catalog",
+        "party_builder"
+      ]
+    },
+    {
+      "id": "character-football-ball",
+      "title": "Футбольный мяч",
+      "description": "Весёлый футбольный герой для эстафет и фотографий.",
+      "image": "assets/img/characters/football-ball-1200.webp",
+      "alt": "Футбольный мяч",
+      "cta_label": "Заказать",
+      "href": "/party-builder/?character=football-ball",
+      "active": true,
+      "title_color": "#21165b",
+      "image_position": {
+        "x": 50,
+        "y": 50
+      },
+      "image_zoom": 100,
+      "categories": [
+        "boys"
+      ],
+      "placements": [
+        "homepage",
+        "catalog",
+        "party_builder"
+      ]
+    },
+    {
+      "id": "character-goalkeeper",
+      "title": "Вратарь",
+      "description": "Футбольные конкурсы, ловкость и командная игра.",
+      "image": "assets/img/characters/goalkeeper-1200.webp",
+      "alt": "Вратарь",
+      "cta_label": "Заказать",
+      "href": "/party-builder/?character=goalkeeper",
+      "active": true,
+      "title_color": "#21165b",
+      "image_position": {
+        "x": 50,
+        "y": 50
+      },
+      "image_zoom": 100,
+      "categories": [
+        "boys"
+      ],
+      "placements": [
+        "homepage",
+        "catalog",
+        "party_builder"
+      ]
+    },
+    {
+      "id": "character-hello-kitty",
+      "title": "Хеллоу Китти",
+      "description": "Нежная героиня для танцев, игр и красивых фотографий.",
+      "image": "assets/img/characters/hello-kitty-1200.webp",
+      "alt": "Хеллоу Китти",
+      "cta_label": "Заказать",
+      "href": "/party-builder/?character=hello-kitty",
+      "active": true,
+      "title_color": "#21165b",
+      "image_position": {
+        "x": 50,
+        "y": 50
+      },
+      "image_zoom": 100,
+      "categories": [
+        "girls"
+      ],
+      "placements": [
+        "homepage",
+        "catalog",
+        "party_builder"
+      ]
+    },
+    {
+      "id": "character-brawl-stars",
+      "title": "Шелли, Леон и Ворон",
+      "description": "Командная битва и испытания по мотивам Brawl Stars.",
+      "image": "assets/img/characters/brawl-stars-1200.webp",
+      "alt": "Шелли, Леон и Ворон",
+      "cta_label": "Заказать",
+      "href": "/party-builder/?character=brawl-stars",
+      "active": true,
+      "title_color": "#21165b",
+      "image_position": {
+        "x": 50,
+        "y": 50
+      },
+      "image_zoom": 100,
+      "categories": [
+        "boys",
+        "girls",
+        "cartoons"
+      ],
+      "placements": [
+        "homepage",
+        "catalog",
+        "party_builder"
+      ],
+      "ensemble_members": [
+        "Шелли",
+        "Леон",
+        "Ворон (ростовой)"
+      ],
+      "ensemble_included_count": 2,
+      "ensemble_extra_member_price": 0,
+      "ensemble_mode": "choose_any",
+      "service_notes": [
+        "Ворон — ростовой персонаж; действует правило двух открытых ведущих."
+      ]
+    },
+    {
+      "id": "character-kid-e-cats",
+      "title": "Три кота",
+      "description": "Коржик, Компот и Карамелька устраивают игры и танцы.",
+      "image": "assets/img/characters/kid-e-cats-1200.webp",
+      "alt": "Три кота",
+      "cta_label": "Заказать",
+      "href": "/party-builder/?character=kid-e-cats",
+      "active": true,
+      "title_color": "#21165b",
+      "image_position": {
+        "x": 50,
+        "y": 50
+      },
+      "image_zoom": 100,
+      "categories": [
+        "boys",
+        "girls",
+        "cartoons"
+      ],
+      "placements": [
+        "homepage",
+        "catalog",
+        "party_builder"
+      ],
+      "ensemble_members": [
+        "Коржик",
+        "Компот",
+        "Карамелька"
+      ],
+      "ensemble_included_count": 2,
+      "ensemble_extra_member_price": 0,
+      "ensemble_mode": "choose_any"
+    },
+    {
+      "id": "character-anna-elsa-olaf",
+      "title": "Анна, Эльза и Олаф",
+      "description": "Снежная сказка, волшебные задания и танцы.",
+      "image": "assets/img/characters/anna-elsa-olaf-1200.webp",
+      "alt": "Анна, Эльза и Олаф",
+      "cta_label": "Заказать",
+      "href": "/party-builder/?character=anna-elsa-olaf",
+      "active": true,
+      "title_color": "#21165b",
+      "image_position": {
+        "x": 50,
+        "y": 50
+      },
+      "image_zoom": 100,
+      "categories": [
+        "princesses",
+        "boys",
+        "girls"
+      ],
+      "placements": [
+        "homepage",
+        "catalog",
+        "party_builder"
+      ],
+      "ensemble_members": [
+        "Анна",
+        "Эльза",
+        "Олаф (ростовой)"
+      ],
+      "ensemble_included_count": 2,
+      "ensemble_extra_member_price": 0,
+      "ensemble_mode": "choose_any",
+      "service_notes": [
+        "Олаф — ростовой персонаж; действует правило двух открытых ведущих."
+      ]
+    },
+    {
+      "id": "character-surpriz-clown",
+      "title": "D Billions",
+      "description": "Чикки, Ляля и Бум-Бум проводят музыкальные игры.",
+      "image": "assets/img/characters/surpriz-clown-1200.webp",
+      "alt": "D Billions",
+      "cta_label": "Заказать",
+      "href": "/party-builder/?character=surpriz-clown",
+      "active": true,
+      "title_color": "#21165b",
+      "image_position": {
+        "x": 50,
+        "y": 50
+      },
+      "image_zoom": 100,
+      "categories": [
+        "boys",
+        "girls",
+        "cartoons"
+      ],
+      "placements": [
+        "homepage",
+        "catalog",
+        "party_builder"
+      ],
+      "ensemble_members": [
+        "Чикки",
+        "Ляля",
+        "Бум-Бум"
+      ],
+      "ensemble_included_count": 2,
+      "ensemble_extra_member_price": 0,
+      "ensemble_mode": "choose_any"
+    },
+    {
+      "id": "character-safari",
+      "title": "Сафари",
+      "description": "Исследовательская экспедиция с динозавром и заданиями.",
+      "image": "assets/img/characters/safari-1200.webp",
+      "alt": "Сафари",
+      "cta_label": "Заказать",
+      "href": "/party-builder/?character=safari",
+      "active": true,
+      "title_color": "#21165b",
+      "image_position": {
+        "x": 50,
+        "y": 50
+      },
+      "image_zoom": 100,
+      "categories": [
+        "boys",
+        "girls",
+        "cartoons"
+      ],
+      "placements": [
+        "homepage",
+        "catalog",
+        "party_builder"
+      ],
+      "ensemble_members": [
+        "Сафари (мальчик)",
+        "Сафари (девочка)",
+        "Динозавр (ростовой)"
+      ],
+      "ensemble_included_count": 2,
+      "ensemble_extra_member_price": 0,
+      "ensemble_mode": "choose_any",
+      "service_notes": [
+        "Динозавр — ростовой персонаж; действует правило двух открытых ведущих."
+      ]
+    },
+    {
+      "id": "character-neptune-mermaids",
+      "title": "Нептун и русалочки",
+      "description": "Подводная сказка с Нептуном и двумя русалочками.",
+      "image": "assets/img/characters/neptune-mermaids-1200.webp",
+      "alt": "Нептун и русалочки",
+      "cta_label": "Заказать",
+      "href": "/party-builder/?character=neptune-mermaids",
+      "active": true,
+      "title_color": "#21165b",
+      "image_position": {
+        "x": 50,
+        "y": 50
+      },
+      "image_zoom": 100,
+      "categories": [
+        "princesses",
+        "boys",
+        "girls"
+      ],
+      "placements": [
+        "homepage",
+        "catalog",
+        "party_builder"
+      ],
+      "ensemble_members": [
+        "Нептун",
+        "Русалочка (розовая)",
+        "Русалочка (зелёная)"
+      ],
+      "ensemble_included_count": 2,
+      "ensemble_extra_member_price": 0,
+      "ensemble_mode": "choose_any",
+      "base_price": 25000,
+      "service_notes": [
+        "При выборе Нептуна добавляется 25 000 сум."
+      ]
+    },
+    {
+      "id": "character-labubu-quad",
+      "title": "Лабубу и Зимомо",
+      "description": "Четыре ярких героя: выберите любых двух или расширьте состав.",
+      "image": "assets/img/characters/labubu-quad-1200.webp",
+      "alt": "Лабубу и Зимомо",
+      "cta_label": "Заказать",
+      "href": "/party-builder/?character=labubu-quad",
+      "active": true,
+      "title_color": "#21165b",
+      "image_position": {
+        "x": 50,
+        "y": 50
+      },
+      "image_zoom": 100,
+      "categories": [
+        "boys",
+        "girls",
+        "cartoons"
+      ],
+      "placements": [
+        "homepage",
+        "catalog",
+        "party_builder"
+      ],
+      "ensemble_members": [
+        "Лабубу (ментоловый)",
+        "Лабубу (розовый)",
+        "Лабубу (радужный)",
+        "Зимомо (ростовой)"
+      ],
+      "ensemble_included_count": 2,
+      "ensemble_extra_member_price": 0,
+      "ensemble_mode": "choose_any",
+      "service_notes": [
+        "Зимомо — ростовой персонаж; действует правило двух открытых ведущих."
+      ]
+    }
+  ]
+}

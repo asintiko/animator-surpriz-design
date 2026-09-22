@@ -1,0 +1,181 @@
+<link rel="stylesheet" href="/v2/v2-account.css?v=20260807-accepted2">
+
+<main class="v2-main accepted-page" id="content">
+  <section class="accepted-shell" aria-labelledby="order-accepted-title" aria-live="polite">
+    <div class="v2-container accepted-layout">
+      <article class="accepted-card accepted-card--main">
+        <div class="accepted-card__head">
+          <span class="accepted-check" aria-hidden="true">
+            <svg class="v2-i"><use href="#i-check"/></svg>
+          </span>
+          <div class="accepted-card__head-copy">
+            <span class="accepted-eyebrow">Праздник начинается здесь</span>
+            <h1 id="order-accepted-title">Заказ принят!</h1>
+          </div>
+        </div>
+
+        <p class="accepted-lead">
+          Заявка <strong>{{ order.public_id }}</strong> уже у нашей команды. Менеджер проверит детали и свяжется с вами для подтверждения.
+        </p>
+
+        <div class="accepted-state">
+          <span class="accepted-state__dot" aria-hidden="true"></span>
+          <span>Передан менеджеру</span>
+        </div>
+
+        <dl class="accepted-summary" aria-label="Краткая информация о заказе">
+          <div class="accepted-summary__item">
+            <dt>
+              <svg class="v2-i" aria-hidden="true"><use href="#i-sparkles"/></svg>
+              Программа
+            </dt>
+            <dd>{{ order.program_name or 'Праздник с персонажами' }}</dd>
+          </div>
+          <div class="accepted-summary__item">
+            <dt>
+              <svg class="v2-i" aria-hidden="true"><use href="#i-calendar"/></svg>
+              Дата и время
+            </dt>
+            <dd>
+              {{ order.celebration_date_label or order.celebration_date }}
+              {% if order.time_from or order.time_to %}
+                <span>{% if order.time_from and order.time_to %}{{ order.time_from }}–{{ order.time_to }}{% else %}{{ order.time_from or order.time_to }}{% endif %}</span>
+              {% endif %}
+            </dd>
+          </div>
+          {% if order.character_names %}
+            <div class="accepted-summary__item">
+              <dt>
+                <svg class="v2-i" aria-hidden="true"><use href="#i-mask"/></svg>
+                Герои
+              </dt>
+              <dd>{{ order.character_names | join(', ') }}</dd>
+            </div>
+          {% endif %}
+          {% if order.celebrant_name or order.celebrant_age or order.children_count %}
+            <div class="accepted-summary__item">
+              <dt>
+                <svg class="v2-i" aria-hidden="true"><use href="#i-cake"/></svg>
+                Именинник
+              </dt>
+              <dd>
+                {{ order.celebrant_name }}{% if order.celebrant_age %}, {{ order.celebrant_age }} лет{% endif %}
+                {% if order.children_count %}<span>Детей: {{ order.children_count }}</span>{% endif %}
+              </dd>
+            </div>
+          {% endif %}
+          {% if order.address_text or order.location_label %}
+            <div class="accepted-summary__item accepted-summary__item--wide">
+              <dt>
+                <svg class="v2-i" aria-hidden="true"><use href="#i-map-pin"/></svg>
+                Адрес
+              </dt>
+              <dd>{{ order.address_text or order.location_label }}</dd>
+            </div>
+          {% endif %}
+          <div class="accepted-summary__item">
+            <dt>
+              <svg class="v2-i" aria-hidden="true"><use href="#i-card"/></svg>
+              Оплата
+            </dt>
+            <dd>{{ order.payment_method_label or 'После праздника' }}</dd>
+          </div>
+          <div class="accepted-summary__item accepted-summary__item--price">
+            <dt>
+              <svg class="v2-i" aria-hidden="true"><use href="#i-cash"/></svg>
+              Сумма заказа
+            </dt>
+            <dd>{{ order.total_price_label }}</dd>
+          </div>
+        </dl>
+
+        {% if order.addons %}
+          <div class="accepted-addons">
+            <span class="accepted-addons__icon" aria-hidden="true">
+              <svg class="v2-i"><use href="#i-plus"/></svg>
+            </span>
+            <div>
+              <strong>Дополнительные услуги</strong>
+              <span>{{ order.addon_names | join(', ') }}</span>
+            </div>
+            <strong class="accepted-addons__price">{{ order.addon_total_label }}</strong>
+          </div>
+        {% endif %}
+
+        <div class="accepted-actions">
+          <a class="accepted-action accepted-action--primary" href="{{ url_for('customer_order_detail', public_id=order.public_id) }}">
+            <span>Посмотреть заказ</span>
+            <svg class="v2-i" aria-hidden="true"><use href="#i-arrow-right"/></svg>
+          </a>
+          <a class="accepted-action accepted-action--secondary" href="{{ url_for('customer_account') }}">
+            <svg class="v2-i" aria-hidden="true"><use href="#i-user"/></svg>
+            <span>В личный кабинет</span>
+          </a>
+        </div>
+      </article>
+
+      <aside class="accepted-card accepted-card--next" aria-labelledby="accepted-next-title">
+        <span class="accepted-next__eyebrow">Всё под контролем</span>
+        <h2 id="accepted-next-title">Что будет дальше</h2>
+
+        <ol class="accepted-timeline">
+          <li>
+            <span class="accepted-timeline__number">1</span>
+            <div>
+              <strong>Проверим заказ</strong>
+              <p>Сверим программу, героев, дату и адрес.</p>
+            </div>
+          </li>
+          <li>
+            <span class="accepted-timeline__number">2</span>
+            <div>
+              <strong>Свяжемся с вами</strong>
+              <p>Позвоним или напишем в Telegram для уточнения деталей.</p>
+            </div>
+          </li>
+          <li>
+            <span class="accepted-timeline__number">3</span>
+            <div>
+              <strong>Подтвердим праздник</strong>
+              <p>Новый статус сразу появится в личном кабинете.</p>
+            </div>
+          </li>
+        </ol>
+
+        <div class="accepted-support">
+          <span class="accepted-support__label">Нужно что-то уточнить?</span>
+          <a href="tel:+998998926565">
+            <svg class="v2-i" aria-hidden="true"><use href="#i-phone"/></svg>
+            <span>+998 (99) 892-65-65</span>
+          </a>
+          <a href="https://t.me/Animator_Surpriz" rel="noopener noreferrer" target="_blank">
+            <svg class="v2-i" aria-hidden="true"><use href="#i-telegram"/></svg>
+            <span>Написать в Telegram</span>
+          </a>
+        </div>
+      </aside>
+    </div>
+  </section>
+</main>
+
+<script>
+  try { localStorage.removeItem("surpriz_party_builder_draft_v1"); } catch (_) {}
+
+  /* Заявка засчитывается здесь, а не по нажатию «Подтвердить»: сюда попадают
+     только заказы, которые сервер уже принял. Перезагрузка страницы события не
+     повторяет — ключ по номеру заявки. Сумму берём из той же подписи, что видит
+     клиент, чтобы не зависеть от имени поля в модели. */
+  (function () {
+    var orderId = {{ order.public_id | tojson }};
+    var key = "surpriz_lead_sent_" + orderId;
+    try { if (localStorage.getItem(key)) return; } catch (_) {}
+    if (!window.surprizLead) return;
+    var priceLabel = {{ (order.total_price_label or "") | tojson }};
+    window.surprizLead({
+      order_id: orderId,
+      value: Number(String(priceLabel).replace(/\D+/g, "")) || 0,
+      program: {{ (order.program_name or "") | tojson }}
+    });
+    try { localStorage.setItem(key, "1"); } catch (_) {}
+  })();
+</script>

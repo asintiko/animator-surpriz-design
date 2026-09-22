@@ -1,0 +1,483 @@
+<link rel="stylesheet" href="/v2/v2-home.css?v=20260720-4">
+<main class="v2-main v3-home" id="content">
+
+  <!-- ============ 1. HERO ============ -->
+  <section class="v2-hero v2-hero-home v3-hero">
+    <div class="v2-container v2-hero-home__inner">
+      <div class="v2-hero-home__text" data-reveal>
+        <p class="v3-overline">Студия детских праздников · Ташкент</p>
+        <h1 class="v2-h1">Праздник, о&nbsp;котором <span class="v2-accent">будут рассказывать</span></h1>
+        <p class="v2-sub">Аниматоры, шоу-программы и любимые герои на вашем празднике в Ташкенте. Приезжаем вовремя, дарим эмоции, а оплата — только после мероприятия.</p>
+        <div class="v2-hero-home__cta">
+          <a class="v2-btn v2-btn--primary v2-btn--lg" href="/party-builder/"><svg class="v2-i" aria-hidden="true"><use href="#i-party-hat"/></svg><span>Собрать праздник</span></a>
+          <a class="v2-btn v2-btn--ghost v2-btn--lg" href="/show-programs/"><svg class="v2-i" aria-hidden="true"><use href="#i-play"/></svg><span>Смотреть шоу</span></a>
+        </div>
+
+        <form class="v2-quick v3-quick" data-quick-order data-reveal data-reveal-delay="160" novalidate>
+          <div class="v2-quick__head">
+            <svg class="v2-i" aria-hidden="true"><use href="#i-timer-fast"/></svg>
+            <strong>Быстрый заказ</strong>
+            <span>узнайте стоимость за 30 секунд</span>
+          </div>
+          <div class="v2-quick__row">
+            <label class="v2-quick__field v2-quick__field--program">
+              <span class="v2-quick__label">Шоу-программа</span>
+              <select id="quick-order-program" name="program" data-quick-order-program required aria-label="Выберите шоу-программу" aria-invalid="false" aria-describedby="quick-order-program-error" aria-errormessage="quick-order-program-error">
+                <option value="" selected>Выберите шоу</option>
+                {% for show in shows %}
+                  <option value="{{ show.slug }}">{{ show.name }} — {{ show.price_label }}</option>
+                {% endfor %}
+              </select>
+            </label>
+            <label class="v2-quick__field v2-quick__field--date">
+              <span class="v2-quick__label">Дата праздника</span>
+              <input id="quick-order-date" name="date" type="date" data-quick-order-date aria-label="Дата праздника">
+            </label>
+            <button class="v2-btn v2-btn--navy v2-btn--md v2-quick__submit" type="submit">
+              <span>Рассчитать</span>
+              <svg class="v2-i" aria-hidden="true"><use href="#i-arrow-right"/></svg>
+            </button>
+          </div>
+          <p class="v2-quick__error" id="quick-order-program-error" data-quick-order-error role="alert" hidden>Выберите шоу-программу — так мы посчитаем точнее.</p>
+        </form>
+      </div>
+
+      <div class="v2-collage v3-collage" data-reveal data-reveal-delay="140" aria-hidden="false">
+        {% if collage|length > 0 %}
+          <a class="v2-collage__item v2-collage__item--1 v2-blob v2-float" href="{{ collage[0].route }}">
+            <img src="{{ collage[0].hero_file_path }}" alt="{{ collage[0].name }}" loading="eager" fetchpriority="high" decoding="async">
+          </a>
+        {% endif %}
+        {% if collage|length > 1 %}
+          <a class="v2-collage__item v2-collage__item--2 v2-blob v2-blob--2 v2-float--d1" href="{{ collage[1].route }}">
+            <img src="{{ collage[1].hero_file_path }}" alt="{{ collage[1].name }}" loading="lazy" decoding="async">
+          </a>
+        {% endif %}
+        {% if collage|length > 2 %}
+          <a class="v2-collage__item v2-collage__item--3 v2-blob v2-blob--3 v2-float--d2" href="{{ collage[2].route }}">
+            <img src="{{ collage[2].hero_file_path }}" alt="{{ collage[2].name }}" loading="lazy" decoding="async">
+          </a>
+        {% endif %}
+        {% if collage|length > 3 %}
+          <a class="v2-collage__item v2-collage__item--4 v2-blob v2-blob--2 v2-float--d3" href="{{ collage[3].route }}">
+            <img src="{{ collage[3].hero_file_path }}" alt="{{ collage[3].name }}" loading="lazy" decoding="async">
+          </a>
+        {% endif %}
+      </div>
+    </div>
+
+    <div class="v2-container">
+      <dl class="v2-trust v3-trust" data-reveal data-reveal-delay="220">
+        <div class="v2-trust__item">
+          <dt class="v2-trust__num"><span data-count="500" data-count-suffix="+">0</span></dt>
+          <dd class="v2-trust__label">праздников провели</dd>
+        </div>
+        <div class="v2-trust__item">
+          <dt class="v2-trust__num"><span data-count="{{ characters_total }}" data-count-suffix="+">0</span></dt>
+          <dd class="v2-trust__label">героев в каталоге</dd>
+        </div>
+        <div class="v2-trust__item">
+          <dt class="v2-trust__num"><span data-count="{{ shows_total }}">0</span></dt>
+          <dd class="v2-trust__label">шоу-программ</dd>
+        </div>
+        <div class="v2-trust__item">
+          <dt class="v2-trust__num"><span data-count="5" data-count-suffix="+">0</span></dt>
+          <dd class="v2-trust__label">лет опыта артистов</dd>
+        </div>
+      </dl>
+    </div>
+  </section>
+
+  <!-- ============ 2. MARQUEE ============ -->
+  {% if marquee %}
+    <section class="v2-section--tight v2-section--paper v2-marquee-section v3-marquee" aria-label="Наши персонажи">
+      <div class="v2-marquee" data-reveal>
+        <div class="v2-marquee__track v2-marquee__track--photos">
+          {% for character in marquee %}
+            <a class="v2-mq-card" href="{{ character.route }}">
+              <img src="{{ character.hero_file_path }}" alt="" loading="lazy" decoding="async">
+              <span>{{ character.name }}</span>
+            </a>
+          {% endfor %}
+        </div>
+      </div>
+    </section>
+  {% endif %}
+
+  <!-- ============ 3. ШОУ-ПРОГРАММЫ ============ -->
+  {% if shows %}
+    <section class="v2-section v3-shows" id="shows">
+      <div class="v2-container">
+        <div class="v2-section-head v3-sechead" data-reveal>
+          <div>
+            <p class="v3-overline">Шоу-программы</p>
+            <h2 class="v2-h2">Готовые шоу, которые взрывают зал</h2>
+            <p class="v2-sub">Каждая программа — это сценарий, реквизит и артисты, которые знают, как рассмешить даже самых серьёзных.</p>
+          </div>
+          <a class="v3-more" href="/show-programs/"><span>Все шоу</span><svg class="v2-i" aria-hidden="true"><use href="#i-arrow-right"/></svg></a>
+        </div>
+
+        {% set lead = shows[0] %}
+        <article class="v3-lead" data-reveal>
+          <a class="v3-lead__media" href="{{ lead.route }}" aria-label="{{ lead.name }} — подробнее">
+            <img src="{{ lead.hero_file_path or lead.fallback_image }}" alt="{{ lead.name }}" loading="lazy" decoding="async">
+          </a>
+          <div class="v3-lead__body">
+            <h3 class="v3-lead__title"><a href="{{ lead.route }}">{{ lead.name }}</a></h3>
+            <p class="v3-lead__text">{{ lead.summary_text[:220] }}{% if lead.summary_text|length > 220 %}…{% endif %}</p>
+            <p class="v3-meta">{{ lead.price_label }}<span class="v3-meta__dot" aria-hidden="true"></span>{{ lead.duration_label }}{% if lead.age_label %}<span class="v3-meta__dot" aria-hidden="true"></span>{{ lead.age_label }}{% endif %}</p>
+            <div class="v3-show-actions">
+              <a class="v2-btn v2-btn--primary v2-btn--md" href="/party-builder/?program={{ lead.slug }}"><svg class="v2-i" aria-hidden="true"><use href="#i-party-hat"/></svg><span>Собрать</span></a>
+              <a class="v3-more" href="{{ lead.route }}"><span>Подробнее</span><svg class="v2-i" aria-hidden="true"><use href="#i-arrow-right"/></svg></a>
+            </div>
+          </div>
+        </article>
+
+        <div class="v2-shows-grid v3-shows-grid">
+          {% for show in shows[1:] %}
+            <article class="v2-card v2-show-card v3-show" data-reveal data-reveal-delay="{{ (loop.index0 % 3) * 90 }}">
+              <a class="v2-show-card__media" href="{{ show.route }}" aria-label="{{ show.name }} — подробнее">
+                <img src="{{ show.hero_file_path or show.fallback_image }}" alt="{{ show.name }}" loading="lazy" decoding="async">
+              </a>
+              <div class="v2-show-card__body">
+                <h3 class="v2-show-card__title"><a href="{{ show.route }}">{{ show.name }}</a></h3>
+                <p class="v2-show-card__text">{{ show.summary_text[:150] }}{% if show.summary_text|length > 150 %}…{% endif %}</p>
+                <p class="v3-meta">{{ show.price_label }}<span class="v3-meta__dot" aria-hidden="true"></span>{{ show.duration_label }}{% if show.age_label %}<span class="v3-meta__dot" aria-hidden="true"></span>{{ show.age_label }}{% endif %}</p>
+                <div class="v3-show-actions">
+                  <a class="v2-btn v2-btn--primary v2-btn--md" href="/party-builder/?program={{ show.slug }}"><svg class="v2-i" aria-hidden="true"><use href="#i-party-hat"/></svg><span>Собрать</span></a>
+                  <a class="v3-more" href="{{ show.route }}"><span>Подробнее</span><svg class="v2-i" aria-hidden="true"><use href="#i-arrow-right"/></svg></a>
+                </div>
+              </div>
+            </article>
+          {% endfor %}
+        </div>
+      </div>
+    </section>
+  {% endif %}
+
+  <!-- ============ 4. ПЕРСОНАЖИ ============ -->
+  {% if characters %}
+    <section class="v2-section v2-section--paper v3-chars" id="characters">
+      <div class="v2-container">
+        <div class="v3-chars__layout">
+          <div class="v3-chars__side" data-reveal>
+            <p class="v3-overline">Персонажи</p>
+            <h2 class="v2-h2">Любимые герои уже готовят костюмы</h2>
+            <p class="v2-sub">Супергерои, принцессы, герои мультфильмов и игр — выбирайте тех, кого ребёнок мечтает встретить.</p>
+
+            {% if categories %}
+              <div class="v2-pills v3-pills">
+                {% for category in categories %}
+                  <a class="v2-chip" href="{{ category.route }}">{{ category.name }}<span class="v2-pills__count">{{ category.character_count }}</span></a>
+                {% endfor %}
+              </div>
+            {% endif %}
+
+            <a class="v2-btn v2-btn--primary v2-btn--lg v3-chars__cta" href="/catalog/"><svg class="v2-i" aria-hidden="true"><use href="#i-grid"/></svg><span>Весь каталог ({{ characters_total }}+ героев)</span></a>
+          </div>
+
+          <div class="v2-chars-grid v3-chars__grid">
+            {% for character in characters %}
+              <a class="v2-char-card v3-char" href="{{ character.route }}" data-reveal data-reveal-delay="{{ (loop.index0 % 6) * 60 }}">
+                <span class="v2-char-card__media">
+                  <img src="{{ character.hero_file_path }}" alt="{{ character.name }}" loading="lazy" decoding="async">
+                </span>
+                <span class="v2-char-card__name">{{ character.name }}</span>
+                {% if character.primary_category %}
+                  <span class="v2-char-card__cat">{{ character.primary_category }}</span>
+                {% endif %}
+              </a>
+            {% endfor %}
+          </div>
+        </div>
+      </div>
+    </section>
+  {% endif %}
+
+  <!-- ============ 5. КАК ЗАКАЗАТЬ ============ -->
+  <section class="v2-section v3-how" id="how">
+    <div class="v2-container">
+      <div class="v3-how__layout">
+        <div class="v3-how__side" data-reveal>
+          <p class="v3-overline">Всё просто</p>
+          <h2 class="v2-h2">Как заказать праздник за 3 шага</h2>
+          <p class="v2-sub">От выбора шоу до восторженных детских глаз — всего несколько минут на сайте.</p>
+          <div class="v3-paynote">
+            <strong>Оплата после мероприятия</strong>
+            <p>Никаких предоплат: вы платите, когда праздник состоялся и дети счастливы.</p>
+          </div>
+          <a class="v2-btn v2-btn--primary v2-btn--md" href="/party-builder/"><span>Собрать праздник</span><svg class="v2-i" aria-hidden="true"><use href="#i-arrow-right"/></svg></a>
+        </div>
+
+        <ol class="v3-tl">
+          <li class="v3-tl__item" data-reveal>
+            <span class="v3-tl__num" aria-hidden="true">1</span>
+            <div class="v3-tl__body">
+              <h3 class="v3-tl__title">Выберите шоу и героев</h3>
+              <p>Посмотрите шоу-программы и каталог персонажей — соберите праздник под вкус вашего ребёнка.</p>
+            </div>
+          </li>
+          <li class="v3-tl__item" data-reveal data-reveal-delay="120">
+            <span class="v3-tl__num" aria-hidden="true">2</span>
+            <div class="v3-tl__body">
+              <h3 class="v3-tl__title">Укажите дату и адрес</h3>
+              <p>Заполните короткую форму в конструкторе: дата, время, адрес и пожелания к программе.</p>
+            </div>
+          </li>
+          <li class="v3-tl__item" data-reveal data-reveal-delay="240">
+            <span class="v3-tl__num" aria-hidden="true">3</span>
+            <div class="v3-tl__body">
+              <h3 class="v3-tl__title">Мы подтверждаем и приезжаем</h3>
+              <p>Свяжемся, подтвердим детали и приедем заранее — с костюмами, реквизитом и отличным настроением.</p>
+            </div>
+          </li>
+        </ol>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 6. АКЦИИ (только при включённой настройке) ============ -->
+  {% if promotions %}
+    <section class="v2-section--tight v3-promos" id="promotions">
+      <div class="v2-container">
+        <div class="v2-section-head v3-sechead" data-reveal>
+          <div>
+            <p class="v3-overline">Акции</p>
+            <h2 class="v2-h2">Приятные поводы для праздника</h2>
+          </div>
+        </div>
+        <div class="v2-promos v3-promos__grid">
+          {% for promotion in promotions %}
+            <article class="v2-card v2-promo v3-promo" data-reveal data-reveal-delay="{{ loop.index0 * 90 }}">
+              <p class="v3-promo__badge">{{ promotion.badge_text }}</p>
+              <h3 class="v2-h3">{{ promotion.title }}</h3>
+              <p>{{ promotion.short_text }}</p>
+              {% if promotion.tooltip_text %}
+                <p class="v2-promo__hint">{{ promotion.tooltip_text }}</p>
+              {% endif %}
+            </article>
+          {% endfor %}
+        </div>
+      </div>
+    </section>
+  {% endif %}
+
+  <!-- ============ 7. ПОЧЕМУ SURPRIZ ============ -->
+  <section class="v2-section v2-section--paper v3-why" id="why">
+    <div class="v2-container">
+      <div class="v2-section-head v3-sechead" data-reveal>
+        <div>
+          <p class="v3-overline">Почему мы</p>
+          <h2 class="v2-h2">Почему семьи выбирают Surpriz</h2>
+          <p class="v2-sub">Мы делаем праздники так, будто они для наших собственных детей.</p>
+        </div>
+      </div>
+
+      <div class="v3-facts">
+        <article class="v3-fact" data-reveal>
+          <span class="v3-fact__num" aria-hidden="true">01</span>
+          <div>
+            <h3>Свои костюмы и реквизит</h3>
+            <p>Не арендуем на стороне: каждый костюм чистый, яркий и в идеальном состоянии.</p>
+          </div>
+        </article>
+        <article class="v3-fact" data-reveal data-reveal-delay="80">
+          <span class="v3-fact__num" aria-hidden="true">02</span>
+          <div>
+            <h3>Артисты с опытом 5+ лет</h3>
+            <p>Профессиональные актёры и аниматоры, которые умеют найти подход к любому ребёнку.</p>
+          </div>
+        </article>
+        <article class="v3-fact" data-reveal data-reveal-delay="160">
+          <span class="v3-fact__num" aria-hidden="true">03</span>
+          <div>
+            <h3>Договор и страховка</h3>
+            <p>Работаем официально: фиксируем детали в договоре и отвечаем за безопасность программы.</p>
+          </div>
+        </article>
+        <article class="v3-fact" data-reveal data-reveal-delay="240">
+          <span class="v3-fact__num" aria-hidden="true">04</span>
+          <div>
+            <h3>Оплата после праздника</h3>
+            <p>Сначала эмоции — потом расчёт. Без предоплат и скрытых доплат.</p>
+          </div>
+        </article>
+        <article class="v3-fact" data-reveal data-reveal-delay="320">
+          <span class="v3-fact__num" aria-hidden="true">05</span>
+          <div>
+            <h3>Приезжаем вовремя</h3>
+            <p>Выезжаем заранее, чтобы к началу праздника всё было готово до мелочей.</p>
+          </div>
+        </article>
+        <article class="v3-fact" data-reveal data-reveal-delay="400">
+          <span class="v3-fact__num" aria-hidden="true">06</span>
+          <div>
+            <h3>500+ довольных семей</h3>
+            <p>Сотни праздников по Ташкенту и области — и столько же историй, которые дети пересказывают друзьям.</p>
+          </div>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 8. ГАЛЕРЕЯ ============ -->
+  {% if gallery %}
+    <section class="v2-section v3-gallery" id="gallery">
+      <div class="v2-container">
+        <div class="v2-section-head v3-sechead" data-reveal>
+          <div>
+            <p class="v3-overline">Галерея</p>
+            <h2 class="v2-h2">Живые эмоции с наших праздников</h2>
+            <p class="v2-sub">Настоящие фото с мероприятий — никаких постановочных стоков.</p>
+          </div>
+        </div>
+      </div>
+      <div class="v2-gallery" data-reveal>
+        <div class="v2-gallery__track">
+          {% for photo in gallery %}
+            <figure class="v2-gallery__item">
+              <img src="{{ photo.hero_file_path }}" alt="{{ photo.name }} на празднике" loading="lazy" decoding="async">
+            </figure>
+          {% endfor %}
+        </div>
+      </div>
+    </section>
+  {% endif %}
+
+  <!-- ============ 9. FAQ ============ -->
+  <section class="v2-section v2-section--paper v3-faq" id="faq">
+    <div class="v2-container v2-container--narrow">
+      <div class="v2-section-head v3-sechead" data-reveal>
+        <div>
+          <p class="v3-overline">Вопросы и ответы</p>
+          <h2 class="v2-h2">Что спрашивают родители</h2>
+        </div>
+      </div>
+
+      <div class="v2-faq" data-accordion data-reveal>
+        <div class="v2-accordion__item v2-faq__item is-open" data-accordion-item>
+          <button class="v2-accordion__btn v2-faq__btn" id="faq-button-1" type="button" data-accordion-btn aria-expanded="true" aria-controls="faq-panel-1">
+            <span>Сколько стоит праздник?</span>
+            <svg class="v2-i" aria-hidden="true"><use href="#i-chevron-down"/></svg>
+          </button>
+          <div class="v2-accordion__panel v2-faq__panel" id="faq-panel-1" role="region" aria-labelledby="faq-button-1" aria-hidden="false" data-accordion-panel>
+            <p>Базовые шоу-программы начинаются от 1 000 000 сум — в стоимость уже включены два персонажа. Точная цена зависит от программы, количества героев и дополнительных услуг. Посмотрите раздел «Цены» или соберите праздник в конструкторе — стоимость посчитается сразу.</p>
+          </div>
+        </div>
+        <div class="v2-accordion__item v2-faq__item" data-accordion-item>
+          <button class="v2-accordion__btn v2-faq__btn" id="faq-button-2" type="button" data-accordion-btn aria-expanded="false" aria-controls="faq-panel-2">
+            <span>Как заказать аниматоров?</span>
+            <svg class="v2-i" aria-hidden="true"><use href="#i-chevron-down"/></svg>
+          </button>
+          <div class="v2-accordion__panel v2-faq__panel" id="faq-panel-2" role="region" aria-labelledby="faq-button-2" aria-hidden="true" data-accordion-panel hidden>
+            <p>Быстрее всего — через конструктор на сайте: выберите шоу, персонажей, дату и адрес, и мы сами перезвоним для подтверждения. Можно и по телефону +998 99 892-65-65 или в Telegram @Animator_Surpriz.</p>
+          </div>
+        </div>
+        <div class="v2-accordion__item v2-faq__item" data-accordion-item>
+          <button class="v2-accordion__btn v2-faq__btn" id="faq-button-3" type="button" data-accordion-btn aria-expanded="false" aria-controls="faq-panel-3">
+            <span>За сколько дней лучше бронировать?</span>
+            <svg class="v2-i" aria-hidden="true"><use href="#i-chevron-down"/></svg>
+          </button>
+          <div class="v2-accordion__panel v2-faq__panel" id="faq-panel-3" role="region" aria-labelledby="faq-button-3" aria-hidden="true" data-accordion-panel hidden>
+            <p>В идеале — за 5–7 дней, особенно на выходные и праздничные даты. Но звоните, даже если праздник завтра: часто находим свободных артистов и приезжаем в день обращения.</p>
+          </div>
+        </div>
+        <div class="v2-accordion__item v2-faq__item" data-accordion-item>
+          <button class="v2-accordion__btn v2-faq__btn" id="faq-button-4" type="button" data-accordion-btn aria-expanded="false" aria-controls="faq-panel-4">
+            <span>Выезжаете ли за город?</span>
+            <svg class="v2-i" aria-hidden="true"><use href="#i-chevron-down"/></svg>
+          </button>
+          <div class="v2-accordion__panel v2-faq__panel" id="faq-panel-4" role="region" aria-labelledby="faq-button-4" aria-hidden="true" data-accordion-panel hidden>
+            <p>Да, работаем по всему Ташкенту и Ташкентской области. Стоимость выезда за пределы города согласуем при подтверждении заказа — без сюрпризов в день праздника.</p>
+          </div>
+        </div>
+        <div class="v2-accordion__item v2-faq__item" data-accordion-item>
+          <button class="v2-accordion__btn v2-faq__btn" id="faq-button-5" type="button" data-accordion-btn aria-expanded="false" aria-controls="faq-panel-5">
+            <span>Что делать, если ребёнок стесняется?</span>
+            <svg class="v2-i" aria-hidden="true"><use href="#i-chevron-down"/></svg>
+          </button>
+          <div class="v2-accordion__panel v2-faq__panel" id="faq-panel-5" role="region" aria-labelledby="faq-button-5" aria-hidden="true" data-accordion-panel hidden>
+            <p>Это нормально, и наши артисты умеют с этим работать: начинают мягко, с игр на знакомство, не давят и не вытаскивают ребёнка в центр внимания. Обычно уже через 10–15 минут даже самые скромные дети вовлечены в игру.</p>
+          </div>
+        </div>
+        <div class="v2-accordion__item v2-faq__item" data-accordion-item>
+          <button class="v2-accordion__btn v2-faq__btn" id="faq-button-6" type="button" data-accordion-btn aria-expanded="false" aria-controls="faq-panel-6">
+            <span>Как проходит оплата?</span>
+            <svg class="v2-i" aria-hidden="true"><use href="#i-chevron-down"/></svg>
+          </button>
+          <div class="v2-accordion__panel v2-faq__panel" id="faq-panel-6" role="region" aria-labelledby="faq-button-6" aria-hidden="true" data-accordion-panel hidden>
+            <p>Оплата — после мероприятия, наличными или переводом, как вам удобно. Предоплату не берём: для нас важно, чтобы праздник сначала состоялся.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 10. КОНТАКТЫ-ПОЛОСА ============ -->
+  <section class="v2-section--tight v2-section--paper v3-contacts" id="contacts-strip">
+    <div class="v2-container">
+      <div class="v2-contacts-strip v3-contacts__row" data-reveal>
+        <a class="v2-contact-mini" href="tel:+998998926565">
+          <span class="v2-contact-mini__icon"><svg class="v2-i" aria-hidden="true"><use href="#i-phone"/></svg></span>
+          <span class="v2-contact-mini__body"><strong>+998 99 892-65-65</strong><small>звоните — подскажем по цене</small></span>
+        </a>
+        <a class="v2-contact-mini" href="https://t.me/Animator_Surpriz" target="_blank" rel="noopener">
+          <span class="v2-contact-mini__icon"><svg class="v2-i" aria-hidden="true"><use href="#i-telegram"/></svg></span>
+          <span class="v2-contact-mini__body"><strong>@Animator_Surpriz</strong><small>отвечаем в Telegram</small></span>
+        </a>
+        <div class="v2-contact-mini">
+          <span class="v2-contact-mini__icon"><svg class="v2-i" aria-hidden="true"><use href="#i-clock"/></svg></span>
+          <span class="v2-contact-mini__body"><strong>9:00–21:00</strong><small>ежедневно, без выходных</small></span>
+        </div>
+        <div class="v2-contact-mini">
+          <span class="v2-contact-mini__icon"><svg class="v2-i" aria-hidden="true"><use href="#i-map-pin"/></svg></span>
+          <span class="v2-contact-mini__body"><strong>Ташкент</strong><small>выезд по городу и области</small></span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<script>
+(function () {
+  "use strict";
+  var form = document.querySelector("[data-quick-order]");
+  if (!form) return;
+  var programSelect = form.querySelector("[data-quick-order-program]");
+  var dateInput = form.querySelector("[data-quick-order-date]");
+  var error = form.querySelector("[data-quick-order-error]");
+
+  if (dateInput) {
+    var today = new Date();
+    var iso = today.getFullYear() + "-" + String(today.getMonth() + 1).padStart(2, "0") + "-" + String(today.getDate()).padStart(2, "0");
+    dateInput.min = iso;
+  }
+
+  form.addEventListener("submit", function (event) {
+    event.preventDefault();
+    var slug = programSelect ? programSelect.value.trim() : "";
+    if (!slug) {
+      if (error) error.hidden = false;
+      if (programSelect) {
+        programSelect.classList.add("is-error");
+        programSelect.setAttribute("aria-invalid", "true");
+        programSelect.focus();
+      }
+      return;
+    }
+    var url = "/party-builder/?program=" + encodeURIComponent(slug);
+    var date = dateInput ? dateInput.value.trim() : "";
+    if (date) url += "&date=" + encodeURIComponent(date);
+    window.location.assign(url);
+  });
+
+  if (programSelect) {
+    programSelect.addEventListener("change", function () {
+      programSelect.classList.remove("is-error");
+      programSelect.setAttribute("aria-invalid", "false");
+      if (error) error.hidden = true;
+    });
+  }
+})();
+</script>

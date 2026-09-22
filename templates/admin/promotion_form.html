@@ -1,0 +1,89 @@
+{% extends "admin/base.html" %}
+
+{% block content %}
+  <form method="post">
+    <div class="adm-editor__main adm-stack">
+
+      <section class="adm-card">
+        <div class="adm-card__head">
+          <span class="adm-editor__section-icon"><svg class="adm-i"><use href="#i-tag"/></svg></span>
+          <div>
+            <div class="adm-card__eyebrow">Акция</div>
+            <h2 class="adm-card__title">{% if is_new %}Новая акция{% else %}{{ promotion.title }}{% endif %}</h2>
+          </div>
+          <div class="adm-card__head-actions">
+            <a class="adm-btn adm-btn--ghost adm-btn--sm" href="{{ url_for('admin_dashboard', tab='promotions') }}">
+              <svg class="adm-i"><use href="#i-arrow-left"/></svg>Назад
+            </a>
+          </div>
+        </div>
+        <p class="adm-note">Акция выводится жёлтой подсветкой на карточках шоу-программ: в каталоге, на главной, на странице программы и в сборщике заказа.</p>
+      </section>
+
+      <section class="adm-card">
+        <div class="adm-editor__section-head">
+          <span class="adm-editor__section-icon adm-editor__section-icon--teal"><svg class="adm-i"><use href="#i-edit"/></svg></span>
+          <div>
+            <div class="adm-card__eyebrow">Основное</div>
+            <h3 class="adm-card__title adm-card__title--sm">Название и тексты бейджа</h3>
+          </div>
+        </div>
+        <div class="adm-form-grid">
+          <label class="adm-field">
+            <span class="adm-field__label">Название</span>
+            <input class="adm-input" name="title" required type="text" value="{{ promotion.title }}">
+          </label>
+          <label class="adm-field">
+            <span class="adm-field__label">Текст бейджа</span>
+            <input class="adm-input" name="badge_text" placeholder="Заливки + ленты в подарок" type="text" value="{{ promotion.badge_text }}">
+          </label>
+          <label class="adm-field adm-field--full">
+            <span class="adm-field__label">Короткое описание</span>
+            <textarea class="adm-input" name="short_text" rows="3">{{ promotion.short_text }}</textarea>
+          </label>
+          <label class="adm-field adm-field--full">
+            <span class="adm-field__label">Текст подсказки у бейджа (?)</span>
+            <textarea class="adm-input" name="tooltip_text" rows="3" placeholder="Опишите, что именно входит в акцию и как она работает.">{{ promotion.tooltip_text }}</textarea>
+          </label>
+        </div>
+      </section>
+
+      <section class="adm-card">
+        <div class="adm-editor__section-head">
+          <span class="adm-editor__section-icon adm-editor__section-icon--grape"><svg class="adm-i"><use href="#i-eye"/></svg></span>
+          <div>
+            <div class="adm-card__eyebrow">Публикация</div>
+            <h3 class="adm-card__title adm-card__title--sm">Видимость и порядок</h3>
+          </div>
+        </div>
+        <div class="adm-form-grid">
+          <label class="adm-field">
+            <span class="adm-field__label">Статус</span>
+            <select class="adm-input" name="status">
+              <option {% if promotion.status == 'active' %}selected{% endif %} value="active">Активна</option>
+              <option {% if promotion.status == 'hidden' %}selected{% endif %} value="hidden">Скрыта</option>
+            </select>
+          </label>
+          <label class="adm-field">
+            <span class="adm-field__label">Порядок</span>
+            <input class="adm-input" min="0" name="sort_order" step="1" type="number" value="{{ promotion.sort_order or 0 }}">
+          </label>
+        </div>
+      </section>
+
+      <section class="adm-card">
+        <div class="adm-form-actions" style="margin-top:0">
+          <button class="adm-btn" type="submit">
+            <svg class="adm-i"><use href="#i-check"/></svg>Сохранить
+          </button>
+          {% if not is_new %}
+            <button class="adm-btn adm-btn--danger" formaction="{{ url_for('admin_promotion_delete', promotion_id=promotion.id) }}" formmethod="post" onclick="return confirm('Удалить акцию?');" type="submit">
+              <svg class="adm-i"><use href="#i-trash"/></svg>Удалить
+            </button>
+          {% endif %}
+        </div>
+      </section>
+
+    </div>
+  </form>
+{% endblock %}

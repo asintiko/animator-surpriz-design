@@ -1,0 +1,312 @@
+ * Serving Flask app 'app'
+ * Debug mode: off
+[31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5001
+ * Running on http://192.168.100.161:5001
+[33mPress CTRL+C to quit[0m
+127.0.0.1 - - [31/May/2026 15:04:54] "GET /show-programs/ HTTP/1.1" 200 -
+[tg-poll] loop error: ('Connection aborted.', ConnectionResetError(54, 'Connection reset by peer'))
+127.0.0.1 - - [31/May/2026 15:16:42] "[33mGET /http://127.0.0.1:5001/catalog/ HTTP/1.1[0m" 404 -
+127.0.0.1 - - [31/May/2026 15:16:42] "GET /catalog/ HTTP/1.1" 200 -
+127.0.0.1 - - [31/May/2026 15:16:42] "[36mGET /_assets/content/uploads/2025/10/IMG_4856.webp HTTP/1.1[0m" 304 -
+127.0.0.1 - - [31/May/2026 15:16:42] "[36mGET /_assets/content/uploads/2025/10/IMG_5108-scaled.webp HTTP/1.1[0m" 304 -
+127.0.0.1 - - [31/May/2026 15:16:42] "[36mGET /_assets/content/uploads/2025/10/IMG_1853-scaled.webp HTTP/1.1[0m" 304 -
+127.0.0.1 - - [31/May/2026 15:16:42] "[36mGET /_assets/content/uploads/2025/10/IMG_7265.webp HTTP/1.1[0m" 304 -
+127.0.0.1 - - [31/May/2026 15:16:42] "[36mGET /_assets/content/uploads/2025/10/IMG_5199.webp HTTP/1.1[0m" 304 -
+127.0.0.1 - - [31/May/2026 15:16:42] "[36mGET /_assets/content/uploads/2025/10/IMG_6874-2-scaled.webp HTTP/1.1[0m" 304 -
+127.0.0.1 - - [31/May/2026 15:16:42] "[36mGET /_assets/content/uploads/2025/10/IMG_8663-scaled.webp HTTP/1.1[0m" 304 -
+127.0.0.1 - - [31/May/2026 15:16:42] "[36mGET /_assets/content/uploads/2026/04/instagram-pill-live-reference.png HTTP/1.1[0m" 304 -
+127.0.0.1 - - [31/May/2026 15:16:42] "[36mGET /_assets/content/uploads/2025/10/IMG_0676.webp HTTP/1.1[0m" 304 -
+127.0.0.1 - - [31/May/2026 15:16:42] "[36mGET /_assets/content/uploads/2025/10/IMG_3431.webp HTTP/1.1[0m" 304 -
+127.0.0.1 - - [31/May/2026 15:16:42] "[33mGET /http://127.0.0.1:5001/catalog/ HTTP/1.1[0m" 404 -
+127.0.0.1 - - [31/May/2026 15:16:43] "[33mGET /http://127.0.0.1:5001/account/ HTTP/1.1[0m" 404 -
+127.0.0.1 - - [31/May/2026 15:16:43] "GET /account/ HTTP/1.1" 200 -
+127.0.0.1 - - [31/May/2026 15:16:43] "[33mGET /http://127.0.0.1:5001/account/ HTTP/1.1[0m" 404 -
+127.0.0.1 - - [31/May/2026 15:16:44] "[33mGET /http://127.0.0.1:5001/party-builder/ HTTP/1.1[0m" 404 -
+127.0.0.1 - - [31/May/2026 16:14:23] "GET /party-builder/ HTTP/1.1" 200 -
+127.0.0.1 - - [31/May/2026 16:14:37] "GET /party-builder/ HTTP/1.1" 200 -
+127.0.0.1 - - [31/May/2026 16:14:37] "GET /_assets/content/cache/min/1/_assets/content/plugins/woocommerce/assets/css/brands.css?ver=1774978498 HTTP/1.1" 200 -
+127.0.0.1 - - [31/May/2026 16:14:37] "GET /_assets/content/cache/min/1/_assets/content/uploads/astra-addon/astra-addon-693ac7e2899ab7-63443221.css?ver=1774978498 HTTP/1.1" 200 -
+127.0.0.1 - - [31/May/2026 16:14:37] "GET /_assets/content/uploads/elementor/css/custom-frontend.min.css?ver=1775874835 HTTP/1.1" 200 -
+127.0.0.1 - - [31/May/2026 16:14:37] "GET /_assets/content/uploads/elementor/css/custom-pro-widget-nav-menu.min.css?ver=1775874835 HTTP/1.1" 200 -
+127.0.0.1 - - [31/May/2026 16:14:37] "GET /_assets/content/plugins/elementor/assets/css/widget-image.min.css?ver=3.32.4 HTTP/1.1" 200 -
+127.0.0.1 - - [31/May/2026 16:14:37] "GET /_assets/content/themes/astra/assets/css/minified/compatibility/woocommerce/woocommerce-layout-grid.min.css?ver=4.11.13 HTTP/1.1" 200 -
+127.0.0.1 - - [31/May/2026 16:14:37] "GET /_assets/content/uploads/elementor/css/custom-widget-icon-list.min.css?ver=1775874835 HTTP/1.1" 200 -
+127.0.0.1 - - [31/May/2026 16:14:37] "GET /_assets/content/themes/astra/assets/css/minified/main.min.css?ver=4.11.13 HTTP/1.1" 200 -
+127.0.0.1 - - [31/May/2026 16:14:37] "GET /_assets/content/cache/fonts/1/google-fonts/css/4/9/c/39123062b63c94cb126779358765f.css HTTP/1.1" 200 -
+127.0.0.1 - - [31/May/2026 16:14:37] "GET /_assets/content/plugins/elementor-pro/assets/css/widget-form.min.css?ver=3.31.0 HTTP/1.1" 200 -
+127.0.0.1 - - [31/May/2026 16:14:37] "GET /_assets/content/plugins/elementor/assets/css/widget-heading.min.css?ver=3.32.4 HTTP/1.1" 200 -
+127.0.0.1 - - [31/May/2026 16:14:37] "GET /_assets/content/plugins/elementor-pro/assets/css/modules/sticky.min.css?ver=3.31.0 HTTP/1.1" 200 -
+127.0.0.1 - - [31/May/2026 16:14:37] "GET /_assets/content/cache/background-css/1/eventsurpriz.uz/_assets/content/cache/min/1/_assets/content/themes/astra/assets/css/minified/compatibility/woocommerce/woocommerce-grid.min.css?ver=1774978498&wpr_t=1775887367 HTTP/1.1" 200 -
+127.0.0.1 - - [31/May/2026 16:14:37] "GET /_assets/content/plugins/elementor/assets/lib/animations/styles/fadeInDown.min.css?ver=3.32.4 HTTP/1.1" 200 -
+127.0.0.1 - - [31/May/2026 16:14:37] "GET /_assets/content/plugins/elementor-pro/assets/css/widget-loop-common.min.css?ver=3.31.0 HTTP/1.1" 200 -
+127.0.0.1 - - [31/May/2026 16:14:37] "GET /_assets/content/plugins/elementor/assets/lib/animations/styles/e-animation-pulse-grow.min.css?ver=3.32.4 HTTP/1.1" 200 -
+127.0.0.1 - - [31/May/2026 16:14:37] "GET /_assets/content/cache/min/1/_assets/content/plugins/elementor/assets/lib/swiper/v8/css/swiper.min.css?ver=1774978498 HTTP/1.1" 200 -
+127.0.0.1 - - [31/May/2026 16:14:37] "GET /_assets/content/plugins/elementor/assets/css/conditionals/shapes.min.css?ver=3.32.4 HTTP/1.1" 200 -
+127.0.0.1 - - [31/May/2026 16:14:37] "GET /_assets/content/plugins/elementor-pro/assets/css/widget-loop-carousel.min.css?ver=3.31.0 HTTP/1.1" 200 -
+127.0.0.1 - - [31/May/2026 16:14:37] "GET /_assets/content/plugins/elementor/assets/css/widget-divider.min.css?ver=3.32.4 HTTP/1.1" 200 -
+127.0.0.1 - - [31/May/2026 16:14:37] "GET /_assets/content/cache/min/1/_assets/content/plugins/elementor/assets/lib/eicons/css/elementor-icons.min.css?ver=1774978498 HTTP/1.1" 200 -
+127.0.0.1 - - [31/May/2026 16:14:37] "GET /_assets/content/plugins/elementor/assets/css/conditionals/e-swiper.min.css?ver=3.32.4 HTTP/1.1" 200 -
+127.0.0.1 - - [31/May/2026 16:14:37] "GET /_assets/content/cache/min/1/_assets/content/plugins/elementor/assets/lib/font-awesome/css/brands.min.css?ver=1774978498 HTTP/1.1" 200 -
+127.0.0.1 - - [31/May/2026 16:14:37] "GET /_assets/content/plugins/elementor/assets/lib/animations/styles/slideInRight.min.css?ver=3.32.4 HTTP/1.1" 200 -
+127.0.0.1 - - [31/May/2026 16:14:37] "GET /_assets/content/cache/fonts/1/google-fonts/css/b/5/8/43c6d2c97974bc9653546099f3d55.css HTTP/1.1" 200 -
+127.0.0.1 - - [31/May/2026 16:14:37] "GET /_assets/content/cache/min/1/_assets/content/plugins/elementor/assets/lib/font-awesome/css/solid.min.css?ver=1774978498 HTTP/1.1" 200 -
+127.0.0.1 - - [31/May/2026 16:14:37] "GET /_assets/content/cache/fonts/1/google-fonts/css/9/b/8/d1db72212c2ef21dc0906bd62ef82.css HTTP/1.1" 200 -
+127.0.0.1 - - [31/May/2026 16:14:37] "GET /_assets/content/plugins/elementor/assets/lib/font-awesome/css/fontawesome.min.css?ver=5.15.3 HTTP/1.1" 200 -
+127.0.0.1 - - [31/May/2026 16:14:37] "GET /_assets/content/cache/fonts/1/google-fonts/css/7/2/f/9bfcdac4190fbdfc3d8afa2c9fbab.css HTTP/1.1" 200 -
+127.0.0.1 - - [31/May/2026 16:14:37] "GET /customer-portal.css?v=stage31-force-hide-inline-confirm-20260531 HTTP/1.1" 200 -
+127.0.0.1 - - [31/May/2026 16:14:37] "GET /_assets/content/cache/fonts/1/google-fonts/css/4/4/2/13ed56f4e4e32405647f0f275399e.css HTTP/1.1" 200 -
+127.0.0.1 - - [31/May/2026 16:14:37] "GET /_assets/content/cache/min/1/_assets/content/plugins/woocommerce/assets/client/blocks/wc-blocks.css?ver=1774978498 HTTP/1.1" 200 -
+127.0.0.1 - - [31/May/2026 16:14:37] "GET /_assets/content/plugins/elementor-pro/assets/css/conditionals/popup.min.css?ver=3.31.0 HTTP/1.1" 200 -
+127.0.0.1 - - [31/May/2026 16:14:37] "GET /_assets/includes/js/dist/hooks.min.js?ver=dd5603f07f9220ed27f1 HTTP/1.1" 200 -
+127.0.0.1 - - [31/May/2026 16:14:37] "GET /_assets/includes/js/dist/i18n.min.js?ver=c26c3dc7bed366793375 HTTP/1.1" 200 -
+127.0.0.1 - - [31/May/2026 16:14:37] "GET /_assets/includes/js/jquery/jquery-migrate.min.js?ver=3.4.1 HTTP/1.1" 200 -
+127.0.0.1 - - [31/May/2026 16:14:37] "GET /_assets/includes/js/jquery/jquery.min.js?ver=3.7.1 HTTP/1.1" 200 -
+127.0.0.1 - - [31/May/2026 16:14:37] "GET /_assets/content/plugins/woocommerce/assets/js/js-cookie/js.cookie.min.js?ver=2.1.4-wc.10.3.8 HTTP/1.1" 200 -
+127.0.0.1 - - [31/May/2026 16:14:37] "GET /_assets/content/plugins/woocommerce/assets/js/frontend/add-to-cart.min.js?ver=10.3.8 HTTP/1.1" 200 -
+127.0.0.1 - - [31/May/2026 16:14:37] "GET /_assets/content/plugins/woocommerce/assets/js/jquery-blockui/jquery.blockUI.min.js?ver=2.7.0-wc.10.3.8 HTTP/1.1" 200 -
+127.0.0.1 - - [31/May/2026 16:14:37] "GET /_assets/content/plugins/woocommerce/assets/js/frontend/woocommerce.min.js?ver=10.3.8 HTTP/1.1" 200 -
+127.0.0.1 - - [31/May/2026 16:14:37] "GET /_assets/content/themes/astra/assets/js/minified/frontend.min.js?ver=4.11.13 HTTP/1.1" 200 -
+127.0.0.1 - - [31/May/2026 16:14:37] "GET /_assets/content/themes/astra/assets/js/minified/add-to-cart-quantity-btn.min.js?ver=4.11.13 HTTP/1.1" 200 -
+127.0.0.1 - - [31/May/2026 16:14:37] "GET /_assets/content/plugins/woocommerce/assets/js/flexslider/jquery.flexslider.min.js?ver=2.7.2-wc.10.3.8 HTTP/1.1" 200 -
+127.0.0.1 - - [31/May/2026 16:14:37] "GET /_assets/content/cache/min/1/_assets/content/uploads/astra-addon/astra-addon-693ac7e28a1cb6-97115560.js?ver=1774978499 HTTP/1.1" 200 -
+127.0.0.1 - - [31/May/2026 16:14:37] "GET /_assets/content/plugins/astra-addon/addons/woocommerce/assets/js/minified/modern-shop-view.min.js?ver=4.11.6 HTTP/1.1" 200 -
+127.0.0.1 - - [31/May/2026 16:14:37] "GET /_assets/content/plugins/astra-addon/assets/js/minified/purify.min.js?ver=4.11.6 HTTP/1.1" 200 -
+127.0.0.1 - - [31/May/2026 16:14:37] "GET /_assets/content/plugins/astra-addon/addons/woocommerce/assets/js/minified/single-product-ajax-cart.min.js?ver=4.11.6 HTTP/1.1" 200 -
+127.0.0.1 - - [31/May/2026 16:14:37] "GET /_assets/content/plugins/elementor/assets/js/webpack.runtime.min.js?ver=3.32.4 HTTP/1.1" 200 -
+127.0.0.1 - - [31/May/2026 16:14:37] "GET /_assets/content/plugins/elementor/assets/js/frontend.min.js?ver=3.32.4 HTTP/1.1" 200 -
+127.0.0.1 - - [31/May/2026 16:14:37] "GET /_assets/includes/js/jquery/ui/core.min.js?ver=1.13.3 HTTP/1.1" 200 -
+127.0.0.1 - - [31/May/2026 16:14:37] "GET /_assets/includes/js/imagesloaded.min.js?ver=5.0.0 HTTP/1.1" 200 -
+127.0.0.1 - - [31/May/2026 16:14:37] "GET /_assets/content/plugins/elementor-pro/assets/lib/smartmenus/jquery.smartmenus.min.js?ver=1.2.1 HTTP/1.1" 200 -
+127.0.0.1 - - [31/May/2026 16:14:37] "GET /_assets/content/plugins/elementor-pro/assets/lib/sticky/jquery.sticky.min.js?ver=3.31.0 HTTP/1.1" 200 -
+127.0.0.1 - - [31/May/2026 16:14:37] "GET /_assets/content/plugins/elementor/assets/js/frontend-modules.min.js?ver=3.32.4 HTTP/1.1" 200 -
+127.0.0.1 - - [31/May/2026 16:14:37] "GET /_assets/content/plugins/woocommerce/assets/js/sourcebuster/sourcebuster.min.js?ver=10.3.8 HTTP/1.1" 200 -
+127.0.0.1 - - [31/May/2026 16:14:37] "GET /_assets/content/plugins/elementor-pro/assets/js/frontend.min.js?ver=3.31.0 HTTP/1.1" 200 -
+127.0.0.1 - - [31/May/2026 16:14:37] "GET /_assets/content/plugins/elementor-pro/assets/js/elements-handlers.min.js?ver=3.31.0 HTTP/1.1" 200 -
+127.0.0.1 - - [31/May/2026 16:14:37] "GET /_assets/content/plugins/elementor-pro/assets/js/webpack-pro.runtime.min.js?ver=3.31.0 HTTP/1.1" 200 -
+127.0.0.1 - - [31/May/2026 16:14:37] "GET /_assets/content/plugins/woocommerce/assets/js/frontend/order-attribution.min.js?ver=10.3.8 HTTP/1.1" 200 -
+127.0.0.1 - - [31/May/2026 16:14:37] "GET /_assets/content/plugins/wp-rocket/assets/js/wpr-beacon.min.js HTTP/1.1" 200 -
+127.0.0.1 - - [31/May/2026 16:14:37] "GET /_assets/content/plugins/wp-rocket/assets/js/lazyload/17.8.3/lazyload.min.js HTTP/1.1" 200 -
+127.0.0.1 - - [31/May/2026 16:14:37] "GET /_assets/content/themes/astra/assets/css/minified/compatibility/woocommerce/woocommerce-smallscreen-grid.min.css?ver=4.11.13 HTTP/1.1" 200 -
+127.0.0.1 - - [31/May/2026 16:14:37] "[36mGET /wp-content/cache/fonts/1/google-fonts/fonts/s/rubik/v31/iJWKBXyIfDnIV7nBrXw.woff2 HTTP/1.1[0m" 304 -
+127.0.0.1 - - [31/May/2026 16:14:37] "[36mGET /wp-content/cache/fonts/1/google-fonts/fonts/s/balsamiqsans/v15/P5sEzZiAbNrN8SB3lQQX7PncwdoXILdN.woff2 HTTP/1.1[0m" 304 -
+127.0.0.1 - - [31/May/2026 16:14:37] "[36mGET /wp-content/cache/fonts/1/google-fonts/fonts/s/rubik/v31/iJWKBXyIfDnIV7nFrXyi0A.woff2 HTTP/1.1[0m" 304 -
+127.0.0.1 - - [31/May/2026 16:14:37] "[36mGET /wp-content/cache/fonts/1/google-fonts/fonts/s/balsamiqsans/v15/P5sZzZiAbNrN8SB3lQQX7PncyWUyNYxsAgLF.woff2 HTTP/1.1[0m" 304 -
+127.0.0.1 - - [31/May/2026 16:14:37] "[36mGET /wp-content/cache/fonts/1/google-fonts/fonts/s/balsamiqsans/v15/P5sEzZiAbNrN8SB3lQQX7Pncwd4XIA.woff2 HTTP/1.1[0m" 304 -
+127.0.0.1 - - [31/May/2026 16:14:37] "[36mGET /wp-content/cache/fonts/1/google-fonts/fonts/s/balsamiqsans/v15/P5sZzZiAbNrN8SB3lQQX7PncyWUyNYhsAg.woff2 HTTP/1.1[0m" 304 -
+127.0.0.1 - - [31/May/2026 16:14:37] "[36mGET /_assets/content/uploads/2025/06/logo.png HTTP/1.1[0m" 304 -
+127.0.0.1 - - [31/May/2026 16:14:37] "GET /wp-content/uploads/2025/10/vecteezy_vector-blue-confetti-background_26587577.svg HTTP/1.1" 200 -
+127.0.0.1 - - [31/May/2026 16:14:37] "GET /wp-content/plugins/elementor/assets/lib/dialog/dialog.min.js?ver=4.9.3 HTTP/1.1" 200 -
+127.0.0.1 - - [31/May/2026 16:14:37] "GET /wp-content/plugins/elementor/assets/js/shared-frontend-handlers.4c8abccc3e268b0767b2.bundle.min.js HTTP/1.1" 200 -
+127.0.0.1 - - [31/May/2026 16:14:37] "GET /wp-content/plugins/elementor-pro/assets/js/nav-menu.a23fbd67486c5bedf26c.bundle.min.js HTTP/1.1" 200 -
+127.0.0.1 - - [31/May/2026 16:14:37] "POST /api/party-builder/check-availability HTTP/1.1" 200 -
+127.0.0.1 - - [31/May/2026 16:14:38] "POST /api/party-builder/check-availability HTTP/1.1" 200 -
+127.0.0.1 - - [31/May/2026 16:15:54] "POST /api/party-builder/check-availability HTTP/1.1" 200 -
+127.0.0.1 - - [31/May/2026 16:15:54] "POST /api/party-builder/check-availability HTTP/1.1" 200 -
+127.0.0.1 - - [31/May/2026 16:16:12] "POST /api/party-builder/check-availability HTTP/1.1" 200 -
+127.0.0.1 - - [31/May/2026 16:17:10] "[36mGET /geo/tashkent.geojson HTTP/1.1[0m" 304 -
+127.0.0.1 - - [31/May/2026 16:17:13] "POST /party-builder/ HTTP/1.1" 200 -
+127.0.0.1 - - [31/May/2026 16:17:13] "GET /_assets/content/cache/fonts/1/google-fonts/css/4/9/c/39123062b63c94cb126779358765f.css HTTP/1.1" 200 -
+127.0.0.1 - - [31/May/2026 16:17:13] "GET /_assets/content/themes/astra/assets/css/minified/main.min.css?ver=4.11.13 HTTP/1.1" 200 -
+127.0.0.1 - - [31/May/2026 16:17:13] "GET /_assets/content/themes/astra/assets/css/minified/compatibility/woocommerce/woocommerce-layout-grid.min.css?ver=4.11.13 HTTP/1.1" 200 -
+127.0.0.1 - - [31/May/2026 16:17:13] "GET /_assets/content/cache/min/1/_assets/content/plugins/woocommerce/assets/css/brands.css?ver=1774978498 HTTP/1.1" 200 -
+127.0.0.1 - - [31/May/2026 16:17:13] "GET /_assets/content/cache/min/1/_assets/content/uploads/astra-addon/astra-addon-693ac7e2899ab7-63443221.css?ver=1774978498 HTTP/1.1" 200 -
+127.0.0.1 - - [31/May/2026 16:17:13] "GET /_assets/content/cache/background-css/1/eventsurpriz.uz/_assets/content/cache/min/1/_assets/content/themes/astra/assets/css/minified/compatibility/woocommerce/woocommerce-grid.min.css?ver=1774978498&wpr_t=1775887367 HTTP/1.1" 200 -
+127.0.0.1 - - [31/May/2026 16:17:13] "GET /_assets/content/plugins/elementor/assets/css/widget-image.min.css?ver=3.32.4 HTTP/1.1" 200 -
+127.0.0.1 - - [31/May/2026 16:17:13] "GET /_assets/content/uploads/elementor/css/custom-frontend.min.css?ver=1775874835 HTTP/1.1" 200 -
+127.0.0.1 - - [31/May/2026 16:17:13] "GET /_assets/content/uploads/elementor/css/custom-pro-widget-nav-menu.min.css?ver=1775874835 HTTP/1.1" 200 -
+127.0.0.1 - - [31/May/2026 16:17:13] "GET /_assets/content/plugins/elementor/assets/css/widget-heading.min.css?ver=3.32.4 HTTP/1.1" 200 -
+127.0.0.1 - - [31/May/2026 16:17:13] "GET /_assets/content/plugins/elementor/assets/lib/animations/styles/fadeInDown.min.css?ver=3.32.4 HTTP/1.1" 200 -
+127.0.0.1 - - [31/May/2026 16:17:13] "GET /_assets/content/plugins/elementor-pro/assets/css/widget-form.min.css?ver=3.31.0 HTTP/1.1" 200 -
+127.0.0.1 - - [31/May/2026 16:17:13] "GET /_assets/content/plugins/elementor/assets/lib/animations/styles/e-animation-pulse-grow.min.css?ver=3.32.4 HTTP/1.1" 200 -
+127.0.0.1 - - [31/May/2026 16:17:13] "GET /_assets/content/plugins/elementor-pro/assets/css/modules/sticky.min.css?ver=3.31.0 HTTP/1.1" 200 -
+127.0.0.1 - - [31/May/2026 16:17:13] "GET /_assets/content/uploads/elementor/css/custom-widget-icon-list.min.css?ver=1775874835 HTTP/1.1" 200 -
+127.0.0.1 - - [31/May/2026 16:17:13] "GET /_assets/content/cache/min/1/_assets/content/plugins/elementor/assets/lib/swiper/v8/css/swiper.min.css?ver=1774978498 HTTP/1.1" 200 -
+127.0.0.1 - - [31/May/2026 16:17:13] "GET /_assets/content/plugins/elementor/assets/css/conditionals/e-swiper.min.css?ver=3.32.4 HTTP/1.1" 200 -
+127.0.0.1 - - [31/May/2026 16:17:13] "GET /_assets/content/plugins/elementor-pro/assets/css/widget-loop-common.min.css?ver=3.31.0 HTTP/1.1" 200 -
+127.0.0.1 - - [31/May/2026 16:17:13] "GET /_assets/content/plugins/elementor-pro/assets/css/widget-loop-carousel.min.css?ver=3.31.0 HTTP/1.1" 200 -
+127.0.0.1 - - [31/May/2026 16:17:13] "GET /_assets/content/plugins/elementor/assets/css/widget-divider.min.css?ver=3.32.4 HTTP/1.1" 200 -
+127.0.0.1 - - [31/May/2026 16:17:13] "GET /_assets/content/plugins/elementor/assets/lib/animations/styles/slideInRight.min.css?ver=3.32.4 HTTP/1.1" 200 -
+127.0.0.1 - - [31/May/2026 16:17:13] "GET /_assets/content/plugins/elementor/assets/css/conditionals/shapes.min.css?ver=3.32.4 HTTP/1.1" 200 -
+127.0.0.1 - - [31/May/2026 16:17:13] "GET /_assets/content/plugins/elementor-pro/assets/css/conditionals/popup.min.css?ver=3.31.0 HTTP/1.1" 200 -
+127.0.0.1 - - [31/May/2026 16:17:13] "GET /_assets/content/cache/fonts/1/google-fonts/css/4/4/2/13ed56f4e4e32405647f0f275399e.css HTTP/1.1" 200 -
+127.0.0.1 - - [31/May/2026 16:17:13] "GET /_assets/content/cache/min/1/_assets/content/plugins/elementor/assets/lib/eicons/css/elementor-icons.min.css?ver=1774978498 HTTP/1.1" 200 -
+127.0.0.1 - - [31/May/2026 16:17:13] "GET /_assets/content/cache/fonts/1/google-fonts/css/b/5/8/43c6d2c97974bc9653546099f3d55.css HTTP/1.1" 200 -
+127.0.0.1 - - [31/May/2026 16:17:13] "GET /_assets/content/cache/fonts/1/google-fonts/css/9/b/8/d1db72212c2ef21dc0906bd62ef82.css HTTP/1.1" 200 -
+127.0.0.1 - - [31/May/2026 16:17:13] "GET /_assets/content/cache/fonts/1/google-fonts/css/7/2/f/9bfcdac4190fbdfc3d8afa2c9fbab.css HTTP/1.1" 200 -
+127.0.0.1 - - [31/May/2026 16:17:13] "GET /_assets/content/cache/min/1/_assets/content/plugins/woocommerce/assets/client/blocks/wc-blocks.css?ver=1774978498 HTTP/1.1" 200 -
+127.0.0.1 - - [31/May/2026 16:17:13] "GET /_assets/content/plugins/elementor/assets/lib/font-awesome/css/fontawesome.min.css?ver=5.15.3 HTTP/1.1" 200 -
+127.0.0.1 - - [31/May/2026 16:17:13] "GET /_assets/includes/js/dist/i18n.min.js?ver=c26c3dc7bed366793375 HTTP/1.1" 200 -
+127.0.0.1 - - [31/May/2026 16:17:13] "GET /customer-portal.css?v=stage31-force-hide-inline-confirm-20260531 HTTP/1.1" 200 -
+127.0.0.1 - - [31/May/2026 16:17:13] "GET /_assets/content/cache/min/1/_assets/content/plugins/elementor/assets/lib/font-awesome/css/brands.min.css?ver=1774978498 HTTP/1.1" 200 -
+127.0.0.1 - - [31/May/2026 16:17:13] "GET /_assets/content/cache/min/1/_assets/content/plugins/elementor/assets/lib/font-awesome/css/solid.min.css?ver=1774978498 HTTP/1.1" 200 -
+127.0.0.1 - - [31/May/2026 16:17:13] "GET /_assets/includes/js/dist/hooks.min.js?ver=dd5603f07f9220ed27f1 HTTP/1.1" 200 -
+127.0.0.1 - - [31/May/2026 16:17:13] "GET /_assets/includes/js/jquery/jquery.min.js?ver=3.7.1 HTTP/1.1" 200 -
+127.0.0.1 - - [31/May/2026 16:17:13] "GET /_assets/includes/js/jquery/jquery-migrate.min.js?ver=3.4.1 HTTP/1.1" 200 -
+127.0.0.1 - - [31/May/2026 16:17:13] "GET /_assets/content/plugins/woocommerce/assets/js/js-cookie/js.cookie.min.js?ver=2.1.4-wc.10.3.8 HTTP/1.1" 200 -
+127.0.0.1 - - [31/May/2026 16:17:13] "GET /_assets/content/plugins/woocommerce/assets/js/jquery-blockui/jquery.blockUI.min.js?ver=2.7.0-wc.10.3.8 HTTP/1.1" 200 -
+127.0.0.1 - - [31/May/2026 16:17:13] "GET /_assets/content/plugins/woocommerce/assets/js/frontend/woocommerce.min.js?ver=10.3.8 HTTP/1.1" 200 -
+127.0.0.1 - - [31/May/2026 16:17:13] "GET /_assets/content/plugins/woocommerce/assets/js/frontend/add-to-cart.min.js?ver=10.3.8 HTTP/1.1" 200 -
+127.0.0.1 - - [31/May/2026 16:17:13] "GET /_assets/content/themes/astra/assets/js/minified/frontend.min.js?ver=4.11.13 HTTP/1.1" 200 -
+127.0.0.1 - - [31/May/2026 16:17:13] "GET /_assets/content/cache/min/1/_assets/content/uploads/astra-addon/astra-addon-693ac7e28a1cb6-97115560.js?ver=1774978499 HTTP/1.1" 200 -
+127.0.0.1 - - [31/May/2026 16:17:13] "GET /_assets/content/plugins/woocommerce/assets/js/flexslider/jquery.flexslider.min.js?ver=2.7.2-wc.10.3.8 HTTP/1.1" 200 -
+127.0.0.1 - - [31/May/2026 16:17:13] "GET /_assets/content/themes/astra/assets/js/minified/add-to-cart-quantity-btn.min.js?ver=4.11.13 HTTP/1.1" 200 -
+127.0.0.1 - - [31/May/2026 16:17:13] "GET /_assets/content/plugins/astra-addon/assets/js/minified/purify.min.js?ver=4.11.6 HTTP/1.1" 200 -
+127.0.0.1 - - [31/May/2026 16:17:13] "GET /_assets/content/plugins/astra-addon/addons/woocommerce/assets/js/minified/modern-shop-view.min.js?ver=4.11.6 HTTP/1.1" 200 -
+127.0.0.1 - - [31/May/2026 16:17:13] "GET /_assets/content/plugins/astra-addon/addons/woocommerce/assets/js/minified/single-product-ajax-cart.min.js?ver=4.11.6 HTTP/1.1" 200 -
+127.0.0.1 - - [31/May/2026 16:17:13] "GET /_assets/content/plugins/elementor/assets/js/webpack.runtime.min.js?ver=3.32.4 HTTP/1.1" 200 -
+127.0.0.1 - - [31/May/2026 16:17:13] "[36mGET /wp-content/cache/fonts/1/google-fonts/fonts/s/rubik/v31/iJWKBXyIfDnIV7nFrXyi0A.woff2 HTTP/1.1[0m" 304 -
+127.0.0.1 - - [31/May/2026 16:17:13] "[36mGET /wp-content/cache/fonts/1/google-fonts/fonts/s/balsamiqsans/v15/P5sEzZiAbNrN8SB3lQQX7PncwdoXILdN.woff2 HTTP/1.1[0m" 304 -
+127.0.0.1 - - [31/May/2026 16:17:13] "[36mGET /wp-content/cache/fonts/1/google-fonts/fonts/s/rubik/v31/iJWKBXyIfDnIV7nBrXw.woff2 HTTP/1.1[0m" 304 -
+127.0.0.1 - - [31/May/2026 16:17:13] "[36mGET /wp-content/cache/fonts/1/google-fonts/fonts/s/balsamiqsans/v15/P5sZzZiAbNrN8SB3lQQX7PncyWUyNYxsAgLF.woff2 HTTP/1.1[0m" 304 -
+127.0.0.1 - - [31/May/2026 16:17:13] "[36mGET /wp-content/cache/fonts/1/google-fonts/fonts/s/balsamiqsans/v15/P5sZzZiAbNrN8SB3lQQX7PncyWUyNYhsAg.woff2 HTTP/1.1[0m" 304 -
+127.0.0.1 - - [31/May/2026 16:17:13] "[36mGET /wp-content/cache/fonts/1/google-fonts/fonts/s/balsamiqsans/v15/P5sEzZiAbNrN8SB3lQQX7Pncwd4XIA.woff2 HTTP/1.1[0m" 304 -
+127.0.0.1 - - [31/May/2026 16:17:13] "GET /_assets/content/plugins/elementor/assets/js/frontend.min.js?ver=3.32.4 HTTP/1.1" 200 -
+127.0.0.1 - - [31/May/2026 16:17:13] "GET /_assets/content/plugins/elementor/assets/js/frontend-modules.min.js?ver=3.32.4 HTTP/1.1" 200 -
+127.0.0.1 - - [31/May/2026 16:17:13] "GET /_assets/content/plugins/elementor-pro/assets/lib/sticky/jquery.sticky.min.js?ver=3.31.0 HTTP/1.1" 200 -
+127.0.0.1 - - [31/May/2026 16:17:13] "GET /_assets/includes/js/jquery/ui/core.min.js?ver=1.13.3 HTTP/1.1" 200 -
+127.0.0.1 - - [31/May/2026 16:17:13] "GET /_assets/content/plugins/elementor-pro/assets/lib/smartmenus/jquery.smartmenus.min.js?ver=1.2.1 HTTP/1.1" 200 -
+127.0.0.1 - - [31/May/2026 16:17:13] "GET /_assets/includes/js/imagesloaded.min.js?ver=5.0.0 HTTP/1.1" 200 -
+127.0.0.1 - - [31/May/2026 16:17:13] "GET /_assets/content/plugins/elementor-pro/assets/js/webpack-pro.runtime.min.js?ver=3.31.0 HTTP/1.1" 200 -
+127.0.0.1 - - [31/May/2026 16:17:13] "GET /_assets/content/plugins/woocommerce/assets/js/sourcebuster/sourcebuster.min.js?ver=10.3.8 HTTP/1.1" 200 -
+127.0.0.1 - - [31/May/2026 16:17:13] "GET /_assets/content/plugins/wp-rocket/assets/js/lazyload/17.8.3/lazyload.min.js HTTP/1.1" 200 -
+127.0.0.1 - - [31/May/2026 16:17:13] "GET /_assets/content/plugins/woocommerce/assets/js/frontend/order-attribution.min.js?ver=10.3.8 HTTP/1.1" 200 -
+127.0.0.1 - - [31/May/2026 16:17:13] "GET /_assets/content/plugins/elementor-pro/assets/js/frontend.min.js?ver=3.31.0 HTTP/1.1" 200 -
+127.0.0.1 - - [31/May/2026 16:17:13] "GET /_assets/content/plugins/elementor-pro/assets/js/elements-handlers.min.js?ver=3.31.0 HTTP/1.1" 200 -
+127.0.0.1 - - [31/May/2026 16:17:13] "[36mGET /_assets/content/uploads/2025/06/logo.png HTTP/1.1[0m" 304 -
+127.0.0.1 - - [31/May/2026 16:17:13] "GET /_assets/content/plugins/wp-rocket/assets/js/wpr-beacon.min.js HTTP/1.1" 200 -
+127.0.0.1 - - [31/May/2026 16:17:13] "GET /_assets/content/themes/astra/assets/css/minified/compatibility/woocommerce/woocommerce-smallscreen-grid.min.css?ver=4.11.13 HTTP/1.1" 200 -
+127.0.0.1 - - [31/May/2026 16:17:13] "GET /wp-content/uploads/2025/10/vecteezy_vector-blue-confetti-background_26587577.svg HTTP/1.1" 200 -
+127.0.0.1 - - [31/May/2026 16:17:13] "GET /wp-content/plugins/elementor/assets/lib/dialog/dialog.min.js?ver=4.9.3 HTTP/1.1" 200 -
+127.0.0.1 - - [31/May/2026 16:17:13] "GET /wp-content/plugins/elementor/assets/js/shared-frontend-handlers.4c8abccc3e268b0767b2.bundle.min.js HTTP/1.1" 200 -
+127.0.0.1 - - [31/May/2026 16:17:13] "GET /wp-content/plugins/elementor-pro/assets/js/nav-menu.a23fbd67486c5bedf26c.bundle.min.js HTTP/1.1" 200 -
+127.0.0.1 - - [31/May/2026 16:17:13] "POST /api/party-builder/check-availability HTTP/1.1" 200 -
+127.0.0.1 - - [31/May/2026 16:17:14] "POST /api/party-builder/check-availability HTTP/1.1" 200 -
+127.0.0.1 - - [31/May/2026 16:17:14] "[32mPOST /party-builder/ HTTP/1.1[0m" 302 -
+127.0.0.1 - - [31/May/2026 16:17:14] "POST /wp-admin/admin-ajax.php HTTP/1.1" 200 -
+127.0.0.1 - - [31/May/2026 16:17:17] "POST /api/party-builder/check-availability HTTP/1.1" 200 -
+127.0.0.1 - - [31/May/2026 16:17:18] "POST /api/party-builder/check-availability HTTP/1.1" 200 -
+127.0.0.1 - - [31/May/2026 16:17:19] "POST /api/party-builder/check-availability HTTP/1.1" 200 -
+127.0.0.1 - - [31/May/2026 16:17:21] "[36mGET /geo/tashkent.geojson HTTP/1.1[0m" 304 -
+127.0.0.1 - - [31/May/2026 16:17:30] "[32mPOST /party-builder/ HTTP/1.1[0m" 302 -
+127.0.0.1 - - [31/May/2026 16:17:30] "GET /account/orders/SRP-00008/?just_created=1 HTTP/1.1" 200 -
+127.0.0.1 - - [31/May/2026 16:17:30] "[33mGET /http://127.0.0.1:5001/ HTTP/1.1[0m" 404 -
+127.0.0.1 - - [31/May/2026 16:17:31] "POST /wp-admin/admin-ajax.php HTTP/1.1" 200 -
+[tg-poll] loop error: HTTPSConnectionPool(host='api.telegram.org', port=443): Read timed out. (read timeout=30)
+[tg-poll] loop error: HTTPSConnectionPool(host='api.telegram.org', port=443): Read timed out. (read timeout=30)
+[tg-poll] loop error: ('Connection aborted.', ConnectionResetError(54, 'Connection reset by peer'))
+[tg-poll] loop error: HTTPSConnectionPool(host='api.telegram.org', port=443): Read timed out. (read timeout=30)
+[tg-poll] loop error: ('Connection aborted.', ConnectionResetError(54, 'Connection reset by peer'))
+[tg-poll] loop error: ('Connection aborted.', ConnectionResetError(54, 'Connection reset by peer'))
+[tg-poll] loop error: HTTPSConnectionPool(host='api.telegram.org', port=443): Read timed out. (read timeout=30)
+[tg-poll] loop error: HTTPSConnectionPool(host='api.telegram.org', port=443): Max retries exceeded with url: /bot<redacted>/getUpdates?offset=0&timeout=25&allowed_updates=%5B%22message%22%2C%22callback_query%22%5D (Caused by NameResolutionError("HTTPSConnection(host='api.telegram.org', port=443): Failed to resolve 'api.telegram.org' ([Errno 8] nodename nor servname provided, or not known)"))
+[tg-poll] loop error: HTTPSConnectionPool(host='api.telegram.org', port=443): Max retries exceeded with url: /bot<redacted>/getUpdates?offset=0&timeout=25&allowed_updates=%5B%22message%22%2C%22callback_query%22%5D (Caused by NameResolutionError("HTTPSConnection(host='api.telegram.org', port=443): Failed to resolve 'api.telegram.org' ([Errno 8] nodename nor servname provided, or not known)"))
+[tg-poll] loop error: HTTPSConnectionPool(host='api.telegram.org', port=443): Max retries exceeded with url: /bot<redacted>/getUpdates?offset=0&timeout=25&allowed_updates=%5B%22message%22%2C%22callback_query%22%5D (Caused by NameResolutionError("HTTPSConnection(host='api.telegram.org', port=443): Failed to resolve 'api.telegram.org' ([Errno 8] nodename nor servname provided, or not known)"))
+[tg-poll] loop error: ('Connection aborted.', ConnectionResetError(54, 'Connection reset by peer'))
+[tg-poll] loop error: HTTPSConnectionPool(host='api.telegram.org', port=443): Max retries exceeded with url: /bot<redacted>/getUpdates?offset=0&timeout=25&allowed_updates=%5B%22message%22%2C%22callback_query%22%5D (Caused by NameResolutionError("HTTPSConnection(host='api.telegram.org', port=443): Failed to resolve 'api.telegram.org' ([Errno 8] nodename nor servname provided, or not known)"))
+[tg-poll] loop error: HTTPSConnectionPool(host='api.telegram.org', port=443): Max retries exceeded with url: /bot<redacted>/getUpdates?offset=0&timeout=25&allowed_updates=%5B%22message%22%2C%22callback_query%22%5D (Caused by NameResolutionError("HTTPSConnection(host='api.telegram.org', port=443): Failed to resolve 'api.telegram.org' ([Errno 8] nodename nor servname provided, or not known)"))
+[tg-poll] loop error: HTTPSConnectionPool(host='api.telegram.org', port=443): Max retries exceeded with url: /bot<redacted>/getUpdates?offset=0&timeout=25&allowed_updates=%5B%22message%22%2C%22callback_query%22%5D (Caused by NameResolutionError("HTTPSConnection(host='api.telegram.org', port=443): Failed to resolve 'api.telegram.org' ([Errno 8] nodename nor servname provided, or not known)"))
+[tg-poll] loop error: HTTPSConnectionPool(host='api.telegram.org', port=443): Max retries exceeded with url: /bot<redacted>/getUpdates?offset=0&timeout=25&allowed_updates=%5B%22message%22%2C%22callback_query%22%5D (Caused by NameResolutionError("HTTPSConnection(host='api.telegram.org', port=443): Failed to resolve 'api.telegram.org' ([Errno 8] nodename nor servname provided, or not known)"))
+[tg-poll] loop error: HTTPSConnectionPool(host='api.telegram.org', port=443): Max retries exceeded with url: /bot<redacted>/getUpdates?offset=0&timeout=25&allowed_updates=%5B%22message%22%2C%22callback_query%22%5D (Caused by NameResolutionError("HTTPSConnection(host='api.telegram.org', port=443): Failed to resolve 'api.telegram.org' ([Errno 8] nodename nor servname provided, or not known)"))
+[tg-poll] loop error: HTTPSConnectionPool(host='api.telegram.org', port=443): Max retries exceeded with url: /bot<redacted>/getUpdates?offset=0&timeout=25&allowed_updates=%5B%22message%22%2C%22callback_query%22%5D (Caused by NameResolutionError("HTTPSConnection(host='api.telegram.org', port=443): Failed to resolve 'api.telegram.org' ([Errno 8] nodename nor servname provided, or not known)"))
+[tg-poll] loop error: HTTPSConnectionPool(host='api.telegram.org', port=443): Max retries exceeded with url: /bot<redacted>/getUpdates?offset=0&timeout=25&allowed_updates=%5B%22message%22%2C%22callback_query%22%5D (Caused by NameResolutionError("HTTPSConnection(host='api.telegram.org', port=443): Failed to resolve 'api.telegram.org' ([Errno 8] nodename nor servname provided, or not known)"))
+[tg-poll] loop error: HTTPSConnectionPool(host='api.telegram.org', port=443): Max retries exceeded with url: /bot<redacted>/getUpdates?offset=0&timeout=25&allowed_updates=%5B%22message%22%2C%22callback_query%22%5D (Caused by NameResolutionError("HTTPSConnection(host='api.telegram.org', port=443): Failed to resolve 'api.telegram.org' ([Errno 8] nodename nor servname provided, or not known)"))
+[tg-poll] loop error: HTTPSConnectionPool(host='api.telegram.org', port=443): Max retries exceeded with url: /bot<redacted>/getUpdates?offset=0&timeout=25&allowed_updates=%5B%22message%22%2C%22callback_query%22%5D (Caused by NameResolutionError("HTTPSConnection(host='api.telegram.org', port=443): Failed to resolve 'api.telegram.org' ([Errno 8] nodename nor servname provided, or not known)"))
+[tg-poll] loop error: HTTPSConnectionPool(host='api.telegram.org', port=443): Max retries exceeded with url: /bot<redacted>/getUpdates?offset=0&timeout=25&allowed_updates=%5B%22message%22%2C%22callback_query%22%5D (Caused by NameResolutionError("HTTPSConnection(host='api.telegram.org', port=443): Failed to resolve 'api.telegram.org' ([Errno 8] nodename nor servname provided, or not known)"))
+[tg-poll] loop error: HTTPSConnectionPool(host='api.telegram.org', port=443): Max retries exceeded with url: /bot<redacted>/getUpdates?offset=0&timeout=25&allowed_updates=%5B%22message%22%2C%22callback_query%22%5D (Caused by NameResolutionError("HTTPSConnection(host='api.telegram.org', port=443): Failed to resolve 'api.telegram.org' ([Errno 8] nodename nor servname provided, or not known)"))
+[tg-poll] loop error: HTTPSConnectionPool(host='api.telegram.org', port=443): Max retries exceeded with url: /bot<redacted>/getUpdates?offset=0&timeout=25&allowed_updates=%5B%22message%22%2C%22callback_query%22%5D (Caused by NameResolutionError("HTTPSConnection(host='api.telegram.org', port=443): Failed to resolve 'api.telegram.org' ([Errno 8] nodename nor servname provided, or not known)"))
+[tg-poll] loop error: HTTPSConnectionPool(host='api.telegram.org', port=443): Max retries exceeded with url: /bot<redacted>/getUpdates?offset=0&timeout=25&allowed_updates=%5B%22message%22%2C%22callback_query%22%5D (Caused by NameResolutionError("HTTPSConnection(host='api.telegram.org', port=443): Failed to resolve 'api.telegram.org' ([Errno 8] nodename nor servname provided, or not known)"))
+[tg-poll] loop error: HTTPSConnectionPool(host='api.telegram.org', port=443): Max retries exceeded with url: /bot<redacted>/getUpdates?offset=0&timeout=25&allowed_updates=%5B%22message%22%2C%22callback_query%22%5D (Caused by NameResolutionError("HTTPSConnection(host='api.telegram.org', port=443): Failed to resolve 'api.telegram.org' ([Errno 8] nodename nor servname provided, or not known)"))
+[tg-poll] loop error: HTTPSConnectionPool(host='api.telegram.org', port=443): Max retries exceeded with url: /bot<redacted>/getUpdates?offset=0&timeout=25&allowed_updates=%5B%22message%22%2C%22callback_query%22%5D (Caused by NameResolutionError("HTTPSConnection(host='api.telegram.org', port=443): Failed to resolve 'api.telegram.org' ([Errno 8] nodename nor servname provided, or not known)"))
+[tg-poll] loop error: HTTPSConnectionPool(host='api.telegram.org', port=443): Max retries exceeded with url: /bot<redacted>/getUpdates?offset=0&timeout=25&allowed_updates=%5B%22message%22%2C%22callback_query%22%5D (Caused by NameResolutionError("HTTPSConnection(host='api.telegram.org', port=443): Failed to resolve 'api.telegram.org' ([Errno 8] nodename nor servname provided, or not known)"))
+[tg-poll] loop error: HTTPSConnectionPool(host='api.telegram.org', port=443): Max retries exceeded with url: /bot<redacted>/getUpdates?offset=0&timeout=25&allowed_updates=%5B%22message%22%2C%22callback_query%22%5D (Caused by NameResolutionError("HTTPSConnection(host='api.telegram.org', port=443): Failed to resolve 'api.telegram.org' ([Errno 8] nodename nor servname provided, or not known)"))
+[tg-poll] loop error: HTTPSConnectionPool(host='api.telegram.org', port=443): Max retries exceeded with url: /bot<redacted>/getUpdates?offset=0&timeout=25&allowed_updates=%5B%22message%22%2C%22callback_query%22%5D (Caused by NameResolutionError("HTTPSConnection(host='api.telegram.org', port=443): Failed to resolve 'api.telegram.org' ([Errno 8] nodename nor servname provided, or not known)"))
+[tg-poll] loop error: HTTPSConnectionPool(host='api.telegram.org', port=443): Max retries exceeded with url: /bot<redacted>/getUpdates?offset=0&timeout=25&allowed_updates=%5B%22message%22%2C%22callback_query%22%5D (Caused by NameResolutionError("HTTPSConnection(host='api.telegram.org', port=443): Failed to resolve 'api.telegram.org' ([Errno 8] nodename nor servname provided, or not known)"))
+[tg-poll] loop error: HTTPSConnectionPool(host='api.telegram.org', port=443): Max retries exceeded with url: /bot<redacted>/getUpdates?offset=0&timeout=25&allowed_updates=%5B%22message%22%2C%22callback_query%22%5D (Caused by NameResolutionError("HTTPSConnection(host='api.telegram.org', port=443): Failed to resolve 'api.telegram.org' ([Errno 8] nodename nor servname provided, or not known)"))
+[tg-poll] loop error: HTTPSConnectionPool(host='api.telegram.org', port=443): Max retries exceeded with url: /bot<redacted>/getUpdates?offset=0&timeout=25&allowed_updates=%5B%22message%22%2C%22callback_query%22%5D (Caused by NameResolutionError("HTTPSConnection(host='api.telegram.org', port=443): Failed to resolve 'api.telegram.org' ([Errno 8] nodename nor servname provided, or not known)"))
+[tg-poll] loop error: HTTPSConnectionPool(host='api.telegram.org', port=443): Max retries exceeded with url: /bot<redacted>/getUpdates?offset=0&timeout=25&allowed_updates=%5B%22message%22%2C%22callback_query%22%5D (Caused by NameResolutionError("HTTPSConnection(host='api.telegram.org', port=443): Failed to resolve 'api.telegram.org' ([Errno 8] nodename nor servname provided, or not known)"))
+[tg-poll] loop error: HTTPSConnectionPool(host='api.telegram.org', port=443): Max retries exceeded with url: /bot<redacted>/getUpdates?offset=0&timeout=25&allowed_updates=%5B%22message%22%2C%22callback_query%22%5D (Caused by NameResolutionError("HTTPSConnection(host='api.telegram.org', port=443): Failed to resolve 'api.telegram.org' ([Errno 8] nodename nor servname provided, or not known)"))
+[tg-poll] loop error: HTTPSConnectionPool(host='api.telegram.org', port=443): Max retries exceeded with url: /bot<redacted>/getUpdates?offset=0&timeout=25&allowed_updates=%5B%22message%22%2C%22callback_query%22%5D (Caused by NameResolutionError("HTTPSConnection(host='api.telegram.org', port=443): Failed to resolve 'api.telegram.org' ([Errno 8] nodename nor servname provided, or not known)"))
+[tg-poll] loop error: HTTPSConnectionPool(host='api.telegram.org', port=443): Max retries exceeded with url: /bot<redacted>/getUpdates?offset=0&timeout=25&allowed_updates=%5B%22message%22%2C%22callback_query%22%5D (Caused by NameResolutionError("HTTPSConnection(host='api.telegram.org', port=443): Failed to resolve 'api.telegram.org' ([Errno 8] nodename nor servname provided, or not known)"))
+[tg-poll] loop error: HTTPSConnectionPool(host='api.telegram.org', port=443): Max retries exceeded with url: /bot<redacted>/getUpdates?offset=0&timeout=25&allowed_updates=%5B%22message%22%2C%22callback_query%22%5D (Caused by NameResolutionError("HTTPSConnection(host='api.telegram.org', port=443): Failed to resolve 'api.telegram.org' ([Errno 8] nodename nor servname provided, or not known)"))
+[tg-poll] loop error: HTTPSConnectionPool(host='api.telegram.org', port=443): Max retries exceeded with url: /bot<redacted>/getUpdates?offset=0&timeout=25&allowed_updates=%5B%22message%22%2C%22callback_query%22%5D (Caused by NameResolutionError("HTTPSConnection(host='api.telegram.org', port=443): Failed to resolve 'api.telegram.org' ([Errno 8] nodename nor servname provided, or not known)"))
+[tg-poll] loop error: HTTPSConnectionPool(host='api.telegram.org', port=443): Max retries exceeded with url: /bot<redacted>/getUpdates?offset=0&timeout=25&allowed_updates=%5B%22message%22%2C%22callback_query%22%5D (Caused by NameResolutionError("HTTPSConnection(host='api.telegram.org', port=443): Failed to resolve 'api.telegram.org' ([Errno 8] nodename nor servname provided, or not known)"))
+[tg-poll] loop error: HTTPSConnectionPool(host='api.telegram.org', port=443): Max retries exceeded with url: /bot<redacted>/getUpdates?offset=0&timeout=25&allowed_updates=%5B%22message%22%2C%22callback_query%22%5D (Caused by NameResolutionError("HTTPSConnection(host='api.telegram.org', port=443): Failed to resolve 'api.telegram.org' ([Errno 8] nodename nor servname provided, or not known)"))
+[tg-poll] loop error: HTTPSConnectionPool(host='api.telegram.org', port=443): Max retries exceeded with url: /bot<redacted>/getUpdates?offset=0&timeout=25&allowed_updates=%5B%22message%22%2C%22callback_query%22%5D (Caused by NameResolutionError("HTTPSConnection(host='api.telegram.org', port=443): Failed to resolve 'api.telegram.org' ([Errno 8] nodename nor servname provided, or not known)"))
+[tg-poll] loop error: HTTPSConnectionPool(host='api.telegram.org', port=443): Max retries exceeded with url: /bot<redacted>/getUpdates?offset=0&timeout=25&allowed_updates=%5B%22message%22%2C%22callback_query%22%5D (Caused by NameResolutionError("HTTPSConnection(host='api.telegram.org', port=443): Failed to resolve 'api.telegram.org' ([Errno 8] nodename nor servname provided, or not known)"))
+[tg-poll] loop error: HTTPSConnectionPool(host='api.telegram.org', port=443): Max retries exceeded with url: /bot<redacted>/getUpdates?offset=0&timeout=25&allowed_updates=%5B%22message%22%2C%22callback_query%22%5D (Caused by NameResolutionError("HTTPSConnection(host='api.telegram.org', port=443): Failed to resolve 'api.telegram.org' ([Errno 8] nodename nor servname provided, or not known)"))
+[tg-poll] loop error: HTTPSConnectionPool(host='api.telegram.org', port=443): Max retries exceeded with url: /bot<redacted>/getUpdates?offset=0&timeout=25&allowed_updates=%5B%22message%22%2C%22callback_query%22%5D (Caused by NameResolutionError("HTTPSConnection(host='api.telegram.org', port=443): Failed to resolve 'api.telegram.org' ([Errno 8] nodename nor servname provided, or not known)"))
+[tg-poll] loop error: HTTPSConnectionPool(host='api.telegram.org', port=443): Max retries exceeded with url: /bot<redacted>/getUpdates?offset=0&timeout=25&allowed_updates=%5B%22message%22%2C%22callback_query%22%5D (Caused by NameResolutionError("HTTPSConnection(host='api.telegram.org', port=443): Failed to resolve 'api.telegram.org' ([Errno 8] nodename nor servname provided, or not known)"))
+[tg-poll] loop error: HTTPSConnectionPool(host='api.telegram.org', port=443): Max retries exceeded with url: /bot<redacted>/getUpdates?offset=0&timeout=25&allowed_updates=%5B%22message%22%2C%22callback_query%22%5D (Caused by NameResolutionError("HTTPSConnection(host='api.telegram.org', port=443): Failed to resolve 'api.telegram.org' ([Errno 8] nodename nor servname provided, or not known)"))
+[tg-poll] loop error: HTTPSConnectionPool(host='api.telegram.org', port=443): Max retries exceeded with url: /bot<redacted>/getUpdates?offset=0&timeout=25&allowed_updates=%5B%22message%22%2C%22callback_query%22%5D (Caused by NameResolutionError("HTTPSConnection(host='api.telegram.org', port=443): Failed to resolve 'api.telegram.org' ([Errno 8] nodename nor servname provided, or not known)"))
+[tg-poll] loop error: HTTPSConnectionPool(host='api.telegram.org', port=443): Max retries exceeded with url: /bot<redacted>/getUpdates?offset=0&timeout=25&allowed_updates=%5B%22message%22%2C%22callback_query%22%5D (Caused by NameResolutionError("HTTPSConnection(host='api.telegram.org', port=443): Failed to resolve 'api.telegram.org' ([Errno 8] nodename nor servname provided, or not known)"))
+[tg-poll] loop error: HTTPSConnectionPool(host='api.telegram.org', port=443): Max retries exceeded with url: /bot<redacted>/getUpdates?offset=0&timeout=25&allowed_updates=%5B%22message%22%2C%22callback_query%22%5D (Caused by NameResolutionError("HTTPSConnection(host='api.telegram.org', port=443): Failed to resolve 'api.telegram.org' ([Errno 8] nodename nor servname provided, or not known)"))
+[tg-poll] loop error: HTTPSConnectionPool(host='api.telegram.org', port=443): Max retries exceeded with url: /bot<redacted>/getUpdates?offset=0&timeout=25&allowed_updates=%5B%22message%22%2C%22callback_query%22%5D (Caused by NameResolutionError("HTTPSConnection(host='api.telegram.org', port=443): Failed to resolve 'api.telegram.org' ([Errno 8] nodename nor servname provided, or not known)"))
+[tg-poll] loop error: HTTPSConnectionPool(host='api.telegram.org', port=443): Max retries exceeded with url: /bot<redacted>/getUpdates?offset=0&timeout=25&allowed_updates=%5B%22message%22%2C%22callback_query%22%5D (Caused by NameResolutionError("HTTPSConnection(host='api.telegram.org', port=443): Failed to resolve 'api.telegram.org' ([Errno 8] nodename nor servname provided, or not known)"))
+[tg-poll] loop error: HTTPSConnectionPool(host='api.telegram.org', port=443): Max retries exceeded with url: /bot<redacted>/getUpdates?offset=0&timeout=25&allowed_updates=%5B%22message%22%2C%22callback_query%22%5D (Caused by NameResolutionError("HTTPSConnection(host='api.telegram.org', port=443): Failed to resolve 'api.telegram.org' ([Errno 8] nodename nor servname provided, or not known)"))
+[tg-poll] loop error: HTTPSConnectionPool(host='api.telegram.org', port=443): Read timed out. (read timeout=30)
+[tg-poll] loop error: HTTPSConnectionPool(host='api.telegram.org', port=443): Read timed out. (read timeout=30)
+[tg-poll] loop error: HTTPSConnectionPool(host='api.telegram.org', port=443): Read timed out. (read timeout=30)
+[tg-poll] loop error: HTTPSConnectionPool(host='api.telegram.org', port=443): Read timed out. (read timeout=30)
+[tg-poll] loop error: HTTPSConnectionPool(host='api.telegram.org', port=443): Read timed out. (read timeout=30)
+[tg-poll] loop error: HTTPSConnectionPool(host='api.telegram.org', port=443): Read timed out. (read timeout=30)
+[tg-poll] loop error: HTTPSConnectionPool(host='api.telegram.org', port=443): Read timed out. (read timeout=30)
+[tg-poll] loop error: HTTPSConnectionPool(host='api.telegram.org', port=443): Max retries exceeded with url: /bot<redacted>/getUpdates?offset=0&timeout=25&allowed_updates=%5B%22message%22%2C%22callback_query%22%5D (Caused by NewConnectionError("HTTPSConnection(host='api.telegram.org', port=443): Failed to establish a new connection: [Errno 51] Network is unreachable"))
+[tg-poll] loop error: HTTPSConnectionPool(host='api.telegram.org', port=443): Max retries exceeded with url: /bot<redacted>/getUpdates?offset=0&timeout=25&allowed_updates=%5B%22message%22%2C%22callback_query%22%5D (Caused by NameResolutionError("HTTPSConnection(host='api.telegram.org', port=443): Failed to resolve 'api.telegram.org' ([Errno 8] nodename nor servname provided, or not known)"))
+[tg-poll] loop error: HTTPSConnectionPool(host='api.telegram.org', port=443): Max retries exceeded with url: /bot<redacted>/getUpdates?offset=0&timeout=25&allowed_updates=%5B%22message%22%2C%22callback_query%22%5D (Caused by NameResolutionError("HTTPSConnection(host='api.telegram.org', port=443): Failed to resolve 'api.telegram.org' ([Errno 8] nodename nor servname provided, or not known)"))
+[tg-poll] loop error: HTTPSConnectionPool(host='api.telegram.org', port=443): Read timed out. (read timeout=30)
+[tg-poll] loop error: HTTPSConnectionPool(host='api.telegram.org', port=443): Read timed out. (read timeout=30)
+[tg-poll] loop error: HTTPSConnectionPool(host='api.telegram.org', port=443): Max retries exceeded with url: /bot<redacted>/getUpdates?offset=7235269&timeout=25&allowed_updates=%5B%22message%22%2C%22callback_query%22%5D (Caused by NameResolutionError("HTTPSConnection(host='api.telegram.org', port=443): Failed to resolve 'api.telegram.org' ([Errno 8] nodename nor servname provided, or not known)"))
+[tg-poll] loop error: HTTPSConnectionPool(host='api.telegram.org', port=443): Max retries exceeded with url: /bot<redacted>/getUpdates?offset=7235269&timeout=25&allowed_updates=%5B%22message%22%2C%22callback_query%22%5D (Caused by NameResolutionError("HTTPSConnection(host='api.telegram.org', port=443): Failed to resolve 'api.telegram.org' ([Errno 8] nodename nor servname provided, or not known)"))
+[tg-poll] loop error: HTTPSConnectionPool(host='api.telegram.org', port=443): Max retries exceeded with url: /bot<redacted>/getUpdates?offset=7235269&timeout=25&allowed_updates=%5B%22message%22%2C%22callback_query%22%5D (Caused by NameResolutionError("HTTPSConnection(host='api.telegram.org', port=443): Failed to resolve 'api.telegram.org' ([Errno 8] nodename nor servname provided, or not known)"))
+[tg-poll] loop error: HTTPSConnectionPool(host='api.telegram.org', port=443): Max retries exceeded with url: /bot<redacted>/getUpdates?offset=7235269&timeout=25&allowed_updates=%5B%22message%22%2C%22callback_query%22%5D (Caused by NameResolutionError("HTTPSConnection(host='api.telegram.org', port=443): Failed to resolve 'api.telegram.org' ([Errno 8] nodename nor servname provided, or not known)"))
+[tg-poll] loop error: HTTPSConnectionPool(host='api.telegram.org', port=443): Max retries exceeded with url: /bot<redacted>/getUpdates?offset=7235269&timeout=25&allowed_updates=%5B%22message%22%2C%22callback_query%22%5D (Caused by NameResolutionError("HTTPSConnection(host='api.telegram.org', port=443): Failed to resolve 'api.telegram.org' ([Errno 8] nodename nor servname provided, or not known)"))
+[tg-poll] loop error: HTTPSConnectionPool(host='api.telegram.org', port=443): Max retries exceeded with url: /bot<redacted>/getUpdates?offset=7235269&timeout=25&allowed_updates=%5B%22message%22%2C%22callback_query%22%5D (Caused by NameResolutionError("HTTPSConnection(host='api.telegram.org', port=443): Failed to resolve 'api.telegram.org' ([Errno 8] nodename nor servname provided, or not known)"))
+[tg-poll] loop error: HTTPSConnectionPool(host='api.telegram.org', port=443): Read timed out. (read timeout=30)
+[tg-poll] loop error: HTTPSConnectionPool(host='api.telegram.org', port=443): Read timed out. (read timeout=30)
+[tg-poll] loop error: HTTPSConnectionPool(host='api.telegram.org', port=443): Max retries exceeded with url: /bot<redacted>/getUpdates?offset=7235269&timeout=25&allowed_updates=%5B%22message%22%2C%22callback_query%22%5D (Caused by NameResolutionError("HTTPSConnection(host='api.telegram.org', port=443): Failed to resolve 'api.telegram.org' ([Errno 8] nodename nor servname provided, or not known)"))
+[tg-poll] loop error: HTTPSConnectionPool(host='api.telegram.org', port=443): Max retries exceeded with url: /bot<redacted>/getUpdates?offset=7235269&timeout=25&allowed_updates=%5B%22message%22%2C%22callback_query%22%5D (Caused by NameResolutionError("HTTPSConnection(host='api.telegram.org', port=443): Failed to resolve 'api.telegram.org' ([Errno 8] nodename nor servname provided, or not known)"))
+[tg-poll] loop error: HTTPSConnectionPool(host='api.telegram.org', port=443): Read timed out. (read timeout=30)
+[tg-poll] loop error: HTTPSConnectionPool(host='api.telegram.org', port=443): Read timed out. (read timeout=30)
+[tg-poll] loop error: HTTPSConnectionPool(host='api.telegram.org', port=443): Read timed out. (read timeout=30)
+[tg-poll] loop error: HTTPSConnectionPool(host='api.telegram.org', port=443): Read timed out. (read timeout=30)
+[tg-poll] loop error: HTTPSConnectionPool(host='api.telegram.org', port=443): Read timed out. (read timeout=30)
+[tg-poll] loop error: HTTPSConnectionPool(host='api.telegram.org', port=443): Read timed out. (read timeout=30)
+[tg-poll] loop error: HTTPSConnectionPool(host='api.telegram.org', port=443): Read timed out. (read timeout=30)
+[tg-poll] loop error: HTTPSConnectionPool(host='api.telegram.org', port=443): Read timed out. (read timeout=30)
+[tg-poll] loop error: HTTPSConnectionPool(host='api.telegram.org', port=443): Read timed out. (read timeout=30)
+[tg-poll] loop error: HTTPSConnectionPool(host='api.telegram.org', port=443): Read timed out. (read timeout=30)
+[tg-poll] loop error: HTTPSConnectionPool(host='api.telegram.org', port=443): Read timed out. (read timeout=30)
+[tg-poll] loop error: HTTPSConnectionPool(host='api.telegram.org', port=443): Read timed out. (read timeout=30)
+[tg-poll] loop error: HTTPSConnectionPool(host='api.telegram.org', port=443): Read timed out. (read timeout=30)
+[tg-poll] loop error: HTTPSConnectionPool(host='api.telegram.org', port=443): Read timed out. (read timeout=30)
+[tg-poll] loop error: HTTPSConnectionPool(host='api.telegram.org', port=443): Read timed out. (read timeout=30)
+[tg-poll] loop error: HTTPSConnectionPool(host='api.telegram.org', port=443): Read timed out. (read timeout=30)
+[tg-poll] loop error: HTTPSConnectionPool(host='api.telegram.org', port=443): Read timed out. (read timeout=30)
+[tg-poll] loop error: HTTPSConnectionPool(host='api.telegram.org', port=443): Read timed out. (read timeout=30)
+[tg-poll] loop error: HTTPSConnectionPool(host='api.telegram.org', port=443): Read timed out. (read timeout=30)
+[tg-poll] loop error: HTTPSConnectionPool(host='api.telegram.org', port=443): Read timed out. (read timeout=30)
+[tg-poll] loop error: HTTPSConnectionPool(host='api.telegram.org', port=443): Read timed out. (read timeout=30)
+[tg-poll] loop error: HTTPSConnectionPool(host='api.telegram.org', port=443): Read timed out. (read timeout=30)
+[tg-poll] loop error: HTTPSConnectionPool(host='api.telegram.org', port=443): Read timed out. (read timeout=30)
+[tg-poll] loop error: HTTPSConnectionPool(host='api.telegram.org', port=443): Read timed out. (read timeout=30)
+[tg-poll] loop error: HTTPSConnectionPool(host='api.telegram.org', port=443): Read timed out. (read timeout=30)
+[tg-poll] loop error: HTTPSConnectionPool(host='api.telegram.org', port=443): Read timed out. (read timeout=30)
+[tg-poll] loop error: HTTPSConnectionPool(host='api.telegram.org', port=443): Read timed out. (read timeout=30)
+[tg-poll] loop error: HTTPSConnectionPool(host='api.telegram.org', port=443): Read timed out. (read timeout=30)
+[tg-poll] loop error: HTTPSConnectionPool(host='api.telegram.org', port=443): Read timed out. (read timeout=30)
+[tg-poll] loop error: HTTPSConnectionPool(host='api.telegram.org', port=443): Read timed out. (read timeout=30)
+[tg-poll] loop error: HTTPSConnectionPool(host='api.telegram.org', port=443): Read timed out. (read timeout=30)
+[tg-poll] loop error: HTTPSConnectionPool(host='api.telegram.org', port=443): Read timed out. (read timeout=30)
+[tg-poll] loop error: HTTPSConnectionPool(host='api.telegram.org', port=443): Read timed out. (read timeout=30)
+[tg-poll] loop error: HTTPSConnectionPool(host='api.telegram.org', port=443): Read timed out. (read timeout=30)
+[tg-poll] loop error: HTTPSConnectionPool(host='api.telegram.org', port=443): Read timed out. (read timeout=30)
+[tg-poll] loop error: HTTPSConnectionPool(host='api.telegram.org', port=443): Read timed out. (read timeout=30)
+[tg-poll] loop error: HTTPSConnectionPool(host='api.telegram.org', port=443): Max retries exceeded with url: /bot<redacted>/getUpdates?offset=7235275&timeout=25&allowed_updates=%5B%22message%22%2C%22callback_query%22%5D (Caused by ConnectTimeoutError(<HTTPSConnection(host='api.telegram.org', port=443) at 0x1050c1580>, 'Connection to api.telegram.org timed out. (connect timeout=30)'))
+[tg-poll] loop error: ('Connection aborted.', ConnectionResetError(54, 'Connection reset by peer'))
+[tg-poll] loop error: HTTPSConnectionPool(host='api.telegram.org', port=443): Read timed out. (read timeout=30)
+[tg-poll] loop error: HTTPSConnectionPool(host='api.telegram.org', port=443): Max retries exceeded with url: /bot<redacted>/getUpdates?offset=7235275&timeout=25&allowed_updates=%5B%22message%22%2C%22callback_query%22%5D (Caused by ConnectTimeoutError(<HTTPSConnection(host='api.telegram.org', port=443) at 0x1053a5940>, 'Connection to api.telegram.org timed out. (connect timeout=30)'))
+[tg-poll] loop error: HTTPSConnectionPool(host='api.telegram.org', port=443): Read timed out. (read timeout=30)
+[tg-poll] loop error: HTTPSConnectionPool(host='api.telegram.org', port=443): Read timed out. (read timeout=30)
+[tg-poll] loop error: HTTPSConnectionPool(host='api.telegram.org', port=443): Read timed out. (read timeout=30)

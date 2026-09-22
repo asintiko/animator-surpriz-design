@@ -1,0 +1,97 @@
+{
+  "version": "v3-atelier-rigid-box-v5-2026-07-21",
+  "style": "premium paper-theatre atelier; warm cream, cobalt, tangerine, gold, and deep ink; no green, balloons, or amusement-park scenery",
+  "active_assets": [
+    {
+      "id": "atelier-stage-poster",
+      "role": "stable hero and final animation frame",
+      "anchor": "bottom center",
+      "served": {
+        "file": "atelier-stage-v3.webp",
+        "width": 1024,
+        "height": 1024,
+        "alpha": true,
+        "bytes": 84396
+      },
+      "served_mobile": {
+        "file": "atelier-stage-v3-mobile.webp",
+        "width": 640,
+        "height": 640,
+        "alpha": true,
+        "bytes": 46234,
+        "media": "max-width: 900px"
+      },
+      "notes": "Preloaded as the default and final render so the hero remains stable before and after the one-time entrance animation."
+    },
+    {
+      "id": "box-opening-rigid-sequence",
+      "role": "optional one-time entrance animation",
+      "served": {
+        "file": "box-motion/opening-rigid-v5.webp",
+        "width": 3072,
+        "height": 2048,
+        "alpha": true,
+        "bytes": 367666
+      },
+      "served_mobile": {
+        "file": "box-motion/opening-rigid-v5-mobile.webp",
+        "width": 2304,
+        "height": 1536,
+        "alpha": true,
+        "bytes": 246050,
+        "media": "max-width: 900px"
+      },
+      "atlas": {
+        "columns": 6,
+        "rows": 4,
+        "frames": 24,
+        "frame_duration_ms": 45,
+        "desktop_frame_size": 512,
+        "mobile_frame_size": 384
+      },
+      "notes": "A single canvas renders 24 rigidly composed frames. The body, handle and lock remain fixed in the source composition; one lid changes projection around a fixed hinge, while the theatre only translates upward. The final frame and poster share the same master composition. Reduced-motion, save-data and slow-network visitors keep the preloaded poster and do not fetch the sequence."
+    },
+    {
+      "id": "show-card-thumbnails",
+      "role": "responsive catalog previews",
+      "served": {
+        "directory": "shows",
+        "count": 5,
+        "width": 720,
+        "height": 540,
+        "format": "webp",
+        "bytes": 316328
+      },
+      "notes": "Purpose-cropped previews replace multi-megapixel portrait originals in the horizontal catalog."
+    }
+  ],
+  "code_native_layers": [
+    {
+      "id": "atelier-wings",
+      "role": "desktop-only side framing",
+      "implementation": "CSS solid shapes"
+    },
+    {
+      "id": "atelier-platform",
+      "role": "clean lower stage boundary",
+      "implementation": "CSS solid shape"
+    }
+  ],
+  "production_notes": {
+    "blocking_placeholders": [],
+    "desktop_initial_poster_bytes": 84396,
+    "mobile_initial_poster_bytes": 46234,
+    "desktop_optional_first_entrance_bytes": 367666,
+    "mobile_optional_first_entrance_bytes": 246050,
+    "lazy_catalog_previews_bytes": 316328,
+    "legacy_unserved_art": [
+      "bg-sky.webp",
+      "park-skyline-v2.webp",
+      "mid-stage-v2.webp",
+      "hero-gift-v2.webp",
+      "fg-left-v2.webp",
+      "fg-right-v2.webp",
+      "confetti-fg-v2.webp"
+    ]
+  }
+}

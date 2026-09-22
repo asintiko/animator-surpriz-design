@@ -1,0 +1,1682 @@
+{% extends "admin/base.html" %}
+
+{% block content %}
+  {% if active_tab == 'info' %}
+    <section class="adm-stats">
+      <article class="adm-stat">
+        <span class="adm-stat__icon adm-stat__icon--teal"><svg class="adm-i"><use href="#i-eye"/></svg></span>
+        <div>
+          <div class="adm-stat__value">{{ stats.total_page_views }}</div>
+          <div class="adm-stat__label">Просмотры всего</div>
+        </div>
+      </article>
+      <article class="adm-stat">
+        <span class="adm-stat__icon adm-stat__icon--grape"><svg class="adm-i"><use href="#i-users"/></svg></span>
+        <div>
+          <div class="adm-stat__value">{{ stats.unique_visitors }}</div>
+          <div class="adm-stat__label">Уникальные посетители</div>
+        </div>
+      </article>
+      <article class="adm-stat">
+        <span class="adm-stat__icon adm-stat__icon--sun"><svg class="adm-i"><use href="#i-calendar"/></svg></span>
+        <div>
+          <div class="adm-stat__value">{{ stats.today_page_views }}</div>
+          <div class="adm-stat__label">Просмотры сегодня</div>
+        </div>
+      </article>
+      <article class="adm-stat">
+        <span class="adm-stat__icon adm-stat__icon--coral"><svg class="adm-i"><use href="#i-user"/></svg></span>
+        <div>
+          <div class="adm-stat__value">{{ stats.today_unique_visitors }}</div>
+          <div class="adm-stat__label">Уникальные сегодня</div>
+        </div>
+      </article>
+      <article class="adm-stat">
+        <span class="adm-stat__icon adm-stat__icon--ink"><svg class="adm-i"><use href="#i-send"/></svg></span>
+        <div>
+          <div class="adm-stat__value">{{ stats.form_submissions }}</div>
+          <div class="adm-stat__label">Заявки с форм</div>
+        </div>
+      </article>
+      <article class="adm-stat">
+        <span class="adm-stat__icon adm-stat__icon--green"><svg class="adm-i"><use href="#i-mask"/></svg></span>
+        <div>
+          <div class="adm-stat__value">{{ stats.catalog_counts.character }}</div>
+          <div class="adm-stat__label">Персонажи в каталоге</div>
+        </div>
+      </article>
+    </section>
+
+    <section class="adm-stats">
+      <article class="adm-stat">
+        <span class="adm-stat__icon adm-stat__icon--sun"><svg class="adm-i"><use href="#i-cash"/></svg></span>
+        <div>
+          <div class="adm-stat__value adm-stat__value--sm">{{ "{:,}".format(stats.revenue.total).replace(",", " ") }} сум</div>
+          <div class="adm-stat__label">Выручка (подтверждённые)</div>
+          <div class="adm-stat__sub">{{ stats.revenue.count }} заказ(ов)</div>
+        </div>
+      </article>
+      <article class="adm-stat">
+        <span class="adm-stat__icon adm-stat__icon--teal"><svg class="adm-i"><use href="#i-card"/></svg></span>
+        <div>
+          <div class="adm-stat__value adm-stat__value--sm">{{ "{:,}".format(stats.revenue.avg).replace(",", " ") }} сум</div>
+          <div class="adm-stat__label">Средний чек</div>
+        </div>
+      </article>
+      <article class="adm-stat">
+        <span class="adm-stat__icon adm-stat__icon--grape"><svg class="adm-i"><use href="#i-users"/></svg></span>
+        <div>
+          <div class="adm-stat__value">{{ stats.customers | length }}</div>
+          <div class="adm-stat__label">Клиентов</div>
+          <div class="adm-stat__sub">
+            {% set blocked = stats.customers | selectattr("is_blocked") | list %}
+            {% if blocked %}{{ blocked | length }} заблокировано{% else %}без блокировок{% endif %}
+          </div>
+        </div>
+      </article>
+    </section>
+
+    <section class="adm-card">
+      <div class="adm-card__head">
+        <div>
+          <div class="adm-card__eyebrow">Быстрые действия</div>
+          <h2 class="adm-card__title">Что сделать прямо сейчас</h2>
+        </div>
+      </div>
+      <div class="adm-flex">
+        <a class="adm-btn adm-btn--sm" href="{{ url_for('admin_dashboard', tab='orders') }}">
+          <svg class="adm-i"><use href="#i-box"/></svg>Смотреть заказы
+        </a>
+        <a class="adm-btn adm-btn--ghost adm-btn--sm" href="{{ url_for('admin_character_create') }}">
+          <svg class="adm-i"><use href="#i-mask"/></svg>Новый персонаж
+        </a>
+        <a class="adm-btn adm-btn--ghost adm-btn--sm" href="{{ url_for('admin_show_program_create') }}">
+          <svg class="adm-i"><use href="#i-sparkles"/></svg>Новая шоу-программа
+        </a>
+        <a class="adm-btn adm-btn--ghost adm-btn--sm" href="{{ url_for('admin_addon_create') }}">
+          <svg class="adm-i"><use href="#i-gift"/></svg>Новая доп. услуга
+        </a>
+        <a class="adm-btn adm-btn--ghost adm-btn--sm" href="{{ url_for('admin_promotion_create') }}">
+          <svg class="adm-i"><use href="#i-tag"/></svg>Новая акция
+        </a>
+        <a class="adm-btn adm-btn--ghost adm-btn--sm" href="/party-builder/?preview=availability" rel="noopener" target="_blank">
+          <svg class="adm-i"><use href="#i-calendar"/></svg>Предпросмотр занятости
+        </a>
+      </div>
+    </section>
+
+    <section class="adm-grid adm-grid--2">
+      <article class="adm-card">
+        <div class="adm-card__head">
+          <div>
+            <div class="adm-card__eyebrow">Статистика</div>
+            <h2 class="adm-card__title adm-card__title--sm">Популярные страницы</h2>
+          </div>
+        </div>
+        <div class="adm-table-wrap">
+          <table class="adm-table">
+            <thead>
+              <tr>
+                <th>Путь</th>
+                <th>Просмотры</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for item in stats.top_pages %}
+                <tr>
+                  <td><span class="adm-table__title">{{ item.path }}</span></td>
+                  <td>{{ item.visit_count }}</td>
+                </tr>
+              {% else %}
+                <tr>
+                  <td class="adm-table__empty" colspan="2">Пока нет данных по посещениям.</td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </article>
+
+      <article class="adm-card">
+        <div class="adm-card__head">
+          <div>
+            <div class="adm-card__eyebrow">Журнал</div>
+            <h2 class="adm-card__title adm-card__title--sm">Последние визиты</h2>
+          </div>
+        </div>
+        <div class="adm-table-wrap">
+          <table class="adm-table">
+            <thead>
+              <tr>
+                <th>Путь</th>
+                <th>Посетитель</th>
+                <th>Когда</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for item in stats.recent_visits %}
+                <tr>
+                  <td><span class="adm-table__title">{{ item.path }}</span></td>
+                  <td>
+                    <span class="adm-table__title">{{ item.visitor }}</span>
+                    <span class="adm-table__muted">{{ item.masked_ip }}</span>
+                  </td>
+                  <td><span class="adm-table__muted">{{ item.visited_at }}</span></td>
+                </tr>
+              {% else %}
+                <tr>
+                  <td class="adm-table__empty" colspan="3">Пока нет записей.</td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </article>
+    </section>
+
+    <section class="adm-grid adm-grid--2">
+      <article class="adm-card">
+        <div class="adm-card__head">
+          <div>
+            <div class="adm-card__eyebrow">Популярность</div>
+            <h2 class="adm-card__title adm-card__title--sm">
+              <svg class="adm-i" style="color:var(--tangerine)"><use href="#i-sparkles"/></svg>
+              Топ шоу-программы
+            </h2>
+          </div>
+        </div>
+        <div class="adm-table-wrap">
+          <table class="adm-table">
+            <thead><tr><th>Программа</th><th>Заказов</th></tr></thead>
+            <tbody>
+              {% for item in stats.popular_programs %}
+                <tr>
+                  <td><span class="adm-table__title">{{ item.name }}</span></td>
+                  <td><strong>{{ item.order_count }}</strong></td>
+                </tr>
+              {% else %}
+                <tr><td class="adm-table__empty" colspan="2">Заказов ещё нет.</td></tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </article>
+
+      <article class="adm-card">
+        <div class="adm-card__head">
+          <div>
+            <div class="adm-card__eyebrow">Популярность</div>
+            <h2 class="adm-card__title adm-card__title--sm">
+              <svg class="adm-i" style="color:var(--tangerine)"><use href="#i-mask"/></svg>
+              Топ персонажи
+            </h2>
+          </div>
+        </div>
+        <div class="adm-table-wrap">
+          <table class="adm-table">
+            <thead><tr><th>Персонаж</th><th>Заказов</th></tr></thead>
+            <tbody>
+              {% for item in stats.popular_characters %}
+                <tr>
+                  <td><span class="adm-table__title">{{ item.name }}</span></td>
+                  <td><strong>{{ item.order_count }}</strong></td>
+                </tr>
+              {% else %}
+                <tr><td class="adm-table__empty" colspan="2">Персонажи ещё не заказывались.</td></tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </article>
+    </section>
+
+  {% elif active_tab == 'visitors' %}
+    <section class="adm-stats" aria-label="Сводка по посетителям">
+      <article class="adm-stat">
+        <span class="adm-stat__icon adm-stat__icon--teal"><svg class="adm-i"><use href="#i-users"/></svg></span>
+        <div>
+          <div class="adm-stat__value">{{ visitors.summary.visitors }}</div>
+          <div class="adm-stat__label">Уникальные посетители</div>
+        </div>
+      </article>
+      <article class="adm-stat">
+        <span class="adm-stat__icon adm-stat__icon--grape"><svg class="adm-i"><use href="#i-refresh"/></svg></span>
+        <div>
+          <div class="adm-stat__value">{{ visitors.summary.sessions }}</div>
+          <div class="adm-stat__label">Сессии</div>
+          <div class="adm-stat__sub">новая после 30 минут паузы</div>
+        </div>
+      </article>
+      <article class="adm-stat">
+        <span class="adm-stat__icon adm-stat__icon--sun"><svg class="adm-i"><use href="#i-eye"/></svg></span>
+        <div>
+          <div class="adm-stat__value">{{ visitors.summary.page_views }}</div>
+          <div class="adm-stat__label">Просмотры страниц</div>
+        </div>
+      </article>
+      <article class="adm-stat">
+        <span class="adm-stat__icon adm-stat__icon--coral"><svg class="adm-i"><use href="#i-calendar"/></svg></span>
+        <div>
+          <div class="adm-stat__value">{{ visitors.summary.today }}</div>
+          <div class="adm-stat__label">Заходили сегодня</div>
+        </div>
+      </article>
+      <article class="adm-stat">
+        <span class="adm-stat__icon adm-stat__icon--green"><svg class="adm-i"><use href="#i-user"/></svg></span>
+        <div>
+          <div class="adm-stat__value">{{ visitors.summary.identified }}</div>
+          <div class="adm-stat__label">Связаны с аккаунтом</div>
+        </div>
+      </article>
+    </section>
+
+    <section class="adm-card">
+      <div class="adm-card__head">
+        <div>
+          <div class="adm-card__eyebrow">Аудитория</div>
+          <h2 class="adm-card__title adm-card__title--sm">История посетителей</h2>
+        </div>
+        <span class="adm-badge adm-badge--info">{{ visitors.pagination.total }} найдено</span>
+      </div>
+
+      <p class="adm-note adm-note--callout">
+        IP-адреса скрыты маской. Имя и телефон появляются только после реальной связи визита с аккаунтом клиента.
+      </p>
+
+      {% if visitors.unavailable %}
+        <p class="adm-note adm-note--callout adm-mt" role="status">
+          Статистика временно занята обновлением. Обновите страницу через несколько секунд.
+        </p>
+      {% endif %}
+
+      <form class="adm-filters adm-mt" method="get" action="{{ url_for('admin_dashboard') }}" role="search">
+        <input name="tab" type="hidden" value="visitors">
+        <label class="adm-field" for="visitor-search">
+          <span class="adm-field__label">Найти посетителя</span>
+          <span class="adm-field__hint">ID, путь, источник, устройство, имя или телефон клиента</span>
+          <input
+            class="adm-input"
+            id="visitor-search"
+            name="visitor_search"
+            type="search"
+            value="{{ visitor_filters.search }}"
+            placeholder="Например, /catalog/ или VIS-12AB"
+            autocomplete="off"
+          >
+        </label>
+        <div class="adm-filters__actions">
+          <button class="adm-btn adm-btn--sm" type="submit">
+            <svg class="adm-i"><use href="#i-search"/></svg>Найти
+          </button>
+          {% if visitor_filters.search %}
+            <a class="adm-btn adm-btn--ghost adm-btn--sm" href="{{ url_for('admin_dashboard', tab='visitors') }}">Сбросить</a>
+          {% endif %}
+        </div>
+      </form>
+
+      <div class="adm-table-wrap">
+        <table class="adm-table adm-table--visitors">
+          <caption class="adm-sr-only">Посетители сайта, их сессии, маршруты и связанные аккаунты</caption>
+          <thead>
+            <tr>
+              <th scope="col">Посетитель</th>
+              <th scope="col">Последний визит</th>
+              <th scope="col">Активность</th>
+              <th scope="col">Маршрут</th>
+              <th scope="col">Источник</th>
+              <th scope="col">Устройство</th>
+              <th scope="col">Аккаунт</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for visitor in visitors["items"] %}
+              <tr>
+                <td>
+                  <div class="adm-table__title adm-visitor-id">{{ visitor.display_id }}</div>
+                  <div class="adm-table__muted">{{ visitor.masked_ip }}</div>
+                  {% if visitor.customer %}
+                    <span class="adm-badge adm-badge--on adm-mt-xs">Клиент</span>
+                  {% else %}
+                    <span class="adm-badge adm-badge--ink adm-mt-xs">Гость</span>
+                  {% endif %}
+                </td>
+                <td>
+                  <div class="adm-table__title">{{ visitor.last_seen_label }}</div>
+                  <div class="adm-table__muted">Первый: {{ visitor.first_seen_label }}</div>
+                </td>
+                <td>
+                  <div class="adm-table__title">{{ visitor.page_views }} просмотров</div>
+                  <div class="adm-table__muted">{{ visitor.sessions }} сессий</div>
+                </td>
+                <td class="adm-visitor-route">
+                  <div class="adm-table__title">{{ visitor.last_path }}</div>
+                  <div class="adm-table__muted">Первый путь: {{ visitor.first_path }}</div>
+                </td>
+                <td class="adm-visitor-source">
+                  <div class="adm-table__title">{{ visitor.referrer }}</div>
+                  <div class="adm-table__muted">
+                    {% if visitor.has_referrer %}Первый источник{% else %}Без внешнего источника{% endif %}
+                  </div>
+                </td>
+                <td>
+                  <div class="adm-table__title">{{ visitor.device }}</div>
+                  <div class="adm-table__muted">{{ visitor.browser }}</div>
+                </td>
+                <td>
+                  {% if visitor.customer %}
+                    {% if visitor.customer.name %}<div class="adm-table__title">{{ visitor.customer.name }}</div>{% endif %}
+                    <div class="adm-table__muted adm-table__muted--strong">{{ visitor.customer.phone }}</div>
+                    <a class="adm-link-inline" href="{{ url_for('admin_dashboard', tab='orders', order_customer_id=visitor.customer.id) }}">Заказы клиента</a>
+                  {% else %}
+                    <span class="adm-table__muted">Не связан</span>
+                  {% endif %}
+                </td>
+              </tr>
+            {% else %}
+              <tr>
+                <td class="adm-table__empty" colspan="7">
+                  {% if visitor_filters.search %}
+                    По запросу «{{ visitor_filters.search }}» ничего не найдено. Измените запрос или сбросьте поиск.
+                  {% else %}
+                    Визитов пока нет. Они появятся после первого перехода на сайт.
+                  {% endif %}
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+
+      {% if visitors.pagination.total > 0 %}
+        <nav class="adm-pagination" aria-label="Страницы списка посетителей">
+          <div class="adm-pagination__controls">
+            {% if visitors.pagination.has_previous %}
+              <a class="adm-btn adm-btn--ghost adm-btn--sm" href="{{ url_for('admin_dashboard', tab='visitors', visitor_search=visitor_filters.search, visitor_page=visitors.pagination.page - 1) }}">Назад</a>
+            {% endif %}
+            <span class="adm-pagination__meta" aria-current="page">
+              Страница {{ visitors.pagination.page }} из {{ visitors.pagination.pages }}
+            </span>
+            {% if visitors.pagination.has_next %}
+              <a class="adm-btn adm-btn--ghost adm-btn--sm" href="{{ url_for('admin_dashboard', tab='visitors', visitor_search=visitor_filters.search, visitor_page=visitors.pagination.page + 1) }}">Дальше</a>
+            {% endif %}
+          </div>
+          <span class="adm-pagination__meta">Показано {{ visitors["items"] | length }} из {{ visitors.pagination.total }}</span>
+        </nav>
+      {% endif %}
+    </section>
+
+  {% elif active_tab == 'settings' %}
+    <section class="adm-grid adm-grid--2">
+      <article class="adm-card">
+        <div class="adm-card__head">
+          <span class="adm-editor__section-icon"><svg class="adm-i"><use href="#i-party-hat"/></svg></span>
+          <div>
+            <div class="adm-card__eyebrow">Быстрое действие</div>
+            <h2 class="adm-card__title adm-card__title--sm">Сезон Нового года</h2>
+          </div>
+        </div>
+        <div class="adm-flex">
+          <form action="{{ url_for('admin_apply_season_preset') }}" method="post">
+            <input name="enabled" type="hidden" value="1">
+            <button class="adm-btn adm-btn--sm" type="submit">
+              <svg class="adm-i"><use href="#i-check"/></svg>Включить сезон целиком
+            </button>
+          </form>
+          <form action="{{ url_for('admin_apply_season_preset') }}" method="post">
+            <input name="enabled" type="hidden" value="0">
+            <button class="adm-btn adm-btn--ghost adm-btn--sm" type="submit">
+              <svg class="adm-i"><use href="#i-close"/></svg>Выключить сезон целиком
+            </button>
+          </form>
+        </div>
+        <p class="adm-note adm-mt">Этот переключатель сразу управляет снегом, сезонным блоком на главной, акциями и пунктом меню.</p>
+      </article>
+
+      <article class="adm-card">
+        <div class="adm-card__head">
+          <span class="adm-editor__section-icon adm-editor__section-icon--teal"><svg class="adm-i"><use href="#i-eye"/></svg></span>
+          <div>
+            <div class="adm-card__eyebrow">Текущее состояние</div>
+            <h2 class="adm-card__title adm-card__title--sm">Активные переключатели</h2>
+          </div>
+        </div>
+        <div class="adm-meta-list">
+          {% for key, meta in setting_labels.items() %}
+            <div class="adm-meta-item">
+              <span>{{ meta.title }}</span>
+              <span class="adm-badge {% if settings[key] %}adm-badge--on{% else %}adm-badge--off{% endif %}">
+                {% if settings[key] %}включено{% else %}выключено{% endif %}
+              </span>
+            </div>
+          {% endfor %}
+        </div>
+      </article>
+    </section>
+
+    <section class="adm-card">
+      <div class="adm-card__head">
+        <span class="adm-editor__section-icon adm-editor__section-icon--grape"><svg class="adm-i"><use href="#i-settings"/></svg></span>
+        <div>
+          <div class="adm-card__eyebrow">Точная настройка</div>
+          <h2 class="adm-card__title adm-card__title--sm">Управление фронтом</h2>
+        </div>
+      </div>
+      <form action="{{ url_for('admin_update_settings') }}" method="post">
+        <div class="adm-switch-list">
+          {% for key, meta in setting_labels.items() %}
+            <label class="adm-switch">
+              <input {% if settings[key] %}checked{% endif %} name="{{ key }}" type="checkbox">
+              <span class="adm-switch__track"></span>
+              <span class="adm-switch__body">
+                <span class="adm-switch__title">{{ meta.title }}</span>
+                <span class="adm-switch__desc">{{ meta.description }}</span>
+              </span>
+            </label>
+          {% endfor %}
+        </div>
+        <div class="adm-form-actions">
+          <button class="adm-btn" type="submit">
+            <svg class="adm-i"><use href="#i-check"/></svg>Сохранить настройки
+          </button>
+        </div>
+      </form>
+    </section>
+
+  {% elif active_tab == 'orders' %}
+    <script>
+      // Auto-refresh orders so Telegram confirmation changes appear without a manual reload.
+      (function () {
+        let timer = null;
+        const start = () => {
+          if (timer) return;
+          timer = setInterval(() => {
+            if (document.visibilityState !== "visible") return;
+            // Skip refresh while a form is being submitted or a select is open
+            if (document.activeElement && ["INPUT", "SELECT", "TEXTAREA"].includes(document.activeElement.tagName)) return;
+            window.location.reload();
+          }, 8000);
+        };
+        document.addEventListener("DOMContentLoaded", start);
+      })();
+    </script>
+
+    <section class="adm-stats">
+      <article class="adm-stat">
+        <span class="adm-stat__icon adm-stat__icon--ink"><svg class="adm-i"><use href="#i-box"/></svg></span>
+        <div>
+          <div class="adm-stat__value">{{ order_summary.total }}</div>
+          <div class="adm-stat__label">Всего заказов</div>
+        </div>
+      </article>
+      <article class="adm-stat">
+        <span class="adm-stat__icon adm-stat__icon--teal"><svg class="adm-i"><use href="#i-bell"/></svg></span>
+        <div>
+          <div class="adm-stat__value">{{ order_summary.unconfirmed }}</div>
+          <div class="adm-stat__label">Не подтверждены</div>
+        </div>
+      </article>
+      <article class="adm-stat">
+        <span class="adm-stat__icon adm-stat__icon--green"><svg class="adm-i"><use href="#i-check"/></svg></span>
+        <div>
+          <div class="adm-stat__value">{{ order_summary.confirmed }}</div>
+          <div class="adm-stat__label">Подтверждены</div>
+        </div>
+      </article>
+    </section>
+
+    <section class="adm-card">
+      <div class="adm-card__head">
+        <div>
+          <div class="adm-card__eyebrow">Поток заказов</div>
+          <h2 class="adm-card__title adm-card__title--sm">Заказы с сайта</h2>
+        </div>
+        {% if order_customer_id %}
+          {% set customer_info = stats.customers | selectattr("id", "equalto", order_customer_id) | first | default(None) %}
+          <div class="adm-card__head-actions">
+            <span class="adm-badge adm-badge--on" style="font-size:13px">
+              {{ customer_info.phone if customer_info else "Клиент #" ~ order_customer_id }}
+              {% if customer_info and customer_info.name %} — {{ customer_info.name }}{% endif %}
+            </span>
+            <a class="adm-btn adm-btn--ghost adm-btn--sm" href="{{ url_for('admin_dashboard', tab='orders') }}">
+              <svg class="adm-i"><use href="#i-close"/></svg>Сбросить фильтр
+            </a>
+          </div>
+        {% endif %}
+      </div>
+
+      <form class="adm-filters" method="get">
+        <input name="tab" type="hidden" value="orders">
+        {% if order_customer_id %}<input name="order_customer_id" type="hidden" value="{{ order_customer_id }}">{% endif %}
+        <label class="adm-field">
+          <span class="adm-field__label">Поиск</span>
+          <input class="adm-input" name="order_search" placeholder="SRP-00012, телефон, имя" type="text" value="{{ order_filters.search }}">
+        </label>
+        <label class="adm-field">
+          <span class="adm-field__label">Подтверждение</span>
+          <select class="adm-input" name="order_status">
+            <option value="">Все</option>
+            {% for status_key, status_label in order_status_labels.items() %}
+              <option {% if order_filters.status == status_key %}selected{% endif %} value="{{ status_key }}">{{ status_label }}</option>
+            {% endfor %}
+          </select>
+        </label>
+        <label class="adm-field">
+          <span class="adm-field__label">Дата с</span>
+          <input class="adm-input" name="order_date_from" type="date" value="{{ order_filters.date_from }}">
+        </label>
+        <label class="adm-field">
+          <span class="adm-field__label">Дата по</span>
+          <input class="adm-input" name="order_date_to" type="date" value="{{ order_filters.date_to }}">
+        </label>
+        <div class="adm-filters__actions">
+          <button class="adm-btn adm-btn--sm" type="submit">
+            <svg class="adm-i"><use href="#i-filter"/></svg>Применить
+          </button>
+          {% if order_filters.search or order_filters.status or order_filters.date_from or order_filters.date_to %}
+            <a class="adm-btn adm-btn--ghost adm-btn--sm" href="{{ url_for('admin_dashboard', tab='orders') }}">Сбросить</a>
+          {% endif %}
+        </div>
+      </form>
+
+      <div class="adm-table-wrap">
+        <table class="adm-table">
+          <thead>
+            <tr>
+              <th>Заказ</th>
+              <th>Клиент</th>
+              <th>Праздник</th>
+              <th>Адрес</th>
+              <th>Связь</th>
+              <th>Подтверждение</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for order in orders %}
+              {% set tg_link = '' %}
+              {% if order.customer_phone %}
+                {% set tg_link = 'https://t.me/+' ~ order.customer_phone | replace('+','') | replace(' ','') | replace('-','') | replace('(','') | replace(')','') %}
+              {% endif %}
+              <tr>
+                <td>
+                  <div class="adm-table__title">{{ order.public_id }}</div>
+                  <div class="adm-table__muted">{{ order.created_at_label or order.created_at }}</div>
+                  {% if order.total_price_label %}
+                    <div class="adm-table__muted adm-table__muted--strong">{{ order.total_price_label }}</div>
+                  {% endif %}
+                </td>
+                <td>
+                  <div class="adm-table__title">{{ order.customer_name or 'Без имени' }}</div>
+                  <div class="adm-table__muted">{{ order.customer_phone or '—' }}</div>
+                  {% if order.celebrant_name %}
+                    <div class="adm-table__muted">Именинник: {{ order.celebrant_name }}{% if order.celebrant_age %}, {{ order.celebrant_age }} лет{% endif %}</div>
+                  {% endif %}
+                  {% if order.children_count is not none and order.children_count != '' %}
+                    <div class="adm-table__muted">Гостей: {{ order.children_count }}</div>
+                  {% endif %}
+                </td>
+                <td>
+                  <div class="adm-table__title">
+                    {% if order.program_name %}{{ order.program_name }}{% else %}Без шоу-программы{% endif %}
+                  </div>
+                  <div class="adm-table__muted">
+                    {{ order.celebration_date_label or order.celebration_date }} · {{ order.time_from }} – {{ order.time_to }}
+                    {% if order.duration_minutes %} · {{ order.duration_minutes }} мин{% endif %}
+                  </div>
+                  {% if order.character_names %}
+                    <div class="adm-table__muted">Персонажи: {{ order.character_names | join(', ') }}</div>
+                  {% endif %}
+                </td>
+                <td>
+                  <div>{{ order.address_text or '—' }}</div>
+                  {% if order.location_label and order.location_label != order.address_text %}
+                    <div class="adm-table__muted">Точка: {{ order.location_label }}</div>
+                  {% endif %}
+                  <div class="adm-table__muted">{{ order.payment_method_label }}</div>
+                  {% if order.notes %}
+                    <details class="adm-ordernotes">
+                      <summary>Комментарий</summary>
+                      <p>{{ order.notes }}</p>
+                    </details>
+                  {% endif %}
+                </td>
+                <td>
+                  <div class="adm-row-actions">
+                    {% if order.customer_phone %}
+                      <a class="adm-iconbtn" href="tel:{{ order.customer_phone | replace(' ', '') | replace('-', '') | replace('(', '') | replace(')', '') }}" title="Позвонить">
+                        <svg class="adm-i"><use href="#i-phone"/></svg>
+                      </a>
+                      <a class="adm-iconbtn" href="{{ tg_link }}" rel="noopener noreferrer" target="_blank" title="Открыть в Telegram">
+                        <svg class="adm-i"><use href="#i-telegram"/></svg>
+                      </a>
+                    {% endif %}
+                    {% if order.yandex_map_url %}
+                      <a class="adm-iconbtn" href="{{ order.yandex_map_url }}" rel="noopener noreferrer" target="_blank" title="Открыть карту">
+                        <svg class="adm-i"><use href="#i-map-pin"/></svg>
+                      </a>
+                    {% endif %}
+                    <form action="{{ url_for('admin_resend_order_notification', order_id=order.id) }}" method="post">
+                      <button class="adm-iconbtn" type="submit" title="Переотправить в Telegram админам">
+                        <svg class="adm-i"><use href="#i-refresh"/></svg>
+                      </button>
+                    </form>
+                  </div>
+                </td>
+                <td>
+                  <div class="adm-stack--sm" style="margin-bottom:8px">
+                    <span class="adm-badge adm-badge--{% if order.confirmation_state == 'confirmed' %}confirmed{% else %}new{% endif %}">
+                      {{ order.confirmation_label }}
+                    </span>
+                  </div>
+                  {% if order.status not in ('cancelled', 'done') %}
+                  <form action="{{ url_for('admin_update_order_status', order_id=order.id, order_status=order_filters.status) }}" class="adm-stack--sm" method="post">
+                    <select class="adm-input" name="status" style="min-width:150px">
+                      {% for status_key, status_label in order_status_labels.items() %}
+                        <option {% if order.confirmation_state == status_key %}selected{% endif %} value="{{ status_key }}">{{ status_label }}</option>
+                      {% endfor %}
+                    </select>
+                    <button class="adm-btn adm-btn--sm" type="submit">Сохранить</button>
+                  </form>
+                  {% endif %}
+                </td>
+              </tr>
+            {% else %}
+              <tr>
+                <td class="adm-table__empty" colspan="6">Заказов по этому фильтру пока нет.</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+  {% elif active_tab == 'promotions' %}
+    <section class="adm-card">
+      <div class="adm-card__head">
+        <div>
+          <div class="adm-card__eyebrow">Акции</div>
+          <h2 class="adm-card__title adm-card__title--sm">Подсветка на карточках шоу</h2>
+        </div>
+        <div class="adm-card__head-actions">
+          <a class="adm-btn adm-btn--sm" href="{{ url_for('admin_promotion_create') }}">
+            <svg class="adm-i"><use href="#i-plus"/></svg>Добавить акцию
+          </a>
+        </div>
+      </div>
+      <div class="adm-table-wrap">
+        <table class="adm-table">
+          <thead>
+            <tr>
+              <th>Название</th>
+              <th>Бейдж</th>
+              <th>Статус</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for promo in promotions %}
+              <tr>
+                <td><span class="adm-table__title">{{ promo.title }}</span></td>
+                <td><span class="surpriz-promo-badge">{{ promo.badge_text or promo.title }}</span></td>
+                <td>
+                  <span class="adm-badge {% if promo.status == 'active' %}adm-badge--on{% else %}adm-badge--off{% endif %}">{{ promo.status }}</span>
+                </td>
+                <td>
+                  <a class="adm-btn adm-btn--ghost adm-btn--sm" href="{{ url_for('admin_promotion_edit', promotion_id=promo.id) }}">
+                    <svg class="adm-i"><use href="#i-edit"/></svg>Редактировать
+                  </a>
+                </td>
+              </tr>
+            {% else %}
+              <tr><td class="adm-table__empty" colspan="4">Акций пока нет.</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+  {% elif active_tab == 'addons' %}
+    <section class="adm-stats">
+      <article class="adm-stat">
+        <span class="adm-stat__icon adm-stat__icon--sun"><svg class="adm-i"><use href="#i-gift"/></svg></span>
+        <div>
+          <div class="adm-stat__value">{{ addons|length }}</div>
+          <div class="adm-stat__label">Доп. услуги</div>
+        </div>
+      </article>
+      <article class="adm-stat">
+        <span class="adm-stat__icon adm-stat__icon--green"><svg class="adm-i"><use href="#i-check"/></svg></span>
+        <div>
+          <div class="adm-stat__value">{{ addons|selectattr('status', 'equalto', 'active')|list|length }}</div>
+          <div class="adm-stat__label">Активные</div>
+        </div>
+      </article>
+      <article class="adm-stat">
+        <span class="adm-stat__icon adm-stat__icon--coral"><svg class="adm-i"><use href="#i-eye"/></svg></span>
+        <div>
+          <div class="adm-stat__value">{{ addons|selectattr('status', 'equalto', 'hidden')|list|length }}</div>
+          <div class="adm-stat__label">Скрытые</div>
+        </div>
+      </article>
+    </section>
+
+    <section class="adm-card">
+      <div class="adm-card__head">
+        <div>
+          <div class="adm-card__eyebrow">Доп. услуги</div>
+          <h2 class="adm-card__title">Усиления для шоу-программ</h2>
+        </div>
+        <div class="adm-card__head-actions">
+          <a class="adm-btn adm-btn--sm" href="{{ url_for('admin_addon_create') }}">
+            <svg class="adm-i"><use href="#i-plus"/></svg>Добавить доп. услугу
+          </a>
+        </div>
+      </div>
+      <p class="adm-note">Здесь настраиваются услуги, которые можно привязать к конкретным шоу: аквагрим, пиньята, фотограф, продление и другие усиления.</p>
+      <p class="adm-note">Цена и себестоимость задаются только здесь. На публичном сайте себестоимость не показывается.</p>
+      <form class="adm-filters adm-mt" method="get">
+        <input name="tab" type="hidden" value="addons">
+        <label class="adm-field">
+          <span class="adm-field__label">Поиск доп. услуги</span>
+          <input class="adm-input" name="addon_search" placeholder="Например: аквагрим, пиньята, фотограф" type="text" value="{{ addon_filters.search }}">
+        </label>
+        <label class="adm-field">
+          <span class="adm-field__label">Статус</span>
+          <select class="adm-input" name="addon_status">
+            <option value="">Все</option>
+            {% for status_key, status_label in addon_status_labels.items() %}
+              <option {% if addon_filters.status == status_key %}selected{% endif %} value="{{ status_key }}">{{ status_label }}</option>
+            {% endfor %}
+          </select>
+        </label>
+        <div class="adm-filters__actions">
+          <button class="adm-btn adm-btn--sm" type="submit">
+            <svg class="adm-i"><use href="#i-search"/></svg>Показать
+          </button>
+        </div>
+      </form>
+    </section>
+
+    <section class="adm-card">
+      <div class="adm-card__head">
+        <div>
+          <div class="adm-card__eyebrow">Карточки</div>
+          <h2 class="adm-card__title adm-card__title--sm">Все доп. услуги</h2>
+        </div>
+      </div>
+
+      {% if addons %}
+        <div class="adm-cards">
+          {% for addon in addons %}
+            {% set summary = addon.short_description or addon.description or 'Описание пока не заполнено.' %}
+            <article class="adm-carditem">
+              <a class="adm-carditem__media" href="{{ url_for('admin_addon_edit', addon_id=addon.id) }}">
+                {% if addon.image_path %}
+                  <img alt="{{ addon.name }}" loading="lazy" src="{{ addon.image_path }}">
+                {% else %}
+                  <span>Фото появится после загрузки</span>
+                {% endif %}
+              </a>
+              <div class="adm-carditem__body">
+                <div class="adm-carditem__top">
+                  <div>
+                    <h3 class="adm-carditem__title">{{ addon.name }}</h3>
+                    <div class="adm-carditem__slug">/{{ addon.slug }}/</div>
+                  </div>
+                  <span class="adm-badge {% if addon.status == 'active' %}adm-badge--on{% else %}adm-badge--off{% endif %}">
+                    {{ addon.status_label }}
+                  </span>
+                </div>
+                <div class="adm-chips">
+                  <span class="adm-pill">{{ addon.price_label }}</span>
+                  <span class="adm-pill adm-pill--muted">Себестоимость: {{ addon.cost_label }}</span>
+                  <span class="adm-pill adm-pill--tag">{{ addon.duration_label }}</span>
+                  {% if addon.type %}<span class="adm-pill">{{ addon.type }}</span>{% endif %}
+                  <span class="adm-pill">Порядок: {{ addon.sort_order or 0 }}</span>
+                </div>
+                <p class="adm-carditem__text">{{ summary[:160] }}{% if summary|length > 160 %}...{% endif %}</p>
+                <div>
+                  <div class="adm-carditem__label">Где используется</div>
+                  <div class="adm-chips">
+                    {% if addon.program_names %}
+                      {% for program_name in addon.program_names[:4] %}
+                        <span class="adm-pill adm-pill--tag">{{ program_name }}</span>
+                      {% endfor %}
+                      {% if addon.program_names|length > 4 %}
+                        <span class="adm-pill adm-pill--muted">+{{ addon.program_names|length - 4 }}</span>
+                      {% endif %}
+                    {% else %}
+                      <span class="adm-pill adm-pill--muted">Пока не привязана</span>
+                    {% endif %}
+                  </div>
+                </div>
+                <div class="adm-carditem__actions">
+                  <a class="adm-btn adm-btn--sm" href="{{ url_for('admin_addon_edit', addon_id=addon.id) }}">
+                    <svg class="adm-i"><use href="#i-edit"/></svg>Редактировать
+                  </a>
+                  {% if addon.status == 'active' %}
+                    <form action="{{ url_for('admin_addon_status', addon_id=addon.id) }}" method="post">
+                      <input name="status" type="hidden" value="hidden">
+                      <button class="adm-btn adm-btn--ghost adm-btn--sm" type="submit">Скрыть</button>
+                    </form>
+                  {% else %}
+                    <form action="{{ url_for('admin_addon_status', addon_id=addon.id) }}" method="post">
+                      <input name="status" type="hidden" value="active">
+                      <button class="adm-btn adm-btn--sm" type="submit">Активировать</button>
+                    </form>
+                  {% endif %}
+                </div>
+                <details class="adm-danger">
+                  <summary><svg class="adm-i"><use href="#i-trash"/></svg>Опасное действие</summary>
+                  <div class="adm-danger__body">
+                    <form action="{{ url_for('admin_addon_delete', addon_id=addon.id) }}" method="post" onsubmit="return confirm('Удалить доп. услугу без восстановления?');">
+                      <button class="adm-btn adm-btn--danger adm-btn--sm" type="submit">Удалить навсегда</button>
+                    </form>
+                  </div>
+                </details>
+              </div>
+            </article>
+          {% endfor %}
+        </div>
+      {% else %}
+        <div class="adm-empty">
+          <span class="adm-empty__icon"><svg class="adm-i"><use href="#i-gift"/></svg></span>
+          <h3>{% if addon_filters.search or addon_filters.status %}По этому фильтру ничего не найдено{% else %}Доп. услуги пока не добавлены{% endif %}</h3>
+          <p>Создайте первую услугу, укажите цену и привяжите её к нужным шоу-программам.</p>
+          <a class="adm-btn adm-btn--sm" href="{{ url_for('admin_addon_create') }}">
+            <svg class="adm-i"><use href="#i-plus"/></svg>Добавить доп. услугу
+          </a>
+        </div>
+      {% endif %}
+    </section>
+
+  {% elif active_tab == 'show_programs' %}
+    <section class="adm-stats">
+      <article class="adm-stat">
+        <span class="adm-stat__icon adm-stat__icon--sun"><svg class="adm-i"><use href="#i-sparkles"/></svg></span>
+        <div>
+          <div class="adm-stat__value">{{ stats.catalog_counts.show_program }}</div>
+          <div class="adm-stat__label">Шоу-программы</div>
+        </div>
+      </article>
+      <article class="adm-stat">
+        <span class="adm-stat__icon adm-stat__icon--green"><svg class="adm-i"><use href="#i-check"/></svg></span>
+        <div>
+          <div class="adm-stat__value">{{ show_programs|selectattr('status', 'equalto', 'active')|list|length }}</div>
+          <div class="adm-stat__label">Активные</div>
+        </div>
+      </article>
+      <article class="adm-stat">
+        <span class="adm-stat__icon adm-stat__icon--ink"><svg class="adm-i"><use href="#i-edit"/></svg></span>
+        <div>
+          <div class="adm-stat__value">{{ show_programs|selectattr('status', 'equalto', 'draft')|list|length }}</div>
+          <div class="adm-stat__label">Черновики</div>
+        </div>
+      </article>
+      <article class="adm-stat">
+        <span class="adm-stat__icon adm-stat__icon--coral"><svg class="adm-i"><use href="#i-eye"/></svg></span>
+        <div>
+          <div class="adm-stat__value">{{ show_programs|selectattr('status', 'equalto', 'hidden')|list|length }}</div>
+          <div class="adm-stat__label">Скрытые</div>
+        </div>
+      </article>
+    </section>
+
+    <section class="adm-card">
+      <div class="adm-card__head">
+        <div>
+          <div class="adm-card__eyebrow">Шоу-программы</div>
+          <h2 class="adm-card__title">Понятное управление витриной программ</h2>
+        </div>
+        <div class="adm-card__head-actions">
+          <a class="adm-btn adm-btn--sm" href="{{ url_for('admin_show_program_create') }}">
+            <svg class="adm-i"><use href="#i-plus"/></svg>Добавить шоу-программу
+          </a>
+        </div>
+      </div>
+      <p class="adm-note">Здесь управляются карточки программ для сайта: обложка, цена, длительность, возраст, описание, SEO и порядок показа.</p>
+      <p class="adm-note">Основной сценарий — редактировать или скрывать программу. Удаление оставлено как опасное действие только на крайний случай.</p>
+      <p class="adm-note adm-note--callout">
+        <strong>Бесплатные подарки на выбор (маски / шары / и т.д.):</strong>
+        настраиваются внутри программы — откройте «Редактировать» нужного шоу и прокрутите до секции «Бонусы · Доп. услуги». Там для каждого аддона выставляется режим подарка (на выбор / включено бесплатно) и группа выбора.
+      </p>
+      <form class="adm-filters adm-mt" method="get">
+        <input name="tab" type="hidden" value="show_programs">
+        <label class="adm-field">
+          <span class="adm-field__label">Поиск шоу-программы</span>
+          <input class="adm-input" name="show_search" placeholder="Например: крио, лента, неон" type="text" value="{{ show_filters.search }}">
+        </label>
+        <label class="adm-field">
+          <span class="adm-field__label">Статус</span>
+          <select class="adm-input" name="show_status">
+            <option value="">Все</option>
+            {% for status_key, status_label in show_status_labels.items() %}
+              <option {% if show_filters.status == status_key %}selected{% endif %} value="{{ status_key }}">{{ status_label }}</option>
+            {% endfor %}
+          </select>
+        </label>
+        <div class="adm-filters__actions">
+          <button class="adm-btn adm-btn--sm" type="submit">
+            <svg class="adm-i"><use href="#i-search"/></svg>Показать
+          </button>
+        </div>
+      </form>
+    </section>
+
+    <section class="adm-card">
+      <div class="adm-card__head">
+        <div>
+          <div class="adm-card__eyebrow">Карточки</div>
+          <h2 class="adm-card__title adm-card__title--sm">Все шоу-программы</h2>
+        </div>
+      </div>
+
+      {% if show_programs %}
+        <div class="adm-cards">
+          {% for show in show_programs %}
+            {% set summary = show.short_description or show.description or 'Описание пока не заполнено.' %}
+            <article class="adm-carditem">
+              <a class="adm-carditem__media" href="{{ url_for('admin_show_program_edit', character_id=show.id) }}">
+                <img alt="{{ show.name }}" loading="lazy" src="{{ show.hero_file_path or '/wp-content/uploads/2025/12/IMG_2209-1.jpg' }}">
+              </a>
+              <div class="adm-carditem__body">
+                <div class="adm-carditem__top">
+                  <div>
+                    <h3 class="adm-carditem__title">{{ show.name }}</h3>
+                    <div class="adm-carditem__slug">/{{ show.slug }}/</div>
+                  </div>
+                  <span class="adm-badge {% if show.status == 'active' %}adm-badge--on{% elif show.status == 'hidden' %}adm-badge--off{% else %}adm-badge--neutral{% endif %}">
+                    {{ show.status_label }}
+                  </span>
+                </div>
+
+                <div class="adm-chips">
+                  <span class="adm-pill">{{ show.price_label }}</span>
+                  <span class="adm-pill adm-pill--tag">{{ show.duration_label }}</span>
+                  <span class="adm-pill {% if not show.age_from and not show.age_to %}adm-pill--muted{% endif %}">{{ show.age_label }}</span>
+                  <span class="adm-pill">Порядок: {{ show.sort_order or 0 }}</span>
+                </div>
+
+                <p class="adm-carditem__text">{{ summary[:180] }}{% if summary|length > 180 %}...{% endif %}</p>
+
+                <div>
+                  <div class="adm-carditem__label">Состояние карточки</div>
+                  <div class="adm-chips">
+                    <span class="adm-pill">{{ show.media_count }} медиа</span>
+                    <span class="adm-pill {% if not show.hero_file_path %}adm-pill--muted{% endif %}">
+                      {% if show.hero_file_path %}Есть обложка{% else %}Без обложки{% endif %}
+                    </span>
+                    <span class="adm-pill {% if show.completeness.percent < 70 %}adm-pill--muted{% else %}adm-pill--tag{% endif %}">
+                      Заполнено {{ show.completeness.percent }}%
+                    </span>
+                    {% if show.show_category %}
+                      <span class="adm-pill adm-pill--tag">{{ show.show_category }}</span>
+                    {% endif %}
+                  </div>
+                </div>
+
+                <div class="adm-carditem__actions">
+                  <a class="adm-btn adm-btn--sm" href="{{ url_for('admin_show_program_edit', character_id=show.id) }}">
+                    <svg class="adm-i"><use href="#i-edit"/></svg>Редактировать
+                  </a>
+                  <a class="adm-btn adm-btn--ghost adm-btn--sm" href="{{ url_for('admin_show_program_edit', character_id=show.id) }}#gifts">Бонусы</a>
+                  <a class="adm-btn adm-btn--ghost adm-btn--sm" href="{{ show.route }}" target="_blank" rel="noopener">На сайт</a>
+                  {% if show.status == 'active' %}
+                    <form action="{{ url_for('admin_show_program_status', character_id=show.id) }}" method="post">
+                      <input name="status" type="hidden" value="hidden">
+                      <button class="adm-btn adm-btn--ghost adm-btn--sm" type="submit">Скрыть</button>
+                    </form>
+                  {% else %}
+                    <form action="{{ url_for('admin_show_program_status', character_id=show.id) }}" method="post">
+                      <input name="status" type="hidden" value="active">
+                      <button class="adm-btn adm-btn--sm" type="submit">Активировать</button>
+                    </form>
+                  {% endif %}
+                </div>
+                <details class="adm-danger">
+                  <summary><svg class="adm-i"><use href="#i-trash"/></svg>Опасное действие</summary>
+                  <div class="adm-danger__body">
+                    <form action="{{ url_for('admin_show_program_delete', character_id=show.id) }}" method="post" onsubmit="return confirm('Удалить шоу-программу без восстановления?');">
+                      <button class="adm-btn adm-btn--danger adm-btn--sm" type="submit">Удалить навсегда</button>
+                    </form>
+                  </div>
+                </details>
+              </div>
+            </article>
+          {% endfor %}
+        </div>
+      {% else %}
+        <div class="adm-empty">
+          <span class="adm-empty__icon"><svg class="adm-i"><use href="#i-sparkles"/></svg></span>
+          <h3>{% if show_filters.search or show_filters.status %}По этому фильтру ничего не найдено{% else %}Шоу-программы пока не добавлены{% endif %}</h3>
+          <p>Создайте первую программу и заполните обложку, цену, длительность и описание.</p>
+          <a class="adm-btn adm-btn--sm" href="{{ url_for('admin_show_program_create') }}">
+            <svg class="adm-i"><use href="#i-plus"/></svg>Добавить шоу-программу
+          </a>
+        </div>
+      {% endif %}
+    </section>
+
+  {% elif active_tab == 'catalog' %}
+    <section class="adm-stats">
+      <article class="adm-stat">
+        <span class="adm-stat__icon adm-stat__icon--sun"><svg class="adm-i"><use href="#i-mask"/></svg></span>
+        <div>
+          <div class="adm-stat__value">{{ stats.catalog_counts.character }}</div>
+          <div class="adm-stat__label">Персонажи</div>
+        </div>
+      </article>
+      <article class="adm-stat">
+        <span class="adm-stat__icon adm-stat__icon--green"><svg class="adm-i"><use href="#i-check"/></svg></span>
+        <div>
+          <div class="adm-stat__value">{{ characters|selectattr('status', 'equalto', 'active')|list|length }}</div>
+          <div class="adm-stat__label">Активные</div>
+        </div>
+      </article>
+      <article class="adm-stat">
+        <span class="adm-stat__icon adm-stat__icon--ink"><svg class="adm-i"><use href="#i-edit"/></svg></span>
+        <div>
+          <div class="adm-stat__value">{{ characters|selectattr('status', 'equalto', 'draft')|list|length }}</div>
+          <div class="adm-stat__label">Черновики</div>
+        </div>
+      </article>
+      <article class="adm-stat">
+        <span class="adm-stat__icon adm-stat__icon--grape"><svg class="adm-i"><use href="#i-grid"/></svg></span>
+        <div>
+          <div class="adm-stat__value">{{ stats.catalog_counts.category }}</div>
+          <div class="adm-stat__label">Фильтры каталога</div>
+        </div>
+      </article>
+      <article class="adm-stat">
+        <span class="adm-stat__icon adm-stat__icon--teal"><svg class="adm-i"><use href="#i-tag"/></svg></span>
+        <div>
+          <div class="adm-stat__value">{{ stats.catalog_counts.tag }}</div>
+          <div class="adm-stat__label">Технические теги</div>
+        </div>
+      </article>
+    </section>
+
+    <section class="adm-card">
+      <div class="adm-card__head">
+        <div>
+          <div class="adm-card__eyebrow">Каталог</div>
+          <h2 class="adm-card__title">Персонажи и фильтры каталога</h2>
+        </div>
+        <div class="adm-card__head-actions">
+          <a class="adm-btn adm-btn--sm" href="{{ url_for('admin_character_create') }}">
+            <svg class="adm-i"><use href="#i-plus"/></svg>Добавить персонажа
+          </a>
+        </div>
+      </div>
+      <p class="adm-note adm-note--callout">Фильтр каталога — публичная подборка на сайте. Его состав определяется связанным техническим тегом: отметьте тег в карточке персонажа, и фильтр появится автоматически. Вручную назначать персонажа в фильтр не нужно.</p>
+      <form class="adm-filters adm-mt" method="get">
+        <input name="tab" type="hidden" value="catalog">
+        <label class="adm-field">
+          <span class="adm-field__label">Поиск персонажа</span>
+          <input class="adm-input" name="search" placeholder="Например: леди баг, эльза, а4" type="text" value="{{ catalog_filters.search }}">
+        </label>
+        <label class="adm-field">
+          <span class="adm-field__label">Статус</span>
+          <select class="adm-input" name="status">
+            <option value="">Все</option>
+            <option {% if catalog_filters.status == 'active' %}selected{% endif %} value="active">Активные</option>
+            <option {% if catalog_filters.status == 'draft' %}selected{% endif %} value="draft">Черновики</option>
+            <option {% if catalog_filters.status == 'hidden' %}selected{% endif %} value="hidden">Скрытые</option>
+          </select>
+        </label>
+        <div class="adm-filters__actions">
+          <button class="adm-btn adm-btn--sm" type="submit">
+            <svg class="adm-i"><use href="#i-search"/></svg>Показать
+          </button>
+        </div>
+      </form>
+    </section>
+
+    <section class="adm-catalog-layout">
+      <div class="adm-catalog-side">
+        <article class="adm-card">
+          <div class="adm-card__head">
+            <div>
+              <div class="adm-card__eyebrow">Публичная витрина</div>
+              <h2 class="adm-card__title adm-card__title--sm">Фильтры каталога</h2>
+            </div>
+            <div class="adm-card__head-actions">
+              <details class="adm-create">
+                <summary aria-label="Добавить фильтр каталога"><svg class="adm-i"><use href="#i-plus"/></svg></summary>
+                <form action="{{ url_for('admin_category_create') }}" class="adm-create__panel" method="post">
+                  <label class="adm-field">
+                    <span class="adm-field__label">Название фильтра <span class="adm-field__hint">видят посетители</span></span>
+                    <input class="adm-input" name="name" required type="text">
+                  </label>
+                  <label class="adm-field">
+                    <span class="adm-field__label">URL slug фильтра</span>
+                    <input class="adm-input" name="slug" placeholder="naprimer-supergeroi" type="text">
+                  </label>
+                  <label class="adm-field">
+                    <span class="adm-field__label">Связанный технический тег <span class="adm-field__hint">его выбирают у персонажа</span></span>
+                    <select class="adm-input" name="linked_tag_id">
+                      <option value="">Выберите существующий тег</option>
+                      {% for tag in tags %}
+                        {% if not tag.is_system %}
+                          <option value="{{ tag.id }}">{{ tag.name }}</option>
+                        {% endif %}
+                      {% endfor %}
+                    </select>
+                  </label>
+                  <label class="adm-field">
+                    <span class="adm-field__label">Или создать и связать новый тег</span>
+                    <input class="adm-input" name="linked_tag_name" placeholder="Например: supergeroi" type="text">
+                  </label>
+                  <label class="adm-field">
+                    <span class="adm-field__label">URL slug нового тега</span>
+                    <input class="adm-input" name="linked_tag_slug" placeholder="naprimer-supergeroi" type="text">
+                  </label>
+                  <label class="adm-field">
+                    <span class="adm-field__label">Описание фильтра</span>
+                    <textarea class="adm-input" name="description"></textarea>
+                  </label>
+                  <label class="adm-checkline">
+                    <input checked name="is_visible" type="checkbox">
+                    <span>Показывать фильтр на сайте</span>
+                  </label>
+                  <button class="adm-btn adm-btn--sm" type="submit">Создать фильтр</button>
+                </form>
+              </details>
+            </div>
+          </div>
+
+          <div class="adm-manager-list">
+            {% for category in categories %}
+              <details class="adm-manager-card">
+                <summary>
+                  <div>
+                    <div class="adm-manager-card__title">{{ category.name }}</div>
+                    <div class="adm-table__muted">{{ category.character_count }} персонажей по связанному тегу</div>
+                  </div>
+                  <div class="adm-manager-card__meta">
+                    <span class="adm-pill adm-pill--cat" title="URL slug фильтра">URL: {{ category.slug }}</span>
+                    {% if category.linked_tag_name %}
+                      <span class="adm-pill adm-pill--tag" title="Тег, который назначается персонажу">тег: #{{ category.linked_tag_slug or category.linked_tag_name }}</span>
+                    {% else %}
+                      <span class="adm-pill adm-pill--muted">нет связанного тега</span>
+                    {% endif %}
+                    <span class="adm-badge {% if category.is_visible %}adm-badge--on{% else %}adm-badge--off{% endif %}">
+                      {% if category.is_visible %}на сайте{% else %}скрыт на сайте{% endif %}
+                    </span>
+                    <span class="adm-manager-card__chevron"></span>
+                  </div>
+                </summary>
+                <form action="{{ url_for('admin_category_update', category_id=category.id) }}" class="adm-manager-card__body" method="post">
+                  <p class="adm-note">Чтобы фильтр наполнялся автоматически, свяжите его с тегом. Этот тег менеджер выбирает в карточке персонажа.</p>
+                  <label class="adm-field">
+                    <span class="adm-field__label">Название фильтра</span>
+                    <input class="adm-input" name="name" type="text" value="{{ category.name }}">
+                  </label>
+                  <label class="adm-field">
+                    <span class="adm-field__label">URL slug фильтра <span class="adm-field__hint">используется в адресе фильтра на сайте</span></span>
+                    <input class="adm-input" name="slug" type="text" value="{{ category.slug }}">
+                  </label>
+                  <label class="adm-field">
+                    <span class="adm-field__label">Связанный технический тег</span>
+                    <select class="adm-input" name="linked_tag_id">
+                      <option value="">Не связывать с тегом</option>
+                      {% for tag in tags %}
+                        {% if not tag.is_system or category.linked_tag_id == tag.id %}
+                          <option {% if category.linked_tag_id == tag.id %}selected{% endif %} value="{{ tag.id }}">{{ tag.name }}</option>
+                        {% endif %}
+                      {% endfor %}
+                    </select>
+                  </label>
+                  <label class="adm-field">
+                    <span class="adm-field__label">Или создать и связать новый тег</span>
+                    <input class="adm-input" name="linked_tag_name" placeholder="Заполняйте, если нужного тега нет" type="text">
+                  </label>
+                  <label class="adm-field">
+                    <span class="adm-field__label">URL slug нового тега</span>
+                    <input class="adm-input" name="linked_tag_slug" placeholder="naprimer-supergeroi" type="text">
+                  </label>
+                  <label class="adm-field">
+                    <span class="adm-field__label">Описание фильтра</span>
+                    <textarea class="adm-input" name="description">{{ category.description }}</textarea>
+                  </label>
+                  <label class="adm-checkline">
+                    <input {% if category.is_visible %}checked{% endif %} {% if category.is_system %}disabled{% endif %} name="is_visible" type="checkbox">
+                    <span>Показывать фильтр на сайте</span>
+                  </label>
+                  <div class="adm-flex">
+                    <button class="adm-btn adm-btn--sm" type="submit">Сохранить фильтр</button>
+                    {% if not category.is_system %}
+                      <button class="adm-btn adm-btn--danger adm-btn--sm" formaction="{{ url_for('admin_category_delete', category_id=category.id) }}" formmethod="post" onclick="return confirm('Удалить фильтр каталога?');" type="submit">Удалить фильтр</button>
+                    {% endif %}
+                  </div>
+                </form>
+
+                {% if category.characters %}
+                  <div class="adm-cat-chars">
+                    <div class="adm-cat-chars__head">
+                      <span>Персонажи по связанному тегу</span>
+                      <span class="adm-cat-chars__count">{{ category.characters|length }}</span>
+                    </div>
+                    <ul class="adm-cat-chars__list">
+                      {% for character in category.characters %}
+                        <li class="adm-cat-chars__item">
+                          <a class="adm-cat-chars__name" href="{{ url_for('admin_character_edit', character_id=character.id) }}">
+                            <span>{{ character.name }}</span>
+                            {% if character.status == 'active' %}
+                              <span class="adm-badge adm-badge--on">активен</span>
+                            {% elif character.status == 'draft' %}
+                              <span class="adm-badge adm-badge--neutral">черновик</span>
+                            {% else %}
+                              <span class="adm-badge adm-badge--off">скрыт</span>
+                            {% endif %}
+                          </a>
+                          <div class="adm-cat-chars__tags">
+                            <span class="adm-pill adm-pill--all" title="Витрина «Все»">#all</span>
+                            {% for tag in character.tags %}
+                              <span class="adm-pill adm-pill--tag">#{{ tag.slug }}</span>
+                            {% endfor %}
+                          </div>
+                        </li>
+                      {% endfor %}
+                    </ul>
+                  </div>
+                {% else %}
+                  <div class="adm-cat-chars">
+                    <span class="adm-muted">Пока нет персонажей с этим связанным тегом.</span>
+                    <div>
+                      <a class="adm-btn adm-btn--sm" href="{{ url_for('admin_character_create') }}">Добавить персонажа и назначить тег</a>
+                    </div>
+                  </div>
+                {% endif %}
+              </details>
+            {% endfor %}
+          </div>
+        </article>
+
+        <article class="adm-card">
+          <div class="adm-card__head">
+            <div>
+              <div class="adm-card__eyebrow">Техническая настройка</div>
+              <h2 class="adm-card__title adm-card__title--sm">Технические теги и связки</h2>
+            </div>
+            <div class="adm-card__head-actions">
+              <details class="adm-create">
+                <summary aria-label="Добавить технический тег"><svg class="adm-i"><use href="#i-plus"/></svg></summary>
+                <form action="{{ url_for('admin_tag_create') }}" class="adm-create__panel" method="post">
+                  <label class="adm-field">
+                    <span class="adm-field__label">Название технического тега</span>
+                    <input class="adm-input" name="name" required type="text">
+                  </label>
+                  <label class="adm-field">
+                    <span class="adm-field__label">URL slug тега</span>
+                    <input class="adm-input" name="slug" placeholder="naprimer-supergeroi" type="text">
+                  </label>
+                  <label class="adm-field">
+                    <span class="adm-field__label">Описание тега</span>
+                    <textarea class="adm-input" name="description"></textarea>
+                  </label>
+                  <label class="adm-checkline">
+                    <input checked name="is_visible" type="checkbox">
+                    <span>Тег активен</span>
+                  </label>
+                  <button class="adm-btn adm-btn--sm" type="submit">Создать технический тег</button>
+                </form>
+              </details>
+            </div>
+          </div>
+
+          <div class="adm-manager-list">
+            {% for tag in tags %}
+              <details class="adm-manager-card">
+                <summary>
+                  <div>
+                    <div class="adm-manager-card__title">{{ tag.name }}</div>
+                    <div class="adm-table__muted">{{ tag.character_count }} персонажей с этим тегом</div>
+                  </div>
+                  <div class="adm-manager-card__meta">
+                    <span class="adm-badge {% if tag.is_visible %}adm-badge--on{% else %}adm-badge--off{% endif %}">
+                      {% if tag.is_visible %}виден{% else %}скрыт{% endif %}
+                    </span>
+                    <span class="adm-manager-card__chevron"></span>
+                  </div>
+                </summary>
+                <form action="{{ url_for('admin_tag_update', tag_id=tag.id) }}" class="adm-manager-card__body" method="post">
+                  <p class="adm-note">Тег не становится публичным фильтром сам по себе. Чтобы использовать его как фильтр каталога, свяжите его с фильтром слева.</p>
+                  <label class="adm-field">
+                    <span class="adm-field__label">Название технического тега</span>
+                    <input class="adm-input" name="name" type="text" value="{{ tag.name }}">
+                  </label>
+                  <label class="adm-field">
+                    <span class="adm-field__label">URL slug тега</span>
+                    <input class="adm-input" name="slug" type="text" value="{{ tag.slug }}">
+                  </label>
+                  <label class="adm-field">
+                    <span class="adm-field__label">Описание тега</span>
+                    <textarea class="adm-input" name="description">{{ tag.description }}</textarea>
+                  </label>
+                  <label class="adm-checkline">
+                    <input {% if tag.is_visible %}checked{% endif %} {% if tag.is_system %}disabled{% endif %} name="is_visible" type="checkbox">
+                    <span>Тег активен</span>
+                  </label>
+                  <div class="adm-flex">
+                    <button class="adm-btn adm-btn--sm" type="submit">Сохранить</button>
+                    {% if not tag.is_system %}
+                      <button class="adm-btn adm-btn--danger adm-btn--sm" formaction="{{ url_for('admin_tag_delete', tag_id=tag.id) }}" formmethod="post" onclick="return confirm('Удалить тег?');" type="submit">Удалить</button>
+                    {% endif %}
+                  </div>
+                </form>
+              </details>
+            {% endfor %}
+          </div>
+        </article>
+      </div>
+
+      <div>
+        <section class="adm-card">
+          <div class="adm-card__head">
+            <div>
+              <div class="adm-card__eyebrow">Карточки персонажей</div>
+              <h2 class="adm-card__title adm-card__title--sm">Все персонажи каталога</h2>
+            </div>
+          </div>
+
+          {% if characters %}
+            <div class="adm-cards">
+              {% for character in characters %}
+                <article class="adm-carditem">
+                  <a class="adm-carditem__media" href="{{ url_for('admin_character_edit', character_id=character.id) }}">
+                    <img alt="{{ character.name }}" loading="lazy" src="{{ character.hero_file_path or '/wp-content/uploads/2025/12/IMG_2209-1.jpg' }}">
+                  </a>
+                  <div class="adm-carditem__body">
+                    <div class="adm-carditem__top">
+                      <div>
+                        <h3 class="adm-carditem__title">{{ character.name }}</h3>
+                        <div class="adm-carditem__slug">/{{ character.slug }}/</div>
+                      </div>
+                      <span class="adm-badge {% if character.status == 'active' %}adm-badge--on{% elif character.status == 'hidden' %}adm-badge--off{% else %}adm-badge--neutral{% endif %}">
+                        {{ character.status }}
+                      </span>
+                    </div>
+
+                    <div>
+                      <div class="adm-carditem__label">Фильтры каталога</div>
+                      <div class="adm-chips">
+                        {% set visible_categories = character.category_names | reject('equalto', 'Все') | list %}
+                        {% if visible_categories %}
+                          {% for category_name in visible_categories %}
+                            <span class="adm-pill">{{ category_name }}</span>
+                          {% endfor %}
+                        {% else %}
+                          <span class="adm-pill adm-pill--muted">Публичные фильтры не определены</span>
+                        {% endif %}
+                      </div>
+                    </div>
+
+                    <div>
+                      <div class="adm-carditem__label">Технические теги</div>
+                      <div class="adm-chips">
+                        {% set visible_tags = character.tag_names | reject('equalto', 'All') | reject('equalto', 'all') | list %}
+                        {% if visible_tags %}
+                          {% for tag_name in visible_tags %}
+                            <span class="adm-pill adm-pill--tag">#{{ tag_name }}</span>
+                          {% endfor %}
+                        {% else %}
+                          <span class="adm-pill adm-pill--muted">Теги ещё не назначены</span>
+                        {% endif %}
+                      </div>
+                    </div>
+
+                    <div class="adm-carditem__actions">
+                      <a class="adm-btn adm-btn--sm" href="{{ url_for('admin_character_edit', character_id=character.id) }}">
+                        <svg class="adm-i"><use href="#i-edit"/></svg>Открыть карточку
+                      </a>
+                      <a class="adm-btn adm-btn--ghost adm-btn--sm" href="{{ character.route }}" target="_blank">На сайт</a>
+                      <form action="{{ url_for('admin_character_delete', character_id=character.id) }}" method="post" onsubmit="return confirm('Удалить персонажа?');">
+                        <button class="adm-btn adm-btn--danger adm-btn--sm" type="submit">Удалить</button>
+                      </form>
+                    </div>
+                  </div>
+                </article>
+              {% endfor %}
+            </div>
+          {% else %}
+            <div class="adm-empty">
+              <span class="adm-empty__icon"><svg class="adm-i"><use href="#i-mask"/></svg></span>
+              <h3>По этому фильтру пока ничего нет</h3>
+              <p>Попробуйте сбросить поиск или создайте новую карточку персонажа.</p>
+            </div>
+          {% endif %}
+        </section>
+      </div>
+    </section>
+
+  {% elif active_tab == 'notifications' %}
+    <section class="adm-card">
+      <div class="adm-card__head">
+        <span class="adm-editor__section-icon adm-editor__section-icon--teal"><svg class="adm-i"><use href="#i-telegram"/></svg></span>
+        <div>
+          <div class="adm-card__eyebrow">Уведомления</div>
+          <h2 class="adm-card__title adm-card__title--sm">Telegram-бот: получатели</h2>
+          <p class="adm-note" style="max-width:640px">При создании заказа клиентом мы отправляем сообщение всем активным получателям. Каждый администратор должен один раз нажать <strong>/start</strong> в Telegram-боте, чтобы бот получил его chat_id.</p>
+        </div>
+      </div>
+
+      {% if not notifications_configured %}
+        <div class="adm-flash adm-flash--warning">
+          <svg class="adm-i"><use href="#i-info"/></svg>
+          <span>Бот не настроен. Создайте бота через <a href="https://t.me/BotFather" rel="noopener noreferrer" target="_blank">@BotFather</a> и сохраните токен ниже — или положите в <code>.env</code> как <code>TELEGRAM_NOTIFY_BOT_TOKEN</code>.</span>
+        </div>
+      {% else %}
+        <div class="adm-flash adm-flash--success">
+          <svg class="adm-i"><use href="#i-check"/></svg>
+          <span>Бот настроен. Можно добавлять получателей.</span>
+        </div>
+      {% endif %}
+    </section>
+
+    <section class="adm-grid adm-grid--2">
+      <article class="adm-card">
+        <div class="adm-card__head">
+          <div>
+            <div class="adm-card__eyebrow">Токены</div>
+            <h3 class="adm-card__title adm-card__title--sm">Токен Telegram-бота</h3>
+          </div>
+        </div>
+        <form action="{{ url_for('admin_notifications_bot_token') }}" class="adm-stack" method="post">
+          <label class="adm-field">
+            <span class="adm-field__label">Bot token</span>
+            <input class="adm-input" name="bot_token" placeholder="123456:AA..." type="text" value="{{ bot_token_masked or '' }}">
+            <span class="adm-field__hint">Сохраняется в БД и имеет приоритет над <code>.env</code>. Оставьте пустым, чтобы стереть и снова брать из <code>.env</code>.</span>
+          </label>
+          <div>
+            <button class="adm-btn adm-btn--sm" type="submit">Сохранить токен</button>
+          </div>
+        </form>
+      </article>
+
+      <article class="adm-card">
+        <div class="adm-card__head">
+          <div>
+            <div class="adm-card__eyebrow">Токены</div>
+            <h3 class="adm-card__title adm-card__title--sm">Токен Telegram Gateway (отправка SMS-кодов)</h3>
+          </div>
+        </div>
+        <form action="{{ url_for('admin_notifications_gateway_token') }}" class="adm-stack" method="post">
+          <label class="adm-field">
+            <span class="adm-field__label">Gateway access token</span>
+            <input class="adm-input" name="gateway_token" placeholder="AAH..." type="text" value="{{ gateway_token_masked or '' }}">
+            <span class="adm-field__hint">Получить можно на <a href="https://gateway.telegram.org/" rel="noopener noreferrer" target="_blank">gateway.telegram.org</a> в разделе API. Используется для отправки кода подтверждения при логине клиентов. Имеет приоритет над <code>.env</code>.</span>
+          </label>
+          <div>
+            <button class="adm-btn adm-btn--sm" type="submit">Сохранить токен</button>
+          </div>
+        </form>
+      </article>
+    </section>
+
+    <section class="adm-grid adm-grid--2">
+      <article class="adm-card">
+        <div class="adm-card__head">
+          <span class="adm-editor__section-icon"><svg class="adm-i"><use href="#i-plus"/></svg></span>
+          <div>
+            <div class="adm-card__eyebrow">Получатели</div>
+            <h3 class="adm-card__title adm-card__title--sm">Добавить получателя</h3>
+          </div>
+        </div>
+        <form action="{{ url_for('admin_notifications_add') }}" class="adm-stack" method="post">
+          <label class="adm-field">
+            <span class="adm-field__label">Telegram chat_id</span>
+            <input class="adm-input" inputmode="numeric" name="chat_id" placeholder="например, 123456789" required type="text">
+            <span class="adm-field__hint">Узнать chat_id: напишите боту <a href="https://t.me/userinfobot" rel="noopener noreferrer" target="_blank">@userinfobot</a> и скопируйте Id.</span>
+          </label>
+          <label class="adm-field">
+            <span class="adm-field__label">Метка (имя для удобства)</span>
+            <input class="adm-input" name="label" placeholder="например, Мария — менеджер" type="text">
+          </label>
+          <div>
+            <button class="adm-btn adm-btn--sm" type="submit">
+              <svg class="adm-i"><use href="#i-plus"/></svg>Добавить
+            </button>
+          </div>
+        </form>
+      </article>
+
+      <article class="adm-card">
+        <div class="adm-card__head">
+          <span class="adm-editor__section-icon adm-editor__section-icon--ink"><svg class="adm-i"><use href="#i-info"/></svg></span>
+          <div>
+            <div class="adm-card__eyebrow">Инструкция</div>
+            <h3 class="adm-card__title adm-card__title--sm">Как получить chat_id</h3>
+          </div>
+        </div>
+        <ol class="adm-list">
+          <li>Создайте Telegram-бота через <a href="https://t.me/BotFather" rel="noopener noreferrer" target="_blank">@BotFather</a> командой <code>/newbot</code>.</li>
+          <li>Скопируйте токен и положите в <code>.env</code>: <code>TELEGRAM_NOTIFY_BOT_TOKEN=...</code>.</li>
+          <li>Каждый администратор должен открыть бота и нажать <strong>/start</strong>.</li>
+          <li>Чтобы узнать свой chat_id, напишите <a href="https://t.me/userinfobot" rel="noopener noreferrer" target="_blank">@userinfobot</a> и пришлите Id сюда.</li>
+          <li>Добавьте chat_id в форму слева и нажмите «Тест» в таблице.</li>
+        </ol>
+      </article>
+    </section>
+
+    <section class="adm-card">
+      <div class="adm-card__head">
+        <div>
+          <div class="adm-card__eyebrow">Список</div>
+          <h3 class="adm-card__title adm-card__title--sm">Получатели уведомлений</h3>
+        </div>
+      </div>
+      <div class="adm-table-wrap">
+        <table class="adm-table">
+          <thead>
+            <tr>
+              <th>chat_id</th>
+              <th>Метка</th>
+              <th>Статус</th>
+              <th>Добавлен</th>
+              <th>Действия</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for recipient in notification_recipients %}
+              <tr>
+                <td><code>{{ recipient.chat_id }}</code></td>
+                <td><span class="adm-table__title">{{ recipient.label or '—' }}</span></td>
+                <td>
+                  <span class="adm-badge {% if recipient.is_active %}adm-badge--on{% else %}adm-badge--off{% endif %}">
+                    {% if recipient.is_active %}активен{% else %}выключен{% endif %}
+                  </span>
+                </td>
+                <td><span class="adm-table__muted">{{ recipient.created_at_label or (recipient.created_at[:10] if recipient.created_at else '—') }}</span></td>
+                <td>
+                  <div class="adm-row-actions">
+                    <form action="{{ url_for('admin_notifications_test', recipient_id=recipient.id) }}" method="post">
+                      <button class="adm-btn adm-btn--ghost adm-btn--sm" type="submit">
+                        <svg class="adm-i"><use href="#i-send"/></svg>Тест
+                      </button>
+                    </form>
+                    <form action="{{ url_for('admin_notifications_toggle', recipient_id=recipient.id) }}" method="post">
+                      <input name="is_active" type="hidden" value="{% if recipient.is_active %}0{% else %}1{% endif %}">
+                      <button class="adm-btn adm-btn--ghost adm-btn--sm" type="submit">
+                        {% if recipient.is_active %}Выключить{% else %}Включить{% endif %}
+                      </button>
+                    </form>
+                    <form action="{{ url_for('admin_notifications_delete', recipient_id=recipient.id) }}" method="post" onsubmit="return confirm('Удалить получателя?');">
+                      <button class="adm-btn adm-btn--danger adm-btn--sm" type="submit">
+                        <svg class="adm-i"><use href="#i-trash"/></svg>Удалить
+                      </button>
+                    </form>
+                  </div>
+                </td>
+              </tr>
+            {% else %}
+              <tr>
+                <td class="adm-table__empty" colspan="5">Получатели пока не добавлены — заказы не будут отправляться в Telegram.</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+  {% elif active_tab == 'customers' %}
+    <section class="adm-card">
+      <div class="adm-card__head">
+        <div>
+          <div class="adm-card__eyebrow">CRM</div>
+          <h2 class="adm-card__title adm-card__title--sm">Клиенты ({{ stats.customers | length }})</h2>
+        </div>
+      </div>
+      <div class="adm-table-wrap">
+        <table class="adm-table">
+          <thead>
+            <tr>
+              <th>Телефон / Имя</th>
+              <th>Заказов</th>
+              <th>Потрачено</th>
+              <th>Отменено</th>
+              <th>Последний заказ</th>
+              <th>Статус</th>
+              <th>Действия</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for c in stats.customers %}
+              <tr{% if c.is_blocked %} class="is-danger"{% endif %}>
+                <td>
+                  <div class="adm-table__title">{{ c.phone }}</div>
+                  {% if c.name %}<div class="adm-table__muted">{{ c.name }}</div>{% endif %}
+                </td>
+                <td>{{ c.order_count }}</td>
+                <td>{{ "{:,}".format(c.total_spent).replace(",", " ") }} сум</td>
+                <td>{{ c.cancelled_count }}</td>
+                <td><span class="adm-table__muted">{{ c.last_order_at[:10] if c.last_order_at else "—" }}</span></td>
+                <td>
+                  {% if c.is_blocked %}
+                    <span class="adm-badge adm-badge--off">Заблокирован</span>
+                    {% if c.blocked_until %}
+                      <div class="adm-table__muted" style="font-size:11px">до {{ c.blocked_until[:10] }}</div>
+                    {% endif %}
+                  {% else %}
+                    <span class="adm-badge adm-badge--on">Активен</span>
+                  {% endif %}
+                </td>
+                <td>
+                  <div class="adm-row-actions">
+                    <a class="adm-btn adm-btn--ghost adm-btn--sm" href="{{ url_for('admin_dashboard', tab='orders', order_customer_id=c.id) }}">Заказы</a>
+                    {% if c.is_blocked %}
+                      <form action="{{ url_for('admin_unblock_customer', customer_id=c.id) }}" method="post">
+                        <button class="adm-btn adm-btn--sm" type="submit">Разблокировать</button>
+                      </form>
+                    {% endif %}
+                  </div>
+                </td>
+              </tr>
+            {% else %}
+              <tr><td class="adm-table__empty" colspan="7">Клиентов пока нет.</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </section>
+  {% endif %}
+{% endblock %}

@@ -1,0 +1,16 @@
+{
+  "headers": {
+    "x-nextjs-stale-time": "300",
+    "x-nextjs-prerender": "1",
+    "x-next-cache-tags": "_N_T_/layout,_N_T_/character/layout,_N_T_/character/[slug]/layout,_N_T_/character/[slug]/page,_N_T_/character/hulk"
+  },
+  "segmentPaths": [
+    "/_tree",
+    "/_full",
+    "/character/$d$slug/__PAGE__",
+    "/character/$d$slug",
+    "/character",
+    "/_index",
+    "/_head"
+  ]
+}

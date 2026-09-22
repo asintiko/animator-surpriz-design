@@ -1,0 +1,23 @@
+[Unit]
+Description=Surpriz private Next admin adapter
+After=network.target surpriz-v2.service
+Requires=surpriz-v2.service
+
+[Service]
+Type=simple
+User=surpriz
+Group=surpriz
+UMask=0077
+WorkingDirectory=/opt/surpriz-releases/20260807T143015Z/webapp
+EnvironmentFile=/opt/surpriz-releases/20260807T143015Z/.env
+EnvironmentFile=/opt/surpriz/webapp.env
+Environment=SURPRIZ_SECURE_COOKIES=1
+Environment=SURPRIZ_ADAPTER_DATA_DIR=/opt/surpriz/adapter-data
+Environment=SURPRIZ_CANONICAL_DATABASE=/opt/surpriz/content/data/admin/site_admin.sqlite3
+ExecStart=/opt/surpriz/.venv/bin/gunicorn --workers 2 --bind 127.0.0.1:5051 --timeout 60 --access-logfile - --error-logfile - 'adapter.app:create_app()'
+Restart=on-failure
+RestartSec=3
+LimitNOFILE=65535
+
+[Install]
+WantedBy=multi-user.target

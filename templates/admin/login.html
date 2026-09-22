@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta content="width=device-width, initial-scale=1" name="viewport">
+  <title>Вход в админку Surpriz</title>
+  <link href="/fonts/fonts.css" rel="stylesheet">
+  {% set panel_css_version = static_asset_version('admin/panel-v2.css') if static_asset_version is defined else 'admin-v2' %}
+  <link href="/admin/panel-v2.css?v={{ panel_css_version }}" rel="stylesheet">
+</head>
+<body class="adm-login">
+  <svg xmlns="http://www.w3.org/2000/svg" style="display:none" aria-hidden="true">
+    <symbol id="i-user" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"> <circle fill="#FFC53D" fill-opacity="0.3" cx="12" cy="7.9" r="3.9"/> <path d="M4.8 20.3c.9-3.6 3.8-5.4 7.2-5.4s6.3 1.8 7.2 5.4"/> </symbol>
+    <symbol id="i-lock" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"> <rect fill="#FFC53D" fill-opacity="0.28" x="4.8" y="10.4" width="14.4" height="9.8" rx="2.2"/> <path d="M8.2 10.4V7.9a3.8 3.8 0 0 1 7.6 0v2.5"/> <path d="M12 14.2v2.5"/> </symbol>
+    <symbol id="i-arrow-right" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"> <path d="M3.8 12h15.7"/> <path d="M13.7 5.9l6.1 6.1-6.1 6.1"/> </symbol>
+    <symbol id="i-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"> <path d="M4.4 12.6l5 5L19.7 6.4"/> </symbol>
+    <symbol id="i-close" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"> <path d="M6.1 6.1l11.8 11.8"/> <path d="M17.9 6.1L6.1 17.9"/> </symbol>
+    <symbol id="i-info" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"> <circle fill="#FFC53D" fill-opacity="0.14" cx="12" cy="12" r="8.7"/> <circle fill="currentColor" stroke="none" cx="12" cy="7.5" r="1.15"/> <path d="M12 11.3v5.1"/> </symbol>
+  </svg>
+
+  <main class="adm-login__card">
+    <div class="adm-login__brand">
+      <span class="adm-login__logo"><img alt="Surpriz" src="/wp-content/uploads/2025/06/logo.png"></span>
+      <h1 class="adm-login__title">Панель управления</h1>
+      <p class="adm-login__sub">Студия детских праздников Surpriz · Ташкент</p>
+    </div>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        <div class="adm-flashes" style="margin-bottom:14px">
+          {% for category, message in messages %}
+            <div class="adm-flash adm-flash--{{ category }}">
+              {% if category == 'success' %}
+                <svg class="adm-i"><use href="#i-check"/></svg>
+              {% elif category in ('error', 'danger') %}
+                <svg class="adm-i"><use href="#i-close"/></svg>
+              {% else %}
+                <svg class="adm-i"><use href="#i-info"/></svg>
+              {% endif %}
+              <span>{{ message }}</span>
+            </div>
+          {% endfor %}
+        </div>
+      {% endif %}
+    {% endwith %}
+
+    <form class="adm-login__form" method="post">
+      <label class="adm-field">
+        <span class="adm-field__label">Логин</span>
+        <span class="adm-field--icon" style="display:block">
+          <input autocomplete="username" class="adm-input" name="username" required type="text" value="{{ username }}">
+          <svg class="adm-i"><use href="#i-user"/></svg>
+        </span>
+      </label>
+      <label class="adm-field">
+        <span class="adm-field__label">Пароль</span>
+        <span class="adm-field--icon" style="display:block">
+          <input autocomplete="current-password" class="adm-input" name="password" required type="password">
+          <svg class="adm-i"><use href="#i-lock"/></svg>
+        </span>
+      </label>
+
+      {% if attempt_state %}
+        <div class="adm-login__attempts">
+          {% if attempt_state.is_locked %}
+            <span>Вход временно заблокирован.</span>
+          {% else %}
+            <span>Осталось попыток: {{ attempt_state.remaining_attempts }}</span>
+          {% endif %}
+        </div>
+      {% endif %}
+
+      <button class="adm-btn adm-btn--full" type="submit">
+        Войти<svg class="adm-i"><use href="#i-arrow-right"/></svg>
+      </button>
+    </form>
+
+    <div class="adm-login__foot">Surpriz · праздники, которые запоминаются</div>
+  </main>
+</body>
+</html>

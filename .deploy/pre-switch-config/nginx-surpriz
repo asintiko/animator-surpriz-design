@@ -1,0 +1,233 @@
+server {
+    server_name animator-surpriz.uz;
+
+    client_max_body_size 64M;
+
+    # Static files served directly by nginx (avoid fd leaks in Flask app)
+    location /wp-content/ {
+        alias /opt/surpriz/static/wp-content/;
+        access_log off;
+        expires 7d;
+        add_header Cache-Control "public, max-age=604800";
+        try_files $uri @flask;
+    }
+    location /wp-includes/ {
+        alias /opt/surpriz/static/wp-includes/;
+        access_log off;
+        expires 7d;
+        add_header Cache-Control "public, max-age=604800";
+        try_files $uri @flask;
+    }
+    location /easter/ {
+        alias /opt/surpriz/static/easter/;
+        access_log off;
+        expires 7d;
+        add_header Cache-Control "public, max-age=604800";
+        try_files $uri @flask;
+    }
+    location /payment-icons/ {
+        alias /opt/surpriz/static/payment-icons/;
+        access_log off;
+        expires 7d;
+        try_files $uri @flask;
+    }
+    location /admin/panel.css {
+        alias /opt/surpriz/static/admin/panel.css;
+        access_log off;
+        expires 1d;
+    }
+    location = /managed-catalog.css {
+        alias /opt/surpriz/static/managed-catalog.css;
+        access_log off;
+        expires 1d;
+    }
+    location = /customer-portal.css {
+        alias /opt/surpriz/static/customer-portal.css;
+        access_log off;
+        expires 1d;
+    }
+
+    # Legacy admin aliases always land in the current Next application.
+    location = /wp-admin { return 302 /admin; }
+    location ^~ /wp-admin/ { return 302 /admin; }
+    location = /wp-login.php { return 302 /admin/login; }
+    location = /admin.html { return 302 /admin; }
+    location = /surpriz/admin.html { return 302 /admin; }
+    location = /surpriz/admin/ { return 302 /admin; }
+
+    # Surpriz Next admin application. The adapter remains loopback-only.
+    location = /admin {
+        proxy_pass http://127.0.0.1:5053;
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_read_timeout 150s;
+        proxy_connect_timeout 10s;
+        proxy_hide_header Cache-Control;
+        proxy_hide_header Surrogate-Control;
+        proxy_hide_header X-Surpriz-Build-Id;
+        proxy_hide_header X-Nextjs-Cache;
+        proxy_no_cache 1;
+        proxy_cache_bypass 1;
+        add_header Cache-Control "private, no-store, no-cache, must-revalidate, max-age=0" always;
+        add_header Surrogate-Control "no-store" always;
+        add_header Pragma "no-cache" always;
+        add_header Expires "0" always;
+        add_header X-Surpriz-Build-Id "20260807T142712Z" always;
+    }
+    location ^~ /admin/ {
+        proxy_pass http://127.0.0.1:5053;
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_read_timeout 150s;
+        proxy_connect_timeout 10s;
+        proxy_hide_header Cache-Control;
+        proxy_hide_header Surrogate-Control;
+        proxy_hide_header X-Surpriz-Build-Id;
+        proxy_hide_header X-Nextjs-Cache;
+        proxy_no_cache 1;
+        proxy_cache_bypass 1;
+        add_header Cache-Control "private, no-store, no-cache, must-revalidate, max-age=0" always;
+        add_header Surrogate-Control "no-store" always;
+        add_header Pragma "no-cache" always;
+        add_header Expires "0" always;
+        add_header X-Surpriz-Build-Id "20260807T142712Z" always;
+    }
+    location = /api/admin {
+        proxy_pass http://127.0.0.1:5053;
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_hide_header Cache-Control;
+        proxy_hide_header Surrogate-Control;
+        proxy_hide_header X-Surpriz-Build-Id;
+        proxy_hide_header X-Nextjs-Cache;
+        proxy_no_cache 1;
+        proxy_cache_bypass 1;
+        add_header Cache-Control "private, no-store, no-cache, must-revalidate, max-age=0" always;
+        add_header Surrogate-Control "no-store" always;
+        add_header Pragma "no-cache" always;
+        add_header Expires "0" always;
+        add_header X-Surpriz-Build-Id "20260807T142712Z" always;
+    }
+    location ^~ /api/admin/ {
+        proxy_pass http://127.0.0.1:5053;
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_read_timeout 150s;
+        proxy_connect_timeout 10s;
+        proxy_hide_header Cache-Control;
+        proxy_hide_header Surrogate-Control;
+        proxy_hide_header X-Surpriz-Build-Id;
+        proxy_hide_header X-Nextjs-Cache;
+        proxy_no_cache 1;
+        proxy_cache_bypass 1;
+        add_header Cache-Control "private, no-store, no-cache, must-revalidate, max-age=0" always;
+        add_header Surrogate-Control "no-store" always;
+        add_header Pragma "no-cache" always;
+        add_header Expires "0" always;
+        add_header X-Surpriz-Build-Id "20260807T142712Z" always;
+    }
+    location = /api/csrf {
+        proxy_pass http://127.0.0.1:5053;
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_hide_header Cache-Control;
+        proxy_hide_header Surrogate-Control;
+        proxy_hide_header X-Surpriz-Build-Id;
+        proxy_hide_header X-Nextjs-Cache;
+        proxy_no_cache 1;
+        proxy_cache_bypass 1;
+        add_header Cache-Control "private, no-store, no-cache, must-revalidate, max-age=0" always;
+        add_header Surrogate-Control "no-store" always;
+        add_header Pragma "no-cache" always;
+        add_header Expires "0" always;
+        add_header X-Surpriz-Build-Id "20260807T142712Z" always;
+    }
+    location ^~ /_next/static/ {
+        proxy_pass http://127.0.0.1:5053;
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        expires 365d;
+        add_header Cache-Control "public, max-age=31536000, immutable";
+    }
+    location ^~ /_next/ {
+        proxy_pass http://127.0.0.1:5053;
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_hide_header Cache-Control;
+        add_header Cache-Control "private, no-store, no-cache, must-revalidate, max-age=0" always;
+    }
+    location ^~ /brand/ {
+        proxy_pass http://127.0.0.1:5053;
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        expires 1h;
+    }
+    location = /manifest.webmanifest {
+        proxy_pass http://127.0.0.1:5053;
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+    location ^~ /media/generated/ {
+        alias /opt/surpriz/static/admin-media/generated/;
+        access_log off;
+        expires 365d;
+        add_header Cache-Control "public, max-age=31536000, immutable";
+    }
+
+    location @flask {
+        proxy_pass http://127.0.0.1:5052;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+
+    location / {
+        proxy_pass http://127.0.0.1:5052;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_read_timeout 60s;
+        proxy_connect_timeout 10s;
+    }
+
+    listen 443 ssl;
+    ssl_certificate /etc/letsencrypt/live/animator-surpriz.uz/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/animator-surpriz.uz/privkey.pem;
+    include /etc/letsencrypt/options-ssl-nginx.conf;
+    ssl_dhparam /etc/letsencrypt/ssl-dhparams.pem;
+}
+
+server {
+    if ($host = www.animator-surpriz.uz) { return 301 https://$host$request_uri; }
+    if ($host = animator-surpriz.uz)     { return 301 https://$host$request_uri; }
+    listen 80;
+    server_name animator-surpriz.uz;
+    return 404;
+}

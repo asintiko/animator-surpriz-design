@@ -1,0 +1,451 @@
+{% set ns = namespace(hero=None, primary_category=None) %}
+{% for media in character.media %}
+  {% if media.id == character.hero_media_id %}
+    {% set ns.hero = media %}
+  {% endif %}
+{% endfor %}
+{% if not ns.hero and character.media %}
+  {% set ns.hero = character.media[0] %}
+{% endif %}
+{% for category in character.categories %}
+  {% if category.slug != 'all' and not ns.primary_category %}
+    {% set ns.primary_category = category %}
+  {% endif %}
+{% endfor %}
+{% set ordered_media = ([ns.hero] + character.media|rejectattr('id', 'equalto', ns.hero.id)|list) if ns.hero else [] %}
+{% set back_href = '/show-programs/' if character.is_show_program else '/catalog/' %}
+{% set back_label = 'Шоу-программы' if character.is_show_program else 'Персонажи' %}
+{% set related_heading = 'Похожие шоу-программы' if character.is_show_program else 'Похожие герои' %}
+{% set builder_url = '/party-builder/?program=' + character.slug if character.is_show_program else '/party-builder/?character=' + character.slug %}
+
+<main class="v2-main" id="content">
+  <div class="v2-charpage">
+
+    <!-- ============ КРОШКИ ============ -->
+    <div class="v2-container v2-charpage__topline">
+      <nav class="v2-crumbs" aria-label="Breadcrumb">
+        <a class="v2-crumbs__link" href="/">Главная</a>
+        <span class="v2-crumbs__sep" aria-hidden="true">/</span>
+        {% if character.is_show_program %}
+          <a class="v2-crumbs__link" href="/show-programs/">Шоу-программы</a>
+        {% elif ns.primary_category %}
+          <a class="v2-crumbs__link" href="{{ ns.primary_category.route }}">{{ ns.primary_category.name }}</a>
+        {% else %}
+          <a class="v2-crumbs__link" href="/catalog/">Персонажи</a>
+        {% endif %}
+        <span class="v2-crumbs__sep" aria-hidden="true">/</span>
+        <span class="v2-crumbs__current">{{ character.name }}</span>
+      </nav>
+      <button class="v2-btn v2-btn--ghost v2-btn--sm v2-charpage__back" type="button" data-v2-back data-fallback="{{ back_href }}">
+        <svg class="v2-i" aria-hidden="true"><use href="#i-arrow-left"/></svg>
+        <span>Назад</span>
+      </button>
+    </div>
+
+    <!-- ============ ГАЛЕРЕЯ + ИНФО ============ -->
+    <section class="v2-container v2-charpage__layout">
+      <div class="v2-char-gallery" data-v2-gallery data-reveal>
+        <div class="v2-char-gallery__stage" data-gallery-stage>
+          {% for media in ordered_media %}
+            <div class="v2-char-gallery__pane {% if loop.first %}is-active{% endif %}" data-gallery-pane data-media-type="{{ media.media_type }}">
+              {% if media.media_type == 'video' %}
+                {% if 'youtube.com' in media.file_path or 'youtu.be' in media.file_path or 'vimeo.com' in media.file_path %}
+                  <iframe allowfullscreen class="v2-char-gallery__frame" loading="lazy" src="{{ media.file_path }}" title="{{ media.alt_text or character.name }}"></iframe>
+                {% else %}
+                  <video class="v2-char-gallery__video" controls preload="metadata" src="{{ media.file_path }}"></video>
+                {% endif %}
+              {% else %}
+                <button class="v2-char-gallery__zoom" type="button" data-gallery-zoom aria-label="Открыть фото на весь экран">
+                  <img alt="{{ media.alt_text or character.name }}" class="v2-char-gallery__image" decoding="async" loading="{% if loop.first %}eager{% else %}lazy{% endif %}" src="{{ media.file_path }}">
+                </button>
+              {% endif %}
+              {% if media.caption %}
+                <span class="v2-char-gallery__caption">{{ media.caption }}</span>
+              {% endif %}
+            </div>
+          {% else %}
+            <div class="v2-char-gallery__pane is-active" data-gallery-pane data-media-type="image">
+              <span class="v2-char-gallery__ph">
+                <svg class="v2-i" aria-hidden="true"><use href="#i-star"/></svg>
+                <small>Фото скоро</small>
+              </span>
+            </div>
+          {% endfor %}
+
+          {% if ordered_media|length > 1 %}
+            <button class="v2-char-gallery__nav v2-char-gallery__nav--prev" type="button" data-gallery-prev aria-label="Предыдущее фото">
+              <svg class="v2-i" aria-hidden="true"><use href="#i-arrow-left"/></svg>
+            </button>
+            <button class="v2-char-gallery__nav v2-char-gallery__nav--next" type="button" data-gallery-next aria-label="Следующее фото">
+              <svg class="v2-i" aria-hidden="true"><use href="#i-arrow-right"/></svg>
+            </button>
+            <span class="v2-char-gallery__counter" data-gallery-counter>1 / {{ ordered_media|length }}</span>
+          {% endif %}
+        </div>
+
+        {% if ordered_media|length > 1 %}
+          <div class="v2-char-gallery__thumbs" data-gallery-thumbs>
+            {% for media in ordered_media %}
+              <button class="v2-char-gallery__thumb {% if loop.first %}is-active{% endif %}" type="button" data-gallery-thumb="{{ loop.index0 }}" aria-label="Фото {{ loop.index }}">
+                {% if media.media_type == 'video' %}
+                  <span class="v2-char-gallery__thumb-video">
+                    <svg class="v2-i" aria-hidden="true"><use href="#i-play"/></svg>
+                  </span>
+                {% else %}
+                  <img alt="" decoding="async" loading="lazy" src="{{ media.file_path }}">
+                {% endif %}
+              </button>
+            {% endfor %}
+          </div>
+        {% endif %}
+      </div>
+
+      <div class="v2-charpage__info">
+        <div data-reveal data-reveal-delay="80">
+          {% if character.categories %}
+            <div class="v2-charpage__chips">
+              {% for category in character.categories %}
+                {% if category.slug != 'all' %}
+                  <a class="v2-chip" href="{{ category.route }}">{{ category.name }}</a>
+                {% endif %}
+              {% endfor %}
+            </div>
+          {% endif %}
+          <h1 class="v2-h1 v2-charpage__title">{{ character.name }}</h1>
+          {% if character.short_description %}
+            <p class="v2-sub">{{ character.short_description }}</p>
+          {% endif %}
+        </div>
+
+        <aside class="v2-card v2-char-cta" data-reveal data-reveal-delay="160">
+          <span class="v2-eyebrow"><svg class="v2-i" aria-hidden="true"><use href="#i-party-hat"/></svg>{% if character.is_show_program %}Заказать программу{% else %}Заказать героя{% endif %}</span>
+          {% if character.price_label %}
+            <p class="v2-char-cta__price">{{ character.price_label }}</p>
+          {% else %}
+            <p class="v2-char-cta__price v2-char-cta__price--soft">Стоимость зависит от программы</p>
+          {% endif %}
+          <a class="v2-btn v2-btn--primary v2-btn--lg v2-char-cta__btn" href="{{ builder_url }}">
+            <svg class="v2-i" aria-hidden="true"><use href="#i-party-hat"/></svg>
+            <span>{% if character.is_show_program %}Собрать праздник с программой{% else %}Собрать праздник с героем{% endif %}</span>
+          </a>
+          <a class="v2-char-cta__phone" href="{{ phone_tel }}">
+            <svg class="v2-i" aria-hidden="true"><use href="#i-phone"/></svg>
+            <span>{{ phone_display }}</span>
+          </a>
+          <p class="v2-char-cta__note">
+            <svg class="v2-i" aria-hidden="true"><use href="#i-sparkles"/></svg>
+            {% if character.is_show_program %}
+              Программу можно дополнить любимыми персонажами
+            {% else %}
+              Герой входит в шоу-программы — спросите, с чем он сочетается
+            {% endif %}
+          </p>
+        </aside>
+      </div>
+    </section>
+
+    <!-- ============ О ПЕРСОНАЖЕ ============ -->
+    {% if (character.description and character.description != character.short_description) or character.duplicate_count %}
+      <section class="v2-section--tight">
+        <div class="v2-container">
+          <div class="v2-card v2-char-about" data-reveal>
+            <h2 class="v2-h2">О персонаже</h2>
+            {% if character.description and character.description != character.short_description %}
+              <div class="v2-char-about__text">
+                <p>{{ character.description|replace('\n', '<br>')|safe }}</p>
+              </div>
+            {% endif %}
+            {% if character.duplicate_count %}
+              <p class="v2-char-about__dup">
+                <svg class="v2-i" aria-hidden="true"><use href="#i-users"/></svg>
+                У этого героя есть второй костюм — его можно заказать параллельно на два праздника.
+              </p>
+            {% endif %}
+          </div>
+        </div>
+      </section>
+    {% endif %}
+
+    <!-- ============ ПОХОЖИЕ ============ -->
+    {% if related_characters %}
+      <section class="v2-section--tight v2-charpage__related">
+        <div class="v2-container">
+          <div class="v2-section-head" data-reveal>
+            <div>
+              <h2 class="v2-h2">{{ related_heading }}</h2>
+            </div>
+            <a class="v2-btn v2-btn--ghost v2-btn--md v2-section-head__link" href="{{ back_href }}">
+              <span>{% if character.is_show_program %}Все шоу{% else %}Все персонажи{% endif %}</span>
+              <svg class="v2-i" aria-hidden="true"><use href="#i-arrow-right"/></svg>
+            </a>
+          </div>
+          <ul class="v2-catalog-grid v2-catalog-grid--related">
+            {% for item in related_characters %}
+              <li class="v2-char-tile" data-reveal data-reveal-delay="{{ loop.index0 * 70 }}">
+                <a class="v2-char-tile__media" href="{{ item.route }}" tabindex="-1" aria-hidden="true">
+                  {% if item.hero_file_path %}
+                    <img alt="{{ item.name }}" decoding="async" loading="lazy" onerror="this.style.display='none'" src="{{ item.hero_file_path }}"
+                         style="object-position: {{ item.cover_offset_x or 50 }}% {{ item.cover_offset_y or 50 }}%; object-fit: {{ item.cover_fit or 'cover' }}; transform: scale({{ (item.image_zoom or 100) / 100 }}); transform-origin: {{ item.cover_offset_x or 50 }}% {{ item.cover_offset_y or 50 }}%;">
+                  {% else %}
+                    <span class="v2-char-tile__ph">
+                      <svg class="v2-i" aria-hidden="true"><use href="#i-star"/></svg>
+                      <small>Фото скоро</small>
+                    </span>
+                  {% endif %}
+                </a>
+                <div class="v2-char-tile__body">
+                  <h3 class="v2-char-tile__name">
+                    <a href="{{ item.route }}">{{ item.name }}</a>
+                  </h3>
+                  <a class="v2-char-tile__more" href="{{ item.route }}">
+                    <span>Подробнее</span>
+                    <svg class="v2-i" aria-hidden="true"><use href="#i-arrow-right"/></svg>
+                  </a>
+                </div>
+              </li>
+            {% endfor %}
+          </ul>
+        </div>
+      </section>
+    {% endif %}
+  </div>
+</main>
+
+<!-- ============ ЛАЙТБОКС ============ -->
+<div class="v2-lightbox" data-v2-lightbox aria-hidden="true" role="dialog" aria-label="Фотогалерея: {{ character.name }}">
+  <div class="v2-lightbox__backdrop" data-lightbox-close></div>
+  <div class="v2-lightbox__stage" data-lightbox-stage>
+    {% for media in ordered_media %}
+      <div class="v2-lightbox__pane {% if loop.first %}is-active{% endif %}" data-lightbox-pane>
+        {% if media.media_type == 'video' %}
+          {% if 'youtube.com' in media.file_path or 'youtu.be' in media.file_path or 'vimeo.com' in media.file_path %}
+            <iframe allowfullscreen class="v2-lightbox__frame" loading="lazy" src="{{ media.file_path }}" title="{{ media.alt_text or character.name }}"></iframe>
+          {% else %}
+            <video class="v2-lightbox__video" controls preload="metadata" src="{{ media.file_path }}"></video>
+          {% endif %}
+        {% else %}
+          <img alt="{{ media.alt_text or character.name }}" class="v2-lightbox__image" decoding="async" loading="lazy" src="{{ media.file_path }}">
+        {% endif %}
+      </div>
+    {% endfor %}
+  </div>
+  {% if ordered_media|length > 1 %}
+    <button class="v2-lightbox__nav v2-lightbox__nav--prev" type="button" data-lightbox-prev aria-label="Предыдущее фото">
+      <svg class="v2-i" aria-hidden="true"><use href="#i-arrow-left"/></svg>
+    </button>
+    <button class="v2-lightbox__nav v2-lightbox__nav--next" type="button" data-lightbox-next aria-label="Следующее фото">
+      <svg class="v2-i" aria-hidden="true"><use href="#i-arrow-right"/></svg>
+    </button>
+    <span class="v2-lightbox__counter" data-lightbox-counter>1 / {{ ordered_media|length }}</span>
+  {% endif %}
+  <button class="v2-lightbox__close" type="button" data-lightbox-close aria-label="Закрыть галерею">
+    <svg class="v2-i" aria-hidden="true"><use href="#i-close"/></svg>
+  </button>
+</div>
+
+<script>
+(function () {
+  "use strict";
+
+  var REDUCED = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  /* ---------- Кнопка «Назад» ---------- */
+  document.querySelectorAll("[data-v2-back]").forEach(function (button) {
+    button.addEventListener("click", function () {
+      var fallback = button.getAttribute("data-fallback") || "/catalog/";
+      var ref = document.referrer || "";
+      var sameSite = ref.indexOf(window.location.origin) === 0;
+      if (sameSite && window.history.length > 1) {
+        window.history.back();
+      } else {
+        window.location.assign(fallback);
+      }
+    });
+  });
+
+  /* ---------- Галерея ---------- */
+  var gallery = document.querySelector("[data-v2-gallery]");
+  if (!gallery) return;
+
+  var panes = Array.prototype.slice.call(gallery.querySelectorAll("[data-gallery-pane]"));
+  var thumbs = Array.prototype.slice.call(gallery.querySelectorAll("[data-gallery-thumb]"));
+  var counter = gallery.querySelector("[data-gallery-counter]");
+  var stage = gallery.querySelector("[data-gallery-stage]");
+  var index = 0;
+
+  function stopPaneMedia(pane) {
+    pane.querySelectorAll("video").forEach(function (video) { video.pause(); });
+    pane.querySelectorAll("iframe").forEach(function (frame) {
+      /* Перезаписываем src, чтобы остановить youtube/vimeo при смене слайда */
+      var src = frame.getAttribute("src");
+      if (src) frame.setAttribute("src", src);
+    });
+  }
+
+  function activate(next) {
+    if (!panes.length) return;
+    index = ((next % panes.length) + panes.length) % panes.length;
+    panes.forEach(function (pane, i) {
+      var active = i === index;
+      pane.classList.toggle("is-active", active);
+      if (!active) stopPaneMedia(pane);
+    });
+    thumbs.forEach(function (thumb, i) {
+      thumb.classList.toggle("is-active", i === index);
+      if (i === index && thumb.scrollIntoView) {
+        thumb.scrollIntoView({ behavior: REDUCED ? "auto" : "smooth", block: "nearest", inline: "center" });
+      }
+    });
+    if (counter) counter.textContent = (index + 1) + " / " + panes.length;
+  }
+
+  gallery.querySelectorAll("[data-gallery-prev]").forEach(function (btn) {
+    btn.addEventListener("click", function () { activate(index - 1); });
+  });
+  gallery.querySelectorAll("[data-gallery-next]").forEach(function (btn) {
+    btn.addEventListener("click", function () { activate(index + 1); });
+  });
+  thumbs.forEach(function (thumb) {
+    thumb.addEventListener("click", function () {
+      activate(parseInt(thumb.getAttribute("data-gallery-thumb"), 10) || 0);
+    });
+  });
+
+  /* ---------- Свайп по сцене ---------- */
+  function bindSwipe(el, onSwipe) {
+    if (!el) return;
+    var startX = null;
+    var startY = null;
+    el.addEventListener("touchstart", function (event) {
+      if (event.touches.length !== 1) return;
+      startX = event.touches[0].clientX;
+      startY = event.touches[0].clientY;
+    }, { passive: true });
+    el.addEventListener("touchend", function (event) {
+      if (startX === null) return;
+      var dx = event.changedTouches[0].clientX - startX;
+      var dy = event.changedTouches[0].clientY - (startY || 0);
+      startX = null;
+      if (Math.abs(dx) > 48 && Math.abs(dx) > Math.abs(dy) * 1.4) {
+        onSwipe(dx < 0 ? 1 : -1);
+      }
+    }, { passive: true });
+  }
+
+  bindSwipe(stage, function (dir) { activate(index + dir); });
+
+  /* ---------- Лайтбокс ---------- */
+  var lightbox = document.querySelector("[data-v2-lightbox]");
+  if (!lightbox) return;
+
+  var lbPanes = Array.prototype.slice.call(lightbox.querySelectorAll("[data-lightbox-pane]"));
+  var lbCounter = lightbox.querySelector("[data-lightbox-counter]");
+  var lbIndex = 0;
+  var lastFocus = null;
+
+  function lbStopAll() {
+    lbPanes.forEach(function (pane) {
+      pane.querySelectorAll("video").forEach(function (video) { video.pause(); });
+      pane.querySelectorAll("iframe").forEach(function (frame) {
+        var src = frame.getAttribute("src");
+        if (src) frame.setAttribute("src", src);
+      });
+    });
+  }
+
+  function lbActivate(next) {
+    if (!lbPanes.length) return;
+    lbIndex = ((next % lbPanes.length) + lbPanes.length) % lbPanes.length;
+    lbPanes.forEach(function (pane, i) {
+      pane.classList.toggle("is-active", i === lbIndex);
+    });
+    if (lbCounter) lbCounter.textContent = (lbIndex + 1) + " / " + lbPanes.length;
+  }
+
+  function lbOpen(startAt) {
+    lastFocus = document.activeElement;
+    lbActivate(startAt);
+    lightbox.classList.add("is-open");
+    lightbox.setAttribute("aria-hidden", "false");
+    document.body.style.overflow = "hidden";
+    var closeBtn = lightbox.querySelector("[data-lightbox-close]");
+    if (closeBtn) closeBtn.focus();
+  }
+
+  function lbClose() {
+    lightbox.classList.remove("is-open");
+    lightbox.setAttribute("aria-hidden", "true");
+    document.body.style.overflow = "";
+    lbStopAll();
+    if (lastFocus && lastFocus.focus) lastFocus.focus();
+  }
+
+  gallery.querySelectorAll("[data-gallery-zoom]").forEach(function (zoom) {
+    zoom.addEventListener("click", function () {
+      lbOpen(index);
+    });
+  });
+
+  lightbox.querySelectorAll("[data-lightbox-close]").forEach(function (el) {
+    el.addEventListener("click", lbClose);
+  });
+  lightbox.querySelectorAll("[data-lightbox-prev]").forEach(function (btn) {
+    btn.addEventListener("click", function () { lbActivate(lbIndex - 1); });
+  });
+  lightbox.querySelectorAll("[data-lightbox-next]").forEach(function (btn) {
+    btn.addEventListener("click", function () { lbActivate(lbIndex + 1); });
+  });
+  bindSwipe(lightbox.querySelector("[data-lightbox-stage]"), function (dir) { lbActivate(lbIndex + dir); });
+
+  document.addEventListener("keydown", function (event) {
+    if (!lightbox.classList.contains("is-open")) return;
+    if (event.key === "Escape") lbClose();
+    if (event.key === "ArrowLeft") lbActivate(lbIndex - 1);
+    if (event.key === "ArrowRight") lbActivate(lbIndex + 1);
+  });
+
+  activate(0);
+})();
+</script>
+
+{# Микроразметка услуги. Offer добавляется только когда у карточки есть своя цена:
+   у большинства персонажей она нулевая (цена считается от программы), и «price: 0»
+   в разметке Google читает как «бесплатно». #}
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Service",
+  "serviceType": "Аниматор на детский праздник",
+  "name": {{ (character.name ~ " на детский праздник в Ташкенте") | tojson }},
+  "description": {{ (character.short_description or character.description or "") | striptags | trim | tojson }},
+  {% if character.hero_file_path %}"image": {{ ("https://animator-surpriz.uz" ~ character.hero_file_path) | tojson }},{% endif %}
+  "provider": { "@id": "https://animator-surpriz.uz/#business" },
+  "areaServed": { "@type": "City", "name": "Ташкент" }{% if character.base_price and character.base_price > 0 %},
+  "offers": {
+    "@type": "Offer",
+    "priceCurrency": "UZS",
+    "price": {{ character.base_price | tojson }},
+    "availability": "https://schema.org/InStock",
+    "url": {{ ("https://animator-surpriz.uz" ~ character.route) | tojson }}
+  }{% endif %}
+}
+</script>
+
+{# Крошки для поисковика — повторяют те, что видит человек выше. #}
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    { "@type": "ListItem", "position": 1, "name": "Главная", "item": "https://animator-surpriz.uz/" },
+    {% if character.is_show_program %}
+    { "@type": "ListItem", "position": 2, "name": "Шоу-программы", "item": "https://animator-surpriz.uz/show-programs/" },
+    {% elif ns.primary_category %}
+    { "@type": "ListItem", "position": 2, "name": {{ ns.primary_category.name | tojson }}, "item": {{ ("https://animator-surpriz.uz" ~ ns.primary_category.route) | tojson }} },
+    {% else %}
+    { "@type": "ListItem", "position": 2, "name": "Персонажи", "item": "https://animator-surpriz.uz/catalog/" },
+    {% endif %}
+    { "@type": "ListItem", "position": 3, "name": {{ character.name | tojson }}, "item": {{ ("https://animator-surpriz.uz" ~ character.route) | tojson }} }
+  ]
+}
+</script>

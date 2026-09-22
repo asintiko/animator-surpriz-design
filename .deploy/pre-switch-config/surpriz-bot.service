@@ -1,0 +1,19 @@
+[Unit]
+Description=Surpriz Telegram worker 20260807T142712Z
+After=network-online.target surpriz-v2.service
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=surpriz
+Group=surpriz
+UMask=0077
+WorkingDirectory=/opt/surpriz-releases/20260807T142712Z
+EnvironmentFile=/opt/surpriz-releases/20260807T142712Z/.env
+Environment=PYTHONUNBUFFERED=1
+ExecStart=/opt/surpriz/.venv/bin/python -m core.admin_notifications
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

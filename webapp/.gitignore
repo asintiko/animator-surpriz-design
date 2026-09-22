@@ -1,0 +1,12 @@
+.next/
+node_modules/
+.DS_Store
+*.tsbuildinfo
+.verification/
+.design-reference/
+playwright-report/
+test-results/
+coverage/
+.env.local
+data/*.sqlite3
+public/media/generated/

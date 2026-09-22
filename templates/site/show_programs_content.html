@@ -1,0 +1,456 @@
+<link rel="stylesheet" href="/v2/v2-shows.css?v=20260720-4">
+{% import 'site/_v2_show_macros.html' as showui %}
+<main class="v2-main" id="content">
+  <div class="v2-shows3" data-v2-programs>
+
+    <!-- ============ РЕДАКЦИОННЫЙ ЗАГОЛОВОК ============ -->
+    <header class="v2-container sf-hero">
+      <p class="ed-eyebrow" data-reveal><span class="ed-eyebrow__rule" aria-hidden="true"></span>Каталог студии</p>
+      <h1 class="sf-hero__title" data-reveal data-reveal-delay="60">{{ heading }}</h1>
+      <p class="sf-hero__sub" data-reveal data-reveal-delay="120">{{ description }}</p>
+
+      {% if shows %}
+        <form class="sf-search" data-show-search-form action="/show-programs/" method="get" role="search" data-reveal data-reveal-delay="180">
+          <label class="screen-reader-text" for="v2-show-search-input">Поиск шоу-программы</label>
+          <svg class="v2-i sf-search__icon" aria-hidden="true"><use href="#i-search"/></svg>
+          <input
+            autocomplete="off"
+            class="sf-search__input"
+            data-show-search-input
+            id="v2-show-search-input"
+            name="q"
+            placeholder="Найти шоу: крио, бумажное, ленты, шуты..."
+            type="search"
+          >
+          <button class="sf-search__clear" type="button" data-show-search-clear aria-label="Очистить поиск" hidden>
+            <svg class="v2-i" aria-hidden="true"><use href="#i-close"/></svg>
+          </button>
+        </form>
+      {% endif %}
+    </header>
+
+    <!-- ============ КАТАЛОГ ШОУ ============ -->
+    <section class="sf-catalog">
+      <div class="v2-container">
+        {% if shows %}
+          {% set catalog = namespace(programs=0) %}
+          {% for show in shows %}
+            {% set catalog.programs = catalog.programs + (show.variants_count if show.is_group else 1) %}
+          {% endfor %}
+          <p class="sf-count" data-show-count role="status">
+            <strong>{{ shows|length }}</strong> {{ showui.plural(shows|length, 'направление', 'направления', 'направлений') }} ·
+            <strong>{{ catalog.programs }}</strong> {{ showui.plural(catalog.programs, 'программа', 'программы', 'программ') }}
+          </p>
+
+          <ul class="sf-list" data-show-grid>
+            {% for show in shows %}
+              {% if show.is_group %}
+                {# === FEATURE-БЛОК ГРУППЫ С ВАРИАНТАМИ === #}
+                <li
+                  class="sf-item sf-item--group"
+                  data-show-card
+                  data-show-group
+                  data-show-name="{{ show.name|lower|e }}"
+                  data-show-search="{{ show.search_haystack|lower|e }}"
+                  data-show-program-count="{{ show.variants_count }}"
+                  data-reveal
+                >
+                  <div class="sf-item__media" data-group-media>
+                    <a class="sf-item__media-link" href="{{ show.variants[0].route }}" data-group-media-link tabindex="-1" aria-hidden="true">
+                      {{ showui.media_placeholder(show.variants | map(attribute="hero_file_path") | select | list or show.hero_file_path) }}
+                      {% for variant in show.variants %}
+                        {% set variant_image = variant.hero_file_path or show.hero_file_path %}
+                        {% if variant_image %}
+                          <img
+                            class="{% if loop.first %}is-active{% endif %}"
+                            data-variant-image="{{ loop.index0 }}"
+                            alt=""
+                            decoding="async"
+                            loading="lazy"
+                            onerror="this.style.display='none'"
+                            src="{{ variant_image }}"
+                          >
+                        {% endif %}
+                      {% endfor %}
+                    </a>
+                    {% if show.variants_count > 1 %}
+                      <button class="sf-nav sf-nav--prev" type="button" data-group-prev aria-label="Предыдущий вариант">
+                        <svg class="v2-i" aria-hidden="true"><use href="#i-arrow-left"/></svg>
+                      </button>
+                      <button class="sf-nav sf-nav--next" type="button" data-group-next aria-label="Следующий вариант">
+                        <svg class="v2-i" aria-hidden="true"><use href="#i-arrow-right"/></svg>
+                      </button>
+                    {% endif %}
+                  </div>
+
+                    <div class="sf-item__content">
+                    <div class="sf-item__topline">
+                      <span class="ed-num" aria-hidden="true">{{ '%02d' % loop.index }}</span>
+                      <span class="sf-item__kind">{{ show.variants_count }} {{ showui.plural(show.variants_count, 'вариант', 'варианта', 'вариантов') }} программы</span>
+                    </div>
+                    <h3 class="sf-item__title">
+                      <a href="{{ show.variants[0].route }}" data-group-title-link>{{ show.name }}</a>
+                    </h3>
+
+                    {% set group_id = 'show-group-' ~ loop.index0 %}
+                    <div class="sf-seg" role="tablist" aria-label="Варианты программы «{{ show.name }}»">
+                      <span class="sf-seg__thumb" data-seg-thumb aria-hidden="true"></span>
+                      {% for variant in show.variants %}
+                        <button
+                          class="sf-seg__btn {% if loop.first %}is-active{% endif %}"
+                          type="button"
+                          role="tab"
+                          id="{{ group_id }}-tab-{{ loop.index0 }}"
+                          aria-controls="{{ group_id }}-panel-{{ loop.index0 }}"
+                          aria-selected="{{ 'true' if loop.first else 'false' }}"
+                          tabindex="{{ '0' if loop.first else '-1' }}"
+                          data-group-tab="{{ loop.index0 }}"
+                        >{{ variant.label }}</button>
+                      {% endfor %}
+                    </div>
+
+                    <div class="sf-panels">
+                      {% for variant in show.variants %}
+                        <div
+                          class="sf-panel {% if loop.first %}is-active{% endif %}"
+                          id="{{ group_id }}-panel-{{ loop.index0 }}"
+                          role="tabpanel"
+                          aria-labelledby="{{ group_id }}-tab-{{ loop.index0 }}"
+                          data-group-panel
+                          data-variant-slug="{{ variant.slug }}"
+                          data-variant-route="{{ variant.route }}"
+                          aria-hidden="{{ 'false' if loop.first else 'true' }}"
+                        >
+                          <p class="sf-item__summary">{{ variant.summary_text|truncate(220, false, '…') }}</p>
+                          {{ showui.meta_line(variant.duration_label, variant.age_label, variant.format_label, variant.category_label) }}
+                          {% if variant.promotions or variant.has_gifts %}
+                            <div class="sf-item__promos">
+                              {{ showui.promo_badges(variant.promotions) }}
+                              {% if variant.has_gifts and not variant.promotions %}{{ showui.gifts_ribbon() }}{% endif %}
+                            </div>
+                          {% endif %}
+                          {{ showui.price_accent(variant.price_label) }}
+                        </div>
+                      {% endfor %}
+                    </div>
+
+                    <div class="sf-item__actions">
+                      <a class="v2-btn v2-btn--primary v2-btn--md" data-group-build-link href="/party-builder/?program={{ show.variants[0].slug }}">
+                        <svg class="v2-i" aria-hidden="true"><use href="#i-party-hat"/></svg>
+                        <span>Собрать</span>
+                      </a>
+                      <a class="sf-more" data-group-detail-link href="{{ show.variants[0].route }}">
+                        <span>Подробнее</span>
+                        <svg class="v2-i" aria-hidden="true"><use href="#i-arrow-right"/></svg>
+                      </a>
+                    </div>
+                  </div>
+                </li>
+              {% else %}
+                {# === FEATURE-БЛОК ОДИНОЧНОЙ ПРОГРАММЫ === #}
+                {{ showui.feature_card(show, loop.index) }}
+              {% endif %}
+            {% endfor %}
+
+            <li class="sf-empty" data-show-empty hidden>
+              <span class="sf-empty__icon">
+                <svg class="v2-i" aria-hidden="true"><use href="#i-search"/></svg>
+              </span>
+              <h2 class="sf-empty__title">Ничего не найдено</h2>
+              <p class="sf-empty__text">Попробуйте другой запрос — например, «крио», «ленты» или «шуты».</p>
+              <button class="v2-btn v2-btn--ghost v2-btn--md" type="button" data-show-reset>
+                <svg class="v2-i" aria-hidden="true"><use href="#i-close"/></svg>
+                <span>Сбросить поиск</span>
+              </button>
+            </li>
+          </ul>
+        {% else %}
+          <div class="sf-empty sf-empty--page">
+            <span class="sf-empty__icon">
+              <svg class="v2-i" aria-hidden="true"><use href="#i-sparkles"/></svg>
+            </span>
+            <h2 class="sf-empty__title">Шоу-программы скоро появятся</h2>
+            <p class="sf-empty__text">Мы готовим удобный каталог программ. Пока можно посмотреть персонажей или вернуться на главную.</p>
+            <div class="sf-empty__actions">
+              <a class="v2-btn v2-btn--primary v2-btn--md" href="/catalog/">
+                <svg class="v2-i" aria-hidden="true"><use href="#i-mask"/></svg>
+                <span>Каталог персонажей</span>
+              </a>
+              <a class="v2-btn v2-btn--ghost v2-btn--md" href="/">
+                <span>На главную</span>
+              </a>
+            </div>
+          </div>
+        {% endif %}
+      </div>
+    </section>
+  </div>
+</main>
+
+<script>
+(function () {
+  "use strict";
+
+  var REDUCED = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  var root = document.querySelector("[data-v2-programs]");
+  if (!root) return;
+
+  /* ---------- Клиентский поиск по шоу ---------- */
+  var grid = root.querySelector("[data-show-grid]");
+  var input = root.querySelector("[data-show-search-input]");
+  var clearBtn = root.querySelector("[data-show-search-clear]");
+  var form = root.querySelector("[data-show-search-form]");
+  var cards = Array.prototype.slice.call(root.querySelectorAll("[data-show-card]"));
+  var emptyEl = root.querySelector("[data-show-empty]");
+  var countEl = root.querySelector("[data-show-count]");
+    var totalCount = cards.length;
+    var totalPrograms = cards.reduce(function (sum, card) {
+      return sum + parseInt(card.getAttribute("data-show-program-count") || "1", 10);
+    }, 0);
+
+  function normalize(value) {
+    return (value || "")
+      .toString()
+      .toLocaleLowerCase("ru-RU")
+      .replace(/ё/g, "е")
+      .trim();
+  }
+
+  function pluralRu(number, one, few, many) {
+    var lastTwo = number % 100;
+    var last = number % 10;
+    if (last === 1 && lastTwo !== 11) return one;
+    if (last >= 2 && last <= 4 && (lastTwo < 12 || lastTwo > 14)) return few;
+    return many;
+  }
+
+  function syncClearButton() {
+    if (clearBtn && input) clearBtn.hidden = !input.value.trim();
+  }
+
+  function updateCount(visible, visiblePrograms, query) {
+    if (!countEl) return;
+    if (query) {
+      countEl.innerHTML = "Найдено: <strong>" + visiblePrograms + "</strong> " +
+        pluralRu(visiblePrograms, "программа", "программы", "программ") + " в <strong>" + visible + "</strong> " +
+        (visible === 1 ? "направлении" : "направлениях");
+    } else {
+      countEl.innerHTML = "<strong>" + totalCount + "</strong> направлений · <strong>" + totalPrograms + "</strong> программ";
+    }
+  }
+
+  function applySearch() {
+    if (!input) return;
+    var query = normalize(input.value);
+    var visible = 0;
+    var visiblePrograms = 0;
+    cards.forEach(function (card) {
+      var haystack = normalize(card.getAttribute("data-show-search") || card.textContent || "");
+      var isVisible = !query || haystack.indexOf(query) !== -1;
+      card.hidden = !isVisible;
+      if (isVisible) {
+        visible += 1;
+        visiblePrograms += parseInt(card.getAttribute("data-show-program-count") || "1", 10);
+      }
+    });
+    if (emptyEl) emptyEl.hidden = visible > 0;
+    updateCount(visible, visiblePrograms, query);
+  }
+
+  if (input) {
+    var searchTimer = null;
+    input.addEventListener("input", function () {
+      syncClearButton();
+      window.clearTimeout(searchTimer);
+      searchTimer = window.setTimeout(applySearch, 160);
+    });
+  }
+
+  if (form) {
+    form.addEventListener("submit", function (event) {
+      event.preventDefault();
+      applySearch();
+    });
+  }
+
+  function resetSearch() {
+    if (!input) return;
+    input.value = "";
+    syncClearButton();
+    applySearch();
+    input.focus();
+  }
+
+  if (clearBtn) clearBtn.addEventListener("click", resetSearch);
+  root.addEventListener("click", function (event) {
+    var reset = event.target.closest ? event.target.closest("[data-show-reset]") : null;
+    if (reset) {
+      event.preventDefault();
+      resetSearch();
+    }
+  });
+  syncClearButton();
+
+  /* ---------- Группы: переключение вариантов ---------- */
+  var groups = Array.prototype.slice.call(root.querySelectorAll("[data-show-group]"));
+
+  groups.forEach(function (card) {
+    var tabs = Array.prototype.slice.call(card.querySelectorAll("[data-group-tab]"));
+    var panels = Array.prototype.slice.call(card.querySelectorAll("[data-group-panel]"));
+    var images = Array.prototype.slice.call(card.querySelectorAll("[data-variant-image]"));
+    var prevBtn = card.querySelector("[data-group-prev]");
+    var nextBtn = card.querySelector("[data-group-next]");
+    var buildLink = card.querySelector("[data-group-build-link]");
+    var detailLink = card.querySelector("[data-group-detail-link]");
+    var titleLink = card.querySelector("[data-group-title-link]");
+    var mediaLink = card.querySelector("[data-group-media-link]");
+    var media = card.querySelector("[data-group-media]");
+    var segThumb = card.querySelector("[data-seg-thumb]");
+    var panelsWrap = card.querySelector(".sf-panels");
+    var activeIndex = 0;
+    var total = panels.length;
+
+    if (!total) return;
+
+    function syncPanelHeight() {
+      if (!panelsWrap) return;
+      var active = panels[activeIndex];
+      if (active) panelsWrap.style.height = active.offsetHeight + "px";
+    }
+
+    function syncSegThumb(animate) {
+      if (!segThumb) return;
+      var activeTab = tabs[activeIndex];
+      if (!activeTab) return;
+      if (animate === false) segThumb.style.transition = "none";
+      segThumb.style.left = activeTab.offsetLeft + "px";
+      segThumb.style.width = activeTab.offsetWidth + "px";
+      segThumb.classList.add("is-ready");
+      if (animate === false) {
+        void segThumb.offsetWidth;
+        segThumb.style.transition = "";
+      }
+    }
+
+    function updateLinks() {
+      var active = panels[activeIndex];
+      if (!active) return;
+      var slug = active.getAttribute("data-variant-slug") || "";
+      var route = active.getAttribute("data-variant-route") || "";
+      if (buildLink && slug) {
+        buildLink.setAttribute("href", "/party-builder/?program=" + encodeURIComponent(slug));
+      }
+      if (detailLink && route) detailLink.setAttribute("href", route);
+      if (titleLink && route) titleLink.setAttribute("href", route);
+      if (mediaLink && route) mediaLink.setAttribute("href", route);
+    }
+
+    function render() {
+      tabs.forEach(function (tab, index) {
+        var isActive = index === activeIndex;
+        tab.classList.toggle("is-active", isActive);
+        tab.setAttribute("aria-selected", isActive ? "true" : "false");
+        tab.tabIndex = isActive ? 0 : -1;
+      });
+      panels.forEach(function (panel, index) {
+        var isActive = index === activeIndex;
+        panel.classList.toggle("is-active", isActive);
+        panel.setAttribute("aria-hidden", isActive ? "false" : "true");
+      });
+      images.forEach(function (image) {
+        image.classList.toggle(
+          "is-active",
+          parseInt(image.getAttribute("data-variant-image"), 10) === activeIndex
+        );
+      });
+      syncSegThumb(true);
+      syncPanelHeight();
+      updateLinks();
+    }
+
+    function goTo(index) {
+      if (total <= 1) return;
+      activeIndex = ((index % total) + total) % total;
+      render();
+    }
+
+    tabs.forEach(function (tab) {
+      tab.addEventListener("click", function () {
+        var target = parseInt(tab.getAttribute("data-group-tab"), 10);
+        if (!Number.isNaN(target)) goTo(target);
+      });
+      tab.addEventListener("keydown", function (event) {
+        if (event.key === "ArrowLeft") {
+          event.preventDefault();
+          goTo(activeIndex - 1);
+          tabs[activeIndex].focus();
+        } else if (event.key === "ArrowRight") {
+          event.preventDefault();
+          goTo(activeIndex + 1);
+          tabs[activeIndex].focus();
+        } else if (event.key === "Home") {
+          event.preventDefault();
+          goTo(0);
+          tabs[activeIndex].focus();
+        } else if (event.key === "End") {
+          event.preventDefault();
+          goTo(total - 1);
+          tabs[activeIndex].focus();
+        }
+      });
+    });
+
+    if (prevBtn) prevBtn.addEventListener("click", function () { goTo(activeIndex - 1); });
+    if (nextBtn) nextBtn.addEventListener("click", function () { goTo(activeIndex + 1); });
+
+    /* Позиция ползунка при ресайзе */
+    if (segThumb && "ResizeObserver" in window) {
+      new ResizeObserver(function () {
+        syncSegThumb(false);
+        syncPanelHeight();
+      }).observe(card);
+    } else if (segThumb) {
+      window.addEventListener("resize", function () {
+        syncSegThumb(false);
+        syncPanelHeight();
+      }, { passive: true });
+    }
+
+    /* Свайп по фото карточки */
+    if (media) {
+      var startX = null;
+      var startY = null;
+      media.addEventListener("touchstart", function (event) {
+        if (event.touches.length !== 1) return;
+        startX = event.touches[0].clientX;
+        startY = event.touches[0].clientY;
+      }, { passive: true });
+      media.addEventListener("touchend", function (event) {
+        if (startX === null) return;
+        var dx = event.changedTouches[0].clientX - startX;
+        var dy = event.changedTouches[0].clientY - (startY || 0);
+        startX = null;
+        if (Math.abs(dx) > 42 && Math.abs(dx) > Math.abs(dy) * 1.4) {
+          goTo(dx < 0 ? activeIndex + 1 : activeIndex - 1);
+        }
+      }, { passive: true });
+    }
+
+    render();
+    syncSegThumb(false);
+    if (document.fonts && document.fonts.ready) {
+      document.fonts.ready.then(function () {
+        syncSegThumb(false);
+        syncPanelHeight();
+      });
+    }
+  });
+
+  /* Показать карточки сразу, если reveal не сработал (надёжность) */
+  if (REDUCED) {
+    Array.prototype.slice.call(root.querySelectorAll("[data-reveal]")).forEach(function (el) {
+      el.classList.add("is-in");
+    });
+  }
+})();
+</script>

@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 180" class="w-full h-full">
+          <line x1="52" y1="116" x2="34" y2="130" stroke="#10b981" stroke-width="3.8500000000000005" stroke-linecap="round" />
+          <line x1="70" y1="134" x2="52" y2="148" stroke="#10b981" stroke-width="3.8500000000000005" stroke-linecap="round" />
+          <path d="M 58 44 C 58 50 60 52 66 52 C 60 52 58 54 58 60 C 58 54 56 52 50 52 C 56 52 58 50 58 44 Z" fill="#10b981" />
+          <circle cx="42" cy="82" r="2.5" fill="#10b981" />
+
+          <g transform="translate(102, 92) rotate(42)">
+            <path d="M -13 48 C -18 68 -6 82 0 90 C 6 82 18 68 13 48 Z" fill="#f97316" stroke="#1e1b4b" stroke-width="2.8000000000000003" stroke-linejoin="round" />
+            <path d="M -7 48 C -10 60 -3 70 0 75 C 3 70 10 60 7 48 Z" fill="#fbbf24" />
+
+            <path d="M -18 12 L -38 38 L -18 38 Z" fill="#FFFFFF" stroke="#1e1b4b" stroke-width="3.5" stroke-linejoin="round" />
+            <path d="M 18 12 L 38 38 L 18 38 Z" fill="#FFFFFF" stroke="#1e1b4b" stroke-width="3.5" stroke-linejoin="round" />
+
+            <path d="M 0 -58 C 22 -28 24 18 18 38 H -18 C -24 18 -22 -28 0 -58 Z" fill="#FFFFFF" stroke="#1e1b4b" stroke-width="3.5" stroke-linejoin="round" />
+
+            <path d="M -12 38 L -15 48 H 15 L 12 38 Z" fill="#FFFFFF" stroke="#1e1b4b" stroke-width="3.5" stroke-linejoin="round" />
+
+            <circle cx="0" cy="-12" r="13" fill="#10b981" stroke="#1e1b4b" stroke-width="3.5" />
+            <circle cx="-3" cy="-15" r="4" fill="#FFFFFF" />
+          </g>
+        </svg>

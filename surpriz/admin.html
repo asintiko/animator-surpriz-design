@@ -1,0 +1,247 @@
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="robots" content="noindex, nofollow" />
+    <meta name="theme-color" content="#fffaf4" />
+    <link rel="icon" type="image/png" href="../favicon.png" />
+    <link rel="stylesheet" href="../assets/home-admin.css?v=a2603a906d6c-categories1" />
+    <title>Единый каталог — Админка Surpriz</title>
+  </head>
+  <body>
+    <div class="admin-shell">
+      <aside class="admin-sidebar">
+        <a class="admin-brand" href="../" target="_blank" rel="noopener">
+          <img src="../favicon.png" alt="" />
+          <span><strong>Surpriz</strong><small>Панель управления</small></span>
+        </a>
+
+        <nav class="admin-nav" aria-label="Разделы админки">
+          <a class="admin-nav__item is-active" href="./" aria-current="page">
+            <span class="admin-nav__icon" aria-hidden="true">◇</span>
+            Каталоги
+          </a>
+          <span class="admin-nav__item is-disabled" aria-disabled="true">
+            <span class="admin-nav__icon" aria-hidden="true">▣</span>
+            Заказы
+            <small>позже</small>
+          </span>
+          <span class="admin-nav__item is-disabled" aria-disabled="true">
+            <span class="admin-nav__icon" aria-hidden="true">✉</span>
+            Контакты
+            <small>позже</small>
+          </span>
+        </nav>
+
+        <div class="admin-sidebar__foot">
+          <span class="admin-local-badge"><i></i>Локальная версия</span>
+          <a href="../" target="_blank" rel="noopener">Открыть сайт ↗</a>
+        </div>
+      </aside>
+
+      <main class="admin-main">
+        <header class="admin-header">
+          <div>
+            <p class="admin-eyebrow">Управление контентом</p>
+            <h1>Единый каталог</h1>
+            <p>Одна карточка может появляться на главной, в полном каталоге и в подборщике праздника.</p>
+          </div>
+          <div class="admin-save-state" data-save-state role="status" aria-live="polite">
+            <i></i><span>Данные загружаются…</span>
+          </div>
+        </header>
+
+        <div class="admin-workspace">
+          <div class="admin-collections">
+            <section class="admin-collection" aria-labelledby="characters-title">
+              <div class="admin-collection__head">
+                <div>
+                  <p class="admin-collection__kicker">Персонажи</p>
+                  <h2 id="characters-title">Каталог персонажей</h2>
+                  <p>На главную попадут только карточки с включённой областью «Главная».</p>
+                </div>
+                <button class="admin-button" type="button" data-add-card="characters"><span>＋</span>Добавить карточку</button>
+              </div>
+              <label class="admin-search">
+                <span aria-hidden="true">⌕</span>
+                <input type="search" placeholder="Найти персонажа" aria-label="Найти персонажа" data-catalog-search="characters" />
+              </label>
+              <div class="admin-card-list" data-admin-list="characters"></div>
+            </section>
+
+            <section class="admin-collection" aria-labelledby="shows-title">
+              <div class="admin-collection__head">
+                <div>
+                  <p class="admin-collection__kicker">Шоу-программы</p>
+                  <h2 id="shows-title">Каталог шоу-программ</h2>
+                  <p>Тексты, кадрирование, цвет, порядок и области показа настраиваются здесь.</p>
+                </div>
+                <button class="admin-button" type="button" data-add-card="shows"><span>＋</span>Добавить карточку</button>
+              </div>
+              <label class="admin-search">
+                <span aria-hidden="true">⌕</span>
+                <input type="search" placeholder="Найти шоу-программу" aria-label="Найти шоу-программу" data-catalog-search="shows" />
+              </label>
+              <div class="admin-card-list" data-admin-list="shows"></div>
+            </section>
+          </div>
+
+          <aside class="admin-editor" data-editor>
+            <div class="admin-editor__empty" data-editor-empty>
+              <span aria-hidden="true">✦</span>
+              <h2>Выберите карточку</h2>
+              <p>Нажмите «Изменить» рядом с нужной карточкой или создайте новую.</p>
+            </div>
+
+            <form class="admin-editor__form" data-editor-form hidden>
+              <div class="admin-editor__head">
+                <div>
+                  <p class="admin-collection__kicker" data-editor-kind>Карточка каталога</p>
+                  <h2 data-editor-title>Редактирование карточки</h2>
+                </div>
+                <button class="admin-editor__close" type="button" data-editor-close aria-label="Закрыть редактор">×</button>
+              </div>
+
+              <div class="admin-image-editor">
+                <div class="admin-editor-section__head">
+                  <div>
+                    <h3>Изображение</h3>
+                    <p>Перетаскивайте фото или используйте ползунки.</p>
+                  </div>
+                  <span>предпросмотр</span>
+                </div>
+                <div class="admin-image-editor__preview" data-image-preview tabindex="0" aria-label="Предпросмотр кадрирования. Используйте стрелки для перемещения изображения.">
+                  <span>Нет изображения</span>
+                  <i class="admin-image-editor__safe-frame" aria-hidden="true"></i>
+                </div>
+                <input type="hidden" name="image" required />
+                <div class="admin-position-controls">
+                  <label>
+                    <span>По горизонтали</span>
+                    <input type="range" name="image_x" min="0" max="100" value="50" />
+                    <output data-position-output="x">50%</output>
+                  </label>
+                  <label>
+                    <span>По вертикали</span>
+                    <input type="range" name="image_y" min="0" max="100" value="50" />
+                    <output data-position-output="y">50%</output>
+                  </label>
+                  <label>
+                    <span>Приближение</span>
+                    <input type="range" name="image_zoom" min="100" max="200" step="5" value="100" />
+                    <output data-position-output="zoom">100%</output>
+                  </label>
+                </div>
+                <div class="admin-image-editor__actions">
+                  <button class="admin-secondary-button" type="button" data-position-reset>Сбросить кадр</button>
+                  <label class="admin-upload-button">
+                    <input type="file" accept="image/png,image/jpeg,image/webp,image/gif" data-image-file />
+                    Заменить изображение
+                  </label>
+                </div>
+                <span class="admin-upload-state" data-upload-state>PNG, JPG или WebP до 8 МБ</span>
+              </div>
+
+              <fieldset class="admin-color-editor">
+                <legend>Цвет названия</legend>
+                <div class="admin-color-editor__swatches" data-color-swatches>
+                  <button type="button" data-title-color="#21165b" style="--swatch: #21165b" aria-label="Тёмно-синий"></button>
+                  <button type="button" data-title-color="#cf258d" style="--swatch: #cf258d" aria-label="Розовый"></button>
+                  <button type="button" data-title-color="#278c73" style="--swatch: #278c73" aria-label="Мятный"></button>
+                  <button type="button" data-title-color="#e9540b" style="--swatch: #e9540b" aria-label="Оранжевый"></button>
+                  <label class="admin-color-editor__custom" title="Свой цвет">
+                    <input type="color" value="#21165b" data-custom-title-color aria-label="Выбрать свой цвет" />
+                    <span aria-hidden="true">＋</span>
+                  </label>
+                </div>
+                <input type="hidden" name="title_color" value="#21165b" />
+                <div class="admin-card-preview">
+                  <h3 data-title-preview>Название карточки</h3>
+                  <p data-description-preview>Короткое описание появится здесь.</p>
+                </div>
+              </fieldset>
+
+              <label class="admin-field">
+                <span>Название</span>
+                <input type="text" name="title" maxlength="60" required />
+              </label>
+
+              <label class="admin-field">
+                <span>Короткое описание</span>
+                <textarea name="description" maxlength="180" rows="4" required></textarea>
+                <small><b data-description-count>0</b>/180 символов</small>
+              </label>
+
+              <label class="admin-field">
+                <span>Подпись изображения</span>
+                <input type="text" name="alt" maxlength="120" required />
+              </label>
+
+              <div class="admin-field-row">
+                <label class="admin-field">
+                  <span>Текст кнопки</span>
+                  <input type="text" name="cta_label" maxlength="32" required />
+                </label>
+                <label class="admin-field">
+                  <span>Ссылка кнопки</span>
+                  <input type="text" name="href" maxlength="240" required />
+                </label>
+              </div>
+
+              <fieldset class="admin-placement-editor">
+                <legend>Где показывать</legend>
+                <label><input type="checkbox" name="placements" value="homepage" /> <span>Главная</span></label>
+                <label><input type="checkbox" name="placements" value="catalog" /> <span>Каталог</span></label>
+                <label><input type="checkbox" name="placements" value="party_builder" /> <span>Подборщик праздника</span></label>
+              </fieldset>
+
+              <fieldset class="admin-category-editor" data-character-categories>
+                <legend>Категории персонажа</legend>
+                <label><input type="checkbox" name="categories" value="superheroes" /> <span>Супергерои</span></label>
+                <label><input type="checkbox" name="categories" value="princesses" /> <span>Принцессы</span></label>
+                <label><input type="checkbox" name="categories" value="boys" /> <span>Для мальчиков</span></label>
+                <label><input type="checkbox" name="categories" value="girls" /> <span>Для девочек</span></label>
+                <label><input type="checkbox" name="categories" value="cartoons" /> <span>Мультгерои</span></label>
+              </fieldset>
+
+              <label class="admin-switch">
+                <input type="checkbox" name="active" />
+                <span></span>
+                Карточка активна
+              </label>
+
+              <div class="admin-editor__actions">
+                <button class="admin-button admin-button--full" type="submit">Сохранить карточку</button>
+                <button class="admin-delete-button" type="button" data-delete-card>Удалить карточку</button>
+              </div>
+            </form>
+          </aside>
+        </div>
+      </main>
+    </div>
+
+    <template id="admin-card-row-template">
+      <article class="admin-card-row" draggable="true">
+        <button class="admin-card-row__drag" type="button" aria-label="Перетащить карточку" title="Перетащить">⠿</button>
+        <div class="admin-card-row__thumb"></div>
+        <div class="admin-card-row__copy">
+          <strong></strong>
+          <p></p>
+          <small class="admin-card-row__placement"></small>
+        </div>
+        <label class="admin-card-row__switch" title="Видимость на сайте">
+          <input type="checkbox" />
+          <span></span>
+        </label>
+        <div class="admin-card-row__order">
+          <button type="button" data-move="up" aria-label="Поднять выше">↑</button>
+          <button type="button" data-move="down" aria-label="Опустить ниже">↓</button>
+        </div>
+        <button class="admin-card-row__edit" type="button">Изменить</button>
+      </article>
+    </template>
+
+    <script src="../assets/home-admin.js?v=1ed6509beabf-categories1" defer></script>
+  </body>
+</html>

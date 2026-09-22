@@ -1,0 +1,450 @@
+<main class="v2-main v2-auth" id="content">
+  <section class="v2-auth__wrap v2-confetti-bg">
+    <div class="v2-auth-card">
+      <a class="v2-auth-card__logo" href="/" aria-label="Surpriz — на главную">
+        <img src="/wp-content/uploads/2025/06/logo.png" alt="Surpriz" width="662" height="603">
+        <span>СЮРПРИЗ</span>
+      </a>
+
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+          <div class="v2-auth-card__flashes">
+            {% for category, message in messages %}
+              <div class="customer-flash customer-flash--{{ category }}">{{ message }}</div>
+            {% endfor %}
+          </div>
+        {% endif %}
+      {% endwith %}
+
+      {% if verify_only|default(false) %}
+        <span class="v2-eyebrow"><svg class="v2-i" aria-hidden="true"><use href="#i-telegram"/></svg>Surpriz account</span>
+        <h1 class="v2-auth-card__title">Подтвердите Telegram-код</h1>
+      {% elif mode == "register" %}
+        <span class="v2-eyebrow"><svg class="v2-i" aria-hidden="true"><use href="#i-star"/></svg>Surpriz account</span>
+        <h1 class="v2-auth-card__title">Регистрация по номеру</h1>
+      {% else %}
+        <span class="v2-eyebrow"><svg class="v2-i" aria-hidden="true"><use href="#i-user"/></svg>Surpriz account</span>
+        <h1 class="v2-auth-card__title">Вход в аккаунт</h1>
+      {% endif %}
+
+      {% if not verify_only|default(false) %}
+        <div class="v2-auth-card__switch">
+          {% if mode == "register" %}
+            Уже есть аккаунт? <a href="{{ url_for('customer_login', next=next_url) }}">Войти</a>
+          {% else %}
+            Ещё нет аккаунта? <a href="{{ url_for('customer_register', next=next_url) }}">Зарегистрироваться</a>
+          {% endif %}
+        </div>
+      {% endif %}
+
+      {% if mode == "register" %}
+        <p class="v2-auth-card__text">
+          Создайте аккаунт клиента, чтобы собирать праздник на сайте и хранить свои заказы в одном месте.
+        </p>
+      {% endif %}
+
+      {% if verify_only|default(false) %}
+        <div class="v2-auth-card__confirm">
+          <p class="v2-auth-card__text">
+            Код отправлен в Telegram-чат Verification Codes на номер <strong>{{ phone_display }}</strong>.
+            Введите его ниже, чтобы
+            {% if mode == "register" %}
+              завершить регистрацию.
+            {% else %}
+              войти в аккаунт.
+            {% endif %}
+          </p>
+
+          <form class="customer-form v2-auth-form" data-auth-verify-form method="post">
+            <input name="next" type="hidden" value="{{ next_url }}">
+            <input name="request_id" type="hidden" value="{{ request_id }}">
+            <input name="phone" type="hidden" value="{{ phone }}">
+            {% if mode == "register" %}
+              <input name="full_name" type="hidden" value="{{ full_name }}">
+            {% endif %}
+
+            <label class="customer-field v2-field">
+              <span class="customer-field__label v2-field__label"><svg class="v2-i" aria-hidden="true"><use href="#i-shield"/></svg>Код из Telegram</span>
+              <span class="v2-code" data-v2-code>
+                <span class="v2-code__cells">
+                  <input class="v2-code__cell" type="text" inputmode="numeric" maxlength="1" autocomplete="one-time-code" aria-label="Цифра 1">
+                  <input class="v2-code__cell" type="text" inputmode="numeric" maxlength="1" aria-label="Цифра 2">
+                  <input class="v2-code__cell" type="text" inputmode="numeric" maxlength="1" aria-label="Цифра 3">
+                  <input class="v2-code__cell" type="text" inputmode="numeric" maxlength="1" aria-label="Цифра 4">
+                  <input class="v2-code__cell" type="text" inputmode="numeric" maxlength="1" aria-label="Цифра 5">
+                  <input class="v2-code__cell" type="text" inputmode="numeric" maxlength="1" aria-label="Цифра 6">
+                </span>
+                <input autocomplete="one-time-code" class="customer-input customer-input--code v2-code__ghost" inputmode="numeric" maxlength="6" name="code" pattern="[0-9]{6}" placeholder="123456" tabindex="-1" aria-hidden="true" type="text">
+              </span>
+            </label>
+
+            <div class="v2-auth-card__resend">
+              <p class="customer-note" data-resend-status>Повторная отправка будет доступна через {{ cooldown }} сек.</p>
+              <button
+                class="v2-auth-card__resend-btn"
+                data-resend-code
+                data-phone="{{ phone }}"
+                data-purpose="{{ mode }}"
+                data-full-name="{{ full_name }}"
+                data-next="{{ next_url }}"
+                data-cooldown="{{ cooldown }}"
+                hidden
+                type="button"
+              >
+                Отправить код повторно
+              </button>
+            </div>
+
+            <button class="v2-btn v2-btn--primary v2-btn--lg v2-auth-form__submit" type="submit">
+              {% if mode == "register" %}
+                <span>Завершить регистрацию</span>
+              {% else %}
+                <span>Войти в кабинет</span>
+              {% endif %}
+              <svg class="v2-i" aria-hidden="true"><use href="#i-arrow-right"/></svg>
+            </button>
+          </form>
+
+        </div>
+      {% else %}
+        <form class="customer-form customer-form--auth v2-auth-form" data-auth-send-form method="post">
+          <input name="next" type="hidden" value="{{ next_url }}">
+
+          {% if mode == "register" %}
+            <label class="customer-field v2-field">
+              <span class="customer-field__label v2-field__label"><svg class="v2-i" aria-hidden="true"><use href="#i-user"/></svg>Как к вам обращаться</span>
+              <input class="customer-input v2-input" name="full_name" placeholder="Например: Мадина" type="text" value="{{ full_name }}">
+            </label>
+          {% endif %}
+
+          <label class="customer-field v2-field">
+            <span class="customer-field__label v2-field__label"><svg class="v2-i" aria-hidden="true"><use href="#i-phone"/></svg>Номер телефона</span>
+            <input
+              autocomplete="tel"
+              class="customer-input v2-input"
+              data-phone-input
+              inputmode="numeric"
+              maxlength="19"
+              name="phone"
+              placeholder="+998 (__) ___-__-__"
+              required
+              spellcheck="false"
+              type="tel"
+              value="{{ phone }}"
+            >
+          </label>
+
+          <div class="v2-auth-card__channel">
+            <svg class="v2-i" aria-hidden="true"><use href="#i-telegram"/></svg>
+            <span>Код подтверждения придёт в Telegram — быстро и бесплатно</span>
+          </div>
+
+          <button class="v2-btn v2-btn--primary v2-btn--lg v2-auth-form__submit" type="submit">
+            {% if mode == "register" %}
+              <span>Получить код в Telegram</span>
+            {% else %}
+              <span>Войти по Telegram-коду</span>
+            {% endif %}
+            <svg class="v2-i" aria-hidden="true"><use href="#i-send"/></svg>
+          </button>
+        </form>
+      {% endif %}
+
+      <p class="v2-auth-card__safe">
+        <svg class="v2-i" aria-hidden="true"><use href="#i-shield"/></svg>
+        Номер нужен только для входа и связи по заказу.
+      </p>
+    </div>
+  </section>
+</main>
+
+<script id="customer-phone-mask-script">
+  (() => {
+    const inputs = document.querySelectorAll("[data-phone-input]");
+
+    if (inputs.length) {
+      const extractLocalDigits = (value) => {
+        let digits = String(value || "").replace(/\D/g, "");
+        if (digits.startsWith("998")) {
+          digits = digits.slice(3);
+        }
+        return digits.slice(0, 9);
+      };
+
+      const formatPhone = (value) => {
+        const digits = extractLocalDigits(value);
+        if (!digits.length) {
+          return "";
+        }
+
+        let formatted = "+998";
+        if (digits.length > 0) {
+          formatted += ` (${digits.slice(0, 2)}`;
+        }
+        if (digits.length >= 2) {
+          formatted += ")";
+        }
+        if (digits.length > 2) {
+          formatted += ` ${digits.slice(2, 5)}`;
+        }
+        if (digits.length > 5) {
+          formatted += `-${digits.slice(5, 7)}`;
+        }
+        if (digits.length > 7) {
+          formatted += `-${digits.slice(7, 9)}`;
+        }
+        return formatted;
+      };
+
+      const navigationKeys = new Set(["Backspace", "Delete", "ArrowLeft", "ArrowRight", "Tab", "Home", "End"]);
+
+      inputs.forEach((input) => {
+        input.value = formatPhone(input.value);
+
+        input.addEventListener("keydown", (event) => {
+          if (event.ctrlKey || event.metaKey || event.altKey) {
+            return;
+          }
+          if (navigationKeys.has(event.key)) {
+            return;
+          }
+          if (!/^\d$/.test(event.key)) {
+            event.preventDefault();
+          }
+        });
+
+        input.addEventListener("input", () => {
+          input.value = formatPhone(input.value);
+        });
+
+        input.addEventListener("paste", (event) => {
+          event.preventDefault();
+          const pasted = (event.clipboardData || window.clipboardData).getData("text");
+          input.value = formatPhone(pasted);
+        });
+
+        input.addEventListener("focus", () => {
+          if (!extractLocalDigits(input.value).length) {
+            input.value = "+998 (";
+          }
+        });
+
+        input.addEventListener("blur", () => {
+          const digits = extractLocalDigits(input.value);
+          input.value = digits.length ? formatPhone(input.value) : "";
+        });
+      });
+    }
+
+    const setLoading = (button, isLoading, text = "Подождите...") => {
+      if (!button) {
+        return;
+      }
+      if (isLoading) {
+        button.dataset.originalText = button.textContent.trim();
+        button.textContent = text;
+        button.disabled = true;
+        return;
+      }
+      button.textContent = button.dataset.originalText || button.textContent;
+      button.disabled = false;
+    };
+
+    document.querySelectorAll("[data-auth-send-form], [data-auth-verify-form]").forEach((form) => {
+      form.addEventListener("submit", () => {
+        setLoading(form.querySelector("button[type='submit']"), true);
+      });
+    });
+
+    const resendButton = document.querySelector("[data-resend-code]");
+    const resendStatus = document.querySelector("[data-resend-status]");
+    const requestIdInput = document.querySelector("input[name='request_id']");
+    let resendTimer = null;
+
+    const startCooldown = (seconds) => {
+      let remaining = Math.max(0, Number(seconds) || 0);
+      window.clearInterval(resendTimer);
+      if (!resendButton || !resendStatus) {
+        return;
+      }
+      const tick = () => {
+        if (remaining > 0) {
+          resendButton.disabled = true;
+          resendButton.hidden = true;
+          resendStatus.textContent = `Повторная отправка будет доступна через ${remaining} сек.`;
+          remaining -= 1;
+          return;
+        }
+        resendButton.disabled = false;
+        resendButton.hidden = false;
+        resendStatus.textContent = "Код не пришёл? Можно запросить новый.";
+        window.clearInterval(resendTimer);
+      };
+      tick();
+      resendTimer = window.setInterval(tick, 1000);
+    };
+
+    if (resendButton) {
+      startCooldown(resendButton.dataset.cooldown || 60);
+      resendButton.addEventListener("click", async () => {
+        window.clearInterval(resendTimer);
+        resendButton.hidden = false;
+        setLoading(resendButton, true, "Отправляем...");
+        try {
+          const response = await fetch("/api/auth/send-telegram-code", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              phone: resendButton.dataset.phone || "",
+              purpose: resendButton.dataset.purpose || "login",
+              full_name: resendButton.dataset.fullName || "",
+              next: resendButton.dataset.next || "/account/",
+            }),
+          });
+          const payload = await response.json();
+          if (!response.ok || !payload.success) {
+            throw new Error(payload.message || "Не удалось отправить код.");
+          }
+          if (requestIdInput && payload.request_id) {
+            requestIdInput.value = payload.request_id;
+          }
+          if (payload.request_id) {
+            const url = new URL(window.location.href);
+            url.searchParams.set("request_id", payload.request_id);
+            window.history.replaceState({}, "", url.toString());
+          }
+          if (resendStatus) {
+            resendStatus.textContent = "Новый код отправлен в Telegram.";
+          }
+          startCooldown(payload.cooldown || 60);
+        } catch (error) {
+          if (resendStatus) {
+            resendStatus.textContent = error.message || "Не удалось отправить код. Попробуйте позже.";
+          }
+          resendButton.hidden = false;
+          resendButton.disabled = false;
+        } finally {
+          resendButton.textContent = resendButton.dataset.originalText || "Отправить код повторно";
+        }
+      });
+    }
+  })();
+</script>
+
+<script id="customer-code-cells-script">
+  /* 6 квадратов кода → единое скрытое поле name="code" (хук сохранён). */
+  (() => {
+    const root = document.querySelector("[data-v2-code]");
+    if (!root) {
+      return;
+    }
+    const cells = Array.from(root.querySelectorAll(".v2-code__cell"));
+    const ghost = root.querySelector(".v2-code__ghost");
+    const form = root.closest("form");
+
+    const syncGhost = () => {
+      if (ghost) {
+        ghost.value = cells.map((cell) => cell.value.replace(/\D/g, "").slice(0, 1)).join("");
+      }
+      root.classList.toggle("is-complete", ghost && ghost.value.length === cells.length);
+    };
+
+    const distribute = (startIndex, rawValue) => {
+      const digits = String(rawValue || "").replace(/\D/g, "");
+      if (!digits.length) {
+        return;
+      }
+      let index = startIndex;
+      for (const digit of digits) {
+        if (index >= cells.length) {
+          break;
+        }
+        cells[index].value = digit;
+        index += 1;
+      }
+      const next = cells[Math.min(index, cells.length - 1)];
+      if (next) {
+        next.focus();
+        next.select();
+      }
+      syncGhost();
+    };
+
+    cells.forEach((cell, index) => {
+      cell.addEventListener("input", () => {
+        const raw = cell.value;
+        if (raw.length > 1) {
+          distribute(index, raw);
+          return;
+        }
+        cell.value = raw.replace(/\D/g, "");
+        if (cell.value && index < cells.length - 1) {
+          cells[index + 1].focus();
+          cells[index + 1].select();
+        }
+        syncGhost();
+      });
+
+      cell.addEventListener("keydown", (event) => {
+        if (event.key === "Backspace" && !cell.value && index > 0) {
+          event.preventDefault();
+          cells[index - 1].value = "";
+          cells[index - 1].focus();
+          syncGhost();
+        }
+        if (event.key === "ArrowLeft" && index > 0) {
+          event.preventDefault();
+          cells[index - 1].focus();
+        }
+        if (event.key === "ArrowRight" && index < cells.length - 1) {
+          event.preventDefault();
+          cells[index + 1].focus();
+        }
+      });
+
+      cell.addEventListener("paste", (event) => {
+        event.preventDefault();
+        const pasted = (event.clipboardData || window.clipboardData).getData("text");
+        distribute(index, pasted);
+      });
+
+      cell.addEventListener("focus", () => {
+        root.classList.add("is-focused");
+      });
+      cell.addEventListener("blur", () => {
+        root.classList.remove("is-focused");
+      });
+    });
+
+    /* Автозаполнение ОТР в ghost (iOS QuickType) → разложить по клеткам. */
+    if (ghost) {
+      ghost.addEventListener("input", () => {
+        if (ghost.value.replace(/\D/g, "").length > 1) {
+          distribute(0, ghost.value);
+        }
+      });
+    }
+
+    if (form) {
+      form.addEventListener(
+        "submit",
+        (event) => {
+          syncGhost();
+          if (!ghost || ghost.value.length !== cells.length) {
+            event.preventDefault();
+            event.stopPropagation();
+            root.classList.add("is-invalid");
+            window.setTimeout(() => root.classList.remove("is-invalid"), 650);
+            const firstEmpty = cells.find((cell) => !cell.value) || cells[0];
+            if (firstEmpty) {
+              firstEmpty.focus();
+            }
+          }
+        },
+        true,
+      );
+    }
+
+    syncGhost();
+  })();
+</script>

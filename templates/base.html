@@ -1,0 +1,16 @@
+<!doctype html>
+<html lang="{{ page.lang }}">
+<head>
+{{ page.head_html | safe }}
+</head>
+<body class="{{ page.body_class }}">
+{{ page.body_prefix_html | safe }}
+<div id="page" class="hfeed site">
+{{ page.header_html | safe }}
+{{ page.content_html | safe }}
+{{ page.footer_html | safe }}
+</div>
+{{ page.body_suffix_html | safe }}
+{% if picker_enabled %}<script src="/dev-picker.js?v={{ picker_version }}" defer></script>{% endif %}
+</body>
+</html>

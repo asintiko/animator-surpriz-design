@@ -1,0 +1,211 @@
+{% extends "admin/base.html" %}
+
+{% block content %}
+  <form enctype="multipart/form-data" method="post">
+    <div class="adm-editor">
+      <div class="adm-editor__main">
+
+        <section class="adm-card">
+          <div class="adm-card__head">
+            <span class="adm-editor__section-icon"><svg class="adm-i"><use href="#i-gift"/></svg></span>
+            <div>
+              <div class="adm-card__eyebrow">Редактор доп. услуги</div>
+              <h2 class="adm-card__title">
+                {% if is_new %}Новая доп. услуга{% else %}{{ addon.name }}{% endif %}
+              </h2>
+            </div>
+            <div class="adm-card__head-actions">
+              <a class="adm-btn adm-btn--ghost adm-btn--sm" href="{{ url_for('admin_dashboard', tab='addons') }}">
+                <svg class="adm-i"><use href="#i-arrow-left"/></svg>Назад к доп. услугам
+              </a>
+            </div>
+          </div>
+          <p class="adm-note">Доп. услуга будет видна клиенту только если она активна и привязана к конкретной шоу-программе.</p>
+        </section>
+
+        <section class="adm-card">
+          <div class="adm-editor__section-head">
+            <span class="adm-editor__section-icon adm-editor__section-icon--teal"><svg class="adm-i"><use href="#i-edit"/></svg></span>
+            <div>
+              <div class="adm-card__eyebrow">Основное</div>
+              <h3 class="adm-card__title adm-card__title--sm">Название, статус и порядок</h3>
+            </div>
+          </div>
+          <div class="adm-form-grid">
+            <label class="adm-field">
+              <span class="adm-field__label">Название</span>
+              <input class="adm-input" name="name" required type="text" value="{{ addon.name }}">
+            </label>
+            <label class="adm-field">
+              <span class="adm-field__label">Slug</span>
+              <input class="adm-input" name="slug" placeholder="face-painting" type="text" value="{{ addon.slug }}">
+            </label>
+            <label class="adm-field">
+              <span class="adm-field__label">Статус</span>
+              <select class="adm-input" name="status">
+                {% for status_key, status_label in addon_status_labels.items() %}
+                  <option {% if addon.status == status_key %}selected{% endif %} value="{{ status_key }}">{{ status_label }}</option>
+                {% endfor %}
+              </select>
+            </label>
+            <label class="adm-field">
+              <span class="adm-field__label">Порядок показа</span>
+              <input class="adm-input" min="0" name="sort_order" step="1" type="number" value="{{ addon.sort_order or 0 }}">
+            </label>
+          </div>
+        </section>
+
+        <section class="adm-card">
+          <div class="adm-editor__section-head">
+            <span class="adm-editor__section-icon adm-editor__section-icon--coral"><svg class="adm-i"><use href="#i-image"/></svg></span>
+            <div>
+              <div class="adm-card__eyebrow">Медиа</div>
+              <h3 class="adm-card__title adm-card__title--sm">Фото услуги</h3>
+            </div>
+          </div>
+          <label class="adm-field">
+            <span class="adm-field__label">Загрузить фото</span>
+            <input class="adm-input adm-input--file" name="image_file" type="file">
+          </label>
+          <p class="adm-note adm-mt">Фото используется в админке и в блоке “Можно добавить к программе” на странице шоу.</p>
+        </section>
+
+        <section class="adm-card">
+          <div class="adm-editor__section-head">
+            <span class="adm-editor__section-icon"><svg class="adm-i"><use href="#i-cash"/></svg></span>
+            <div>
+              <div class="adm-card__eyebrow">Цена</div>
+              <h3 class="adm-card__title adm-card__title--sm">Стоимость для клиента и себестоимость</h3>
+            </div>
+          </div>
+          <div class="adm-form-grid">
+            <label class="adm-field">
+              <span class="adm-field__label">Цена для клиента, сум</span>
+              <input class="adm-input" min="0" name="price" step="1000" type="number" value="{{ addon.price or 0 }}">
+            </label>
+            <label class="adm-field">
+              <span class="adm-field__label">Себестоимость, сум</span>
+              <input class="adm-input" min="0" name="cost" step="1000" type="number" value="{{ addon.cost or 0 }}">
+            </label>
+          </div>
+          <p class="adm-note adm-mt">Себестоимость видна только в админке и не показывается клиентам.</p>
+        </section>
+
+        <section class="adm-card">
+          <div class="adm-editor__section-head">
+            <span class="adm-editor__section-icon adm-editor__section-icon--ink"><svg class="adm-i"><use href="#i-note"/></svg></span>
+            <div>
+              <div class="adm-card__eyebrow">Описание</div>
+              <h3 class="adm-card__title adm-card__title--sm">Текст для карточки услуги</h3>
+            </div>
+          </div>
+          <div class="adm-form-grid">
+            <label class="adm-field">
+              <span class="adm-field__label">Короткое описание</span>
+              <textarea class="adm-input" name="short_description" rows="5">{{ addon.short_description }}</textarea>
+            </label>
+            <label class="adm-field">
+              <span class="adm-field__label">Полное описание</span>
+              <textarea class="adm-input" name="description" rows="5">{{ addon.description }}</textarea>
+            </label>
+          </div>
+        </section>
+
+        <section class="adm-card">
+          <div class="adm-editor__section-head">
+            <span class="adm-editor__section-icon adm-editor__section-icon--grape"><svg class="adm-i"><use href="#i-clock"/></svg></span>
+            <div>
+              <div class="adm-card__eyebrow">Время и тип</div>
+              <h3 class="adm-card__title adm-card__title--sm">Как услуга усиливает программу</h3>
+            </div>
+          </div>
+          <div class="adm-form-grid">
+            <label class="adm-field">
+              <span class="adm-field__label">Длительность, минут</span>
+              <input class="adm-input" min="0" name="duration_minutes" step="5" type="number" value="{{ addon.duration_minutes or 0 }}">
+            </label>
+            <label class="adm-field">
+              <span class="adm-field__label">Тип услуги</span>
+              <input class="adm-input" name="type" placeholder="Оформление, ведущий, реквизит..." type="text" value="{{ addon.type }}">
+            </label>
+          </div>
+        </section>
+
+        <section class="adm-card">
+          <div class="adm-editor__section-head">
+            <span class="adm-editor__section-icon adm-editor__section-icon--teal"><svg class="adm-i"><use href="#i-sparkles"/></svg></span>
+            <div>
+              <div class="adm-card__eyebrow">Где используется</div>
+              <h3 class="adm-card__title adm-card__title--sm">Шоу, к которым услуга привязана</h3>
+            </div>
+          </div>
+          <div class="adm-chips">
+            {% if addon.program_ids %}
+              {% for program in show_programs %}
+                {% if program.id in addon.program_ids %}
+                  <span class="adm-pill adm-pill--tag">{{ program.name }}</span>
+                {% endif %}
+              {% endfor %}
+            {% else %}
+              <span class="adm-pill adm-pill--muted">Пока не привязана ни к одному шоу</span>
+            {% endif %}
+          </div>
+          <p class="adm-note adm-mt">Привязка настраивается в редакторе конкретной шоу-программы в блоке “Доступные доп. услуги”.</p>
+        </section>
+
+        <section class="adm-card">
+          <div class="adm-editor__section-head">
+            <span class="adm-editor__section-icon adm-editor__section-icon--ink"><svg class="adm-i"><use href="#i-search"/></svg></span>
+            <div>
+              <div class="adm-card__eyebrow">SEO</div>
+              <h3 class="adm-card__title adm-card__title--sm">Внутренние мета-данные</h3>
+            </div>
+          </div>
+          <div class="adm-form-grid">
+            <label class="adm-field">
+              <span class="adm-field__label">SEO-заголовок</span>
+              <input class="adm-input" name="seo_title" type="text" value="{{ addon.seo_title }}">
+            </label>
+            <label class="adm-field">
+              <span class="adm-field__label">SEO-описание</span>
+              <textarea class="adm-input" name="seo_description">{{ addon.seo_description }}</textarea>
+            </label>
+          </div>
+        </section>
+
+        <div class="adm-flex">
+          <button class="adm-btn" type="submit">
+            <svg class="adm-i"><use href="#i-check"/></svg>{% if is_new %}Создать доп. услугу{% else %}Сохранить доп. услугу{% endif %}
+          </button>
+        </div>
+      </div>
+
+      <aside class="adm-editor__side">
+        <section class="adm-card">
+          <div class="adm-card__head">
+            <div>
+              <div class="adm-card__eyebrow">Предпросмотр</div>
+              <h3 class="adm-card__title adm-card__title--sm">Карточка услуги</h3>
+            </div>
+          </div>
+          <div class="adm-preview">
+            {% if addon.image_path %}
+              <img alt="{{ addon.name or 'Доп. услуга' }}" src="{{ addon.image_path }}">
+            {% else %}
+              <div class="adm-preview__placeholder">Фото появится после загрузки</div>
+            {% endif %}
+          </div>
+          <div class="adm-preview-card__content">
+            <h4>{{ addon.name or 'Название услуги' }}</h4>
+            <p>{{ addon.short_description or addon.description or 'Короткое описание появится здесь.' }}</p>
+            <div class="adm-chips">
+              <span class="adm-pill">{{ addon.price or 0 }} сум</span>
+              <span class="adm-pill adm-pill--muted">Себестоимость: {{ addon.cost or 0 }} сум</span>
+              <span class="adm-pill adm-pill--tag">{{ addon.duration_minutes or 0 }} минут</span>
+            </div>
+          </div>
+        </section>
+      </aside>
+    </div>
+  </form>
+{% endblock %}

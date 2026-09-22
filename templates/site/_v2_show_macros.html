@@ -1,0 +1,161 @@
+{# Переиспользуемые блоки страниц шоу-программ (v3, редакционный стиль). #}
+
+{# --- Склонение существительных: plural(3, 'вариант', 'варианта', 'вариантов') --- #}
+{% macro plural(n, one, few, many) %}
+  {%- set n10 = n % 10 -%}
+  {%- set n100 = n % 100 -%}
+  {%- if n10 == 1 and n100 != 11 -%}{{ one }}
+  {%- elif 2 <= n10 <= 4 and not (12 <= n100 <= 14) -%}{{ few }}
+  {%- else -%}{{ many }}
+  {%- endif -%}
+{% endmacro %}
+
+{# --- Акции: тонкая лента с иконкой + popover (data-атрибуты для v2.js initPromoHints) --- #}
+{% macro promo_badges(promotions) %}
+  {% for promo in promotions %}
+    <span class="v2-promo ed-ribbon" data-promo-hint>
+      <span class="v2-promo__badge ed-ribbon__badge">
+        <svg class="v2-i" aria-hidden="true"><use href="#i-sparkles"/></svg>
+        <span>{{ promo.badge_text or promo.title }}</span>
+      </span>
+      {% if promo.tooltip_text %}
+        <button class="v2-promo__info ed-ribbon__info" type="button" aria-expanded="false" aria-label="Подробнее об акции" data-promo-hint-trigger>
+          <svg class="v2-i" aria-hidden="true"><use href="#i-info"/></svg>
+        </button>
+        <span class="v2-promo__popover" role="tooltip" data-promo-hint-popover hidden>{{ promo.tooltip_text }}</span>
+      {% endif %}
+    </span>
+  {% endfor %}
+{% endmacro %}
+
+{# --- Лента «Подарки в программе» --- #}
+{% macro gifts_ribbon(text='Подарки в программе') %}
+  <span class="v2-promo ed-ribbon ed-ribbon--gift">
+    <span class="v2-promo__badge ed-ribbon__badge">
+      <svg class="v2-i" aria-hidden="true"><use href="#i-gift"/></svg>
+      <span>{{ text }}</span>
+    </span>
+  </span>
+{% endmacro %}
+
+{# --- Мета-строка: длительность · возраст · формат · категория --- #}
+{% macro meta_line(duration_label='', age_label='', format_label='', category_label='') %}
+  {% if duration_label or age_label or format_label or category_label %}
+    <p class="ed-meta">
+      {% if duration_label %}
+        <span class="ed-meta__item"><svg class="v2-i" aria-hidden="true"><use href="#i-clock"/></svg>{{ duration_label }}</span>
+      {% endif %}
+      {% if age_label %}
+        <span class="ed-meta__item"><svg class="v2-i" aria-hidden="true"><use href="#i-child"/></svg>{{ age_label }}</span>
+      {% endif %}
+      {% if format_label %}
+        <span class="ed-meta__item"><svg class="v2-i" aria-hidden="true"><use href="#i-sparkles"/></svg>{{ format_label }}</span>
+      {% endif %}
+      {% if category_label %}
+        <span class="ed-meta__item"><svg class="v2-i" aria-hidden="true"><use href="#i-tag"/></svg>{{ category_label }}</span>
+      {% endif %}
+    </p>
+  {% endif %}
+{% endmacro %}
+
+{# --- Цена как крупный типографский акцент --- #}
+{% macro price_accent(label, note='') %}
+  {% if label %}
+    {% set head = label.split(' ', 1) %}
+    <p class="ed-price">
+      {% if head|length > 1 and head[0] == 'от' %}
+        <span class="ed-price__pre">от</span>
+        <span class="ed-price__val">{{ head[1]|replace(' до ', '<span class="ed-price__pre"> до </span>')|safe }}</span>
+      {% else %}
+        <span class="ed-price__val">{{ label }}</span>
+      {% endif %}
+      {% if note %}<span class="ed-price__note">{{ note }}</span>{% endif %}
+    </p>
+  {% endif %}
+{% endmacro %}
+
+{# --- Плейсхолдер фото --- #}
+{# Rendered only when there is no photo: covers are transparent cut-outs, so a
+   placeholder underneath one shows straight through it. #}
+{% macro media_placeholder(has_image=false) %}
+  {% if not has_image %}
+    <span class="v2-char-tile__ph ed-ph">
+      <svg class="v2-i" aria-hidden="true"><use href="#i-sparkles"/></svg>
+      <small>Фото скоро</small>
+    </span>
+  {% endif %}
+{% endmacro %}
+
+{# --- Крупный feature-блок одиночной программы (каталог) --- #}
+{% macro feature_card(show, index=1) %}
+  <li
+    class="sf-item"
+    data-show-card
+    data-show-name="{{ show.name|lower|e }}"
+    data-show-search="{{ (show.search_haystack or (show.name ~ ' ' ~ show.summary_text ~ ' ' ~ show.duration_label ~ ' ' ~ show.age_label ~ ' ' ~ show.category_label ~ ' ' ~ show.format_label))|lower|e }}"
+    data-reveal
+  >
+    <div class="sf-item__media">
+      <a class="sf-item__media-link" href="{{ show.route }}" tabindex="-1" aria-hidden="true">
+        {{ media_placeholder(show.has_image) }}
+        {% if show.has_image %}
+          <img class="is-active" alt="" decoding="async" loading="lazy" onerror="this.style.display='none'" src="{{ show.hero_file_path }}">
+        {% endif %}
+      </a>
+    </div>
+    <div class="sf-item__content">
+      <div class="sf-item__topline">
+        <span class="ed-num" aria-hidden="true">{{ '%02d' % index }}</span>
+        {% if show.category_label %}<span class="sf-item__kind">{{ show.category_label }}</span>{% endif %}
+      </div>
+      <h3 class="sf-item__title">
+        <a href="{{ show.route }}">{{ show.name }}</a>
+      </h3>
+      <p class="sf-item__summary">{{ show.summary_text|truncate(220, false, '…') }}</p>
+      {{ meta_line(show.duration_label, show.age_label, show.format_label) }}
+      {% if show.promotions or show.has_gifts %}
+        <div class="sf-item__promos">
+          {{ promo_badges(show.promotions) }}
+          {% if show.has_gifts and not show.promotions %}{{ gifts_ribbon() }}{% endif %}
+        </div>
+      {% endif %}
+      {{ price_accent(show.price_label) }}
+      <div class="sf-item__actions">
+        <a class="v2-btn v2-btn--primary v2-btn--md" href="/party-builder/?program={{ show.slug }}">
+          <svg class="v2-i" aria-hidden="true"><use href="#i-party-hat"/></svg>
+          <span>Собрать</span>
+        </a>
+        <a class="sf-more" href="{{ show.route }}">
+          <span>Подробнее</span>
+          <svg class="v2-i" aria-hidden="true"><use href="#i-arrow-right"/></svg>
+        </a>
+      </div>
+    </div>
+  </li>
+{% endmacro %}
+
+{# --- Компактная редакционная карточка (похожие шоу) --- #}
+{% macro related_card(show) %}
+  <li class="rc-card" data-reveal>
+    <a class="rc-card__media" href="{{ show.route }}" tabindex="-1" aria-hidden="true">
+      {{ media_placeholder(show.has_image) }}
+      {% if show.has_image %}
+        <img alt="" decoding="async" loading="lazy" onerror="this.style.display='none'" src="{{ show.hero_file_path }}">
+      {% endif %}
+    </a>
+    <div class="rc-card__body">
+      {{ meta_line(show.duration_label, show.age_label) }}
+      <h3 class="rc-card__name">
+        <a href="{{ show.route }}">{{ show.name }}</a>
+      </h3>
+      <p class="rc-card__summary">{{ show.summary_text|truncate(140, false, '…') }}</p>
+      <div class="rc-card__footer">
+        {{ price_accent(show.price_label) }}
+        <a class="sf-more" href="{{ show.route }}">
+          <span>Подробнее</span>
+          <svg class="v2-i" aria-hidden="true"><use href="#i-arrow-right"/></svg>
+        </a>
+      </div>
+    </div>
+  </li>
+{% endmacro %}

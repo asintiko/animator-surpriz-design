@@ -1,0 +1,68 @@
+<article class="profile-order{% if featured %} profile-order--featured{% endif %}">
+  <div class="profile-order__head">
+    <div class="profile-order__identity">
+      <span class="profile-order__id">{{ order.public_id }}</span>
+      <h3 class="profile-order__title">{{ order.program_name or 'Праздник с персонажами' }}</h3>
+    </div>
+    <span class="v2-status v2-status--{{ order.display_status }}">{{ order.status_label }}</span>
+  </div>
+
+  <div class="profile-order__meta" aria-label="Дата и время заказа">
+    {% if order.celebration_date_label or order.celebration_date %}
+      <span class="profile-order__meta-item">
+        <svg class="v2-i" aria-hidden="true"><use href="#i-calendar"/></svg>
+        {{ order.celebration_date_label or order.celebration_date }}
+      </span>
+    {% endif %}
+    {% if order.time_from or order.time_to %}
+      <span class="profile-order__meta-item">
+        <svg class="v2-i" aria-hidden="true"><use href="#i-clock"/></svg>
+        {% if order.time_from and order.time_to %}{{ order.time_from }} – {{ order.time_to }}{% else %}{{ order.time_from or order.time_to }}{% endif %}
+      </span>
+    {% endif %}
+    {% if order.payment_method_label %}
+      <span class="profile-order__meta-item">
+        <svg class="v2-i" aria-hidden="true"><use href="#i-cash"/></svg>
+        {{ order.payment_method_label }}
+      </span>
+    {% endif %}
+  </div>
+
+  <dl class="profile-order__details">
+    {% if order.character_names %}
+      <div class="profile-order__detail">
+        <dt>Персонажи</dt>
+        <dd>{{ order.character_names | join(', ') }}</dd>
+      </div>
+    {% endif %}
+    {% if order.addons %}
+      <div class="profile-order__detail profile-order__detail--wide">
+        <dt>Доп. услуги</dt>
+        <dd>{{ order.addon_names | join(', ') }}</dd>
+      </div>
+    {% endif %}
+    {% if order.celebrant_name %}
+      <div class="profile-order__detail">
+        <dt>Именинник</dt>
+        <dd>{{ order.celebrant_name }}{% if order.celebrant_age %}, {{ order.celebrant_age }} лет{% endif %}</dd>
+      </div>
+    {% endif %}
+    {% if order.address_text %}
+      <div class="profile-order__detail profile-order__detail--wide">
+        <dt>Адрес</dt>
+        <dd>{{ order.address_text }}</dd>
+      </div>
+    {% endif %}
+  </dl>
+
+  <div class="profile-order__footer">
+    <div class="profile-order__price">
+      <span>Стоимость</span>
+      <strong>{{ order.total_price_label }}</strong>
+    </div>
+    <a class="profile-order__link" href="{{ url_for('customer_order_detail', public_id=order.public_id) }}">
+      <span>Открыть заказ</span>
+      <svg class="v2-i" aria-hidden="true"><use href="#i-arrow-right"/></svg>
+    </a>
+  </div>
+</article>

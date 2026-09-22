@@ -1,0 +1,3 @@
+module.exports=[23953,a=>{"use strict";var b=a.i(14966);a.s(["default",0,function({reset:a}){return(0,b.jsxs)("section",{className:"empty-page container",children:[(0,b.jsx)("p",{className:"eyebrow",children:"ЧТО-ТО ПОШЛО НЕ ТАК"}),(0,b.jsx)("h1",{children:"Не удалось загрузить страницу"}),(0,b.jsx)("p",{children:"Ваши выбранные данные не потеряны. Попробуйте ещё раз."}),(0,b.jsx)("button",{className:"button button-primary",onClick:a,children:"Повторить"})]})}])}];
+
+//# sourceMappingURL=src_app_error_tsx_0ac07bj._.js.map

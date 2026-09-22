@@ -1,0 +1,28 @@
+[Unit]
+Description=Surpriz Next admin panel
+After=network.target surpriz-adapter.service
+Requires=surpriz-adapter.service
+
+[Service]
+Type=simple
+User=surpriz
+Group=surpriz
+UMask=0077
+WorkingDirectory=/opt/surpriz-releases/20260807T143015Z/webapp
+EnvironmentFile=/opt/surpriz-releases/20260807T143015Z/.env
+EnvironmentFile=/opt/surpriz/webapp.env
+Environment=NODE_ENV=production
+Environment=HOSTNAME=127.0.0.1
+Environment=PORT=5053
+Environment=SURPRIZ_BACKEND_ORIGIN=http://127.0.0.1:5052
+Environment=SURPRIZ_ADAPTER_ORIGIN=http://127.0.0.1:5051
+Environment=SURPRIZ_CANONICAL_URL=https://animator-surpriz.uz
+Environment=SURPRIZ_MEDIA_PRIVATE_ROOT=/opt/surpriz/webapp-media
+Environment=SURPRIZ_MEDIA_PUBLIC_ROOT=/opt/surpriz/static/admin-media
+ExecStart=/usr/bin/node node_modules/next/dist/bin/next start --hostname 127.0.0.1 --port 5053
+Restart=on-failure
+RestartSec=3
+LimitNOFILE=65535
+
+[Install]
+WantedBy=multi-user.target
