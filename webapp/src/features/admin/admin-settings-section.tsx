@@ -1,7 +1,9 @@
 "use client";
 
-import { CalendarDays, Save, Settings2, Snowflake, Sparkles } from "lucide-react";
+import { Save, Settings2 } from "lucide-react";
 import { type FormEvent, useEffect, useState } from "react";
+
+import { AdminSeasonCard, SEASON_OWNED_FLAGS, type SeasonAdminState } from "@/features/admin/admin-season-card";
 
 import {
   AdminSectionState,
@@ -15,13 +17,10 @@ type SettingsPayload = SectionEnvelope & {
   settings?: Record<string, SettingValue>;
   labels?: Record<string, { title: string; description?: string; type?: "boolean" | "number" | "string" }>;
   party_builder?: Record<string, SettingValue>;
+  season?: SeasonAdminState;
 };
 
 const defaultLabels: Record<string, { title: string; description: string }> = {
-  new_year_season_enabled: { title: "Новогодний сезон", description: "Главный переключатель сезонного оформления и контента." },
-  show_new_year_menu_link: { title: "Ссылка в меню", description: "Показывать новогодний раздел в основной навигации." },
-  show_home_new_year_showcase: { title: "Витрина на главной", description: "Добавить сезонный блок на главную страницу." },
-  show_snow: { title: "Эффект снега", description: "Лёгкая декоративная анимация без влияния на управление." },
   show_promotions: { title: "Акции", description: "Показывать промо-предложения посетителям." },
   hide_easter_egg: { title: "Скрыть пасхалку", description: "Отключить секретную интерактивную сцену." },
   picker_enabled: { title: "Конструктор праздника", description: "Разрешить покупателю самостоятельно собирать программу." },
@@ -47,7 +46,8 @@ export function AdminSettingsSection() {
   }
 
   const labels = { ...defaultLabels, ...(section.data?.labels ?? {}) };
-  const booleanEntries = Object.entries(draft).filter(([, value]) => typeof value === "boolean");
+  // The New Year flags follow the season card and are not edited by hand.
+  const booleanEntries = Object.entries(draft).filter(([key, value]) => typeof value === "boolean" && !SEASON_OWNED_FLAGS.has(key));
   const valueEntries = Object.entries(draft).filter(([, value]) => typeof value !== "boolean");
 
   return (
@@ -56,19 +56,15 @@ export function AdminSettingsSection() {
       {!section.loading && !section.error ? (
         <form onSubmit={(event) => void save(event)}>
           <div className="admin-dashboard-grid">
-            <section className="admin-surface">
-              <div className="admin-surface-head"><div><p className="eyebrow">ПУБЛИЧНЫЙ САЙТ</p><h2>Функции и сезонность</h2><p>Изменения применяются к витрине без пересборки фронтенда.</p></div><Settings2 /></div>
+            {section.data?.season ? <AdminSeasonCard onChanged={section.refresh} state={section.data.season} /> : null}
+            <section className="admin-surface admin-surface-wide">
+              <div className="admin-surface-head"><div><p className="eyebrow">ПУБЛИЧНЫЙ САЙТ</p><h2>Функции витрины</h2><p>Изменения применяются к витрине без пересборки фронтенда.</p></div><Settings2 /></div>
               {!booleanEntries.length ? <div className="admin-empty">Переключатели появятся после ответа adapter API.</div> : <div className="admin-toggle-list">{booleanEntries.map(([key, value]) => {
                 const label = labels[key] ?? { title: key, description: "" };
                 return <label className="admin-toggle" key={key}><span><strong>{label.title}</strong><small>{label.description || key}</small></span><input checked={Boolean(value)} onChange={(event) => setDraft((current) => ({ ...current, [key]: event.target.checked }))} type="checkbox" /><i /></label>;
               })}</div>}
             </section>
 
-            <aside className="admin-surface admin-season-card">
-              <div className="admin-surface-head"><div><p className="eyebrow">БЫСТРЫЙ РЕЖИМ</p><h2>Сезонный пресет</h2><p>Одним действием включает связанные новогодние элементы.</p></div><Snowflake /></div>
-              <div className="admin-season-visual"><Sparkles /><strong>{draft.new_year_season_enabled ? "Сезон активен" : "Обычный режим"}</strong></div>
-              <div className="admin-row-actions"><button className="button button-violet" disabled={mutation.pendingKey === "season-on"} onClick={() => void mutation.run("season-on", { action: "season_preset", enabled: true }, "Новогодний режим включён")} type="button"><CalendarDays size={17} /> Включить сезон</button><button className="button button-secondary" disabled={mutation.pendingKey === "season-off"} onClick={() => void mutation.run("season-off", { action: "season_preset", enabled: false }, "Обычный режим включён")} type="button">Выключить</button></div>
-            </aside>
 
             {valueEntries.length ? <section className="admin-surface admin-surface-wide"><div className="admin-surface-head"><div><p className="eyebrow">КОНСТРУКТОР</p><h2>Параметры праздника</h2><p>Лимиты, значения по умолчанию и текстовые настройки.</p></div></div><div className="admin-form-grid">{valueEntries.map(([key, value]) => {
               const label = labels[key] ?? { title: key, description: "" };

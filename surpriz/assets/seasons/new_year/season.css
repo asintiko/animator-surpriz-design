@@ -1,0 +1,10 @@
+/* New Year: mechanics only for now — the shared ribbon and hero badges in a
+   winter palette. Banners, logo and effects arrive with the winter art. */
+
+html[data-season="new_year"] {
+  --season-ink: #0f2a4a;
+  --season-cream: #f2f8ff;
+  --season-accent: #3fa9f5;
+  --season-ribbon-bg: linear-gradient(90deg, #0f2a4a, #1f5a8c 55%, #d4213d);
+  --season-badge-bg: linear-gradient(120deg, #0f2a4a, #1f5a8c);
+}

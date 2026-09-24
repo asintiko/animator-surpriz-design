@@ -46,6 +46,8 @@ export type Promotion = {
   sort_order: number;
 };
 
+export type SeasonId = "halloween" | "new_year";
+
 export type ProgramFeature = {
   icon: string;
   text: string;
@@ -100,6 +102,8 @@ export type CatalogEntity = {
   program_features?: ProgramFeature[];
   program_features_source?: "stored" | "text";
   program_cast?: string[];
+  season?: SeasonId | "";
+  season_only?: boolean;
   media: MediaItem[];
   categories: string[];
   tags: string[];

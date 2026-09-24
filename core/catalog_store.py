@@ -14,6 +14,7 @@ from bs4 import BeautifulSoup
 from werkzeug.datastructures import FileStorage
 from werkzeug.utils import secure_filename
 
+from . import seasons
 from .config import DATA_ROOT, ROUTES_ROOT, STATIC_ROOT
 
 DB_ROOT = DATA_ROOT / "admin"
@@ -676,6 +677,28 @@ def _ensure_show_program_content_columns() -> None:
             added = True
         if added:
             connection.commit()
+
+
+def _ensure_character_season_columns() -> None:
+    columns = {
+        "season": "TEXT NOT NULL DEFAULT ''",
+        "season_only": "INTEGER NOT NULL DEFAULT 0",
+    }
+    with _get_connection() as connection:
+        added = False
+        for column, definition in columns.items():
+            if _has_column(connection, "managed_characters", column):
+                continue
+            connection.execute(f"ALTER TABLE managed_characters ADD COLUMN {column} {definition}")
+            added = True
+        if added:
+            connection.commit()
+
+
+def _season_values(data: dict[str, Any]) -> tuple[str, int]:
+    season = seasons.normalize_season_id(data.get("season"))
+    season_only = 1 if season and str(data.get("season_only", "")).strip().lower() in {"1", "true", "on", "yes"} else 0
+    return season, season_only
 
 
 def guess_show_feature_icon(text: str) -> str:
@@ -1687,6 +1710,7 @@ def init_catalog_store() -> None:
     _ensure_character_cover_offset_columns()
     _ensure_character_ensemble_columns()
     _ensure_show_program_content_columns()
+    _ensure_character_season_columns()
     _ensure_category_linked_tag_column()
     _ensure_show_program_characters_table()
     _sync_entity_types_from_legacy()
@@ -2675,6 +2699,8 @@ def _character_row_to_dict(row: sqlite3.Row) -> dict[str, Any]:
         "ensemble_members": ensemble_members,
         "program_features": _stored_show_features(row),
         "program_cast": normalize_show_cast(row["program_cast"]) if "program_cast" in row.keys() and row["program_cast"] else [],
+        "season": seasons.normalize_season_id(row["season"]) if "season" in row.keys() else "",
+        "season_only": bool(row["season_only"]) if "season_only" in row.keys() and row["season_only"] else False,
         "ensemble_included_count": ensemble_included_count,
         "ensemble_extra_member_price": ensemble_extra_member_price,
         # A roster with two or more real performers is a grouped character
@@ -2882,6 +2908,8 @@ def _character_list_query(filter_sql: str = "", params: Iterable[Any] = ()) -> l
             ch.ensemble_extra_member_price,
             ch.program_features,
             ch.program_cast,
+            ch.season,
+            ch.season_only,
             ch.status,
             ch.entity_type,
             ch.hero_media_id,
@@ -3003,8 +3031,12 @@ def list_characters_for_public(
             filter_sql += " WHERE " + " AND ".join(clauses)
 
     items = _character_list_query(filter_sql, params)
+    season = seasons.active_season()
     filtered_items: list[dict[str, Any]] = []
     for item in items:
+        if not seasons.character_season_visible(item, season):
+            continue
+        item["is_seasonal"] = seasons.is_seasonal_now(item, season)
         legacy_context = get_legacy_catalog_context(item.get("source_path", ""))
         item["legacy_category_slug"] = legacy_context["category_slug"]
         item["legacy_category_name"] = legacy_context["category_name"]
@@ -3015,7 +3047,8 @@ def list_characters_for_public(
 
     if search.strip():
         return sort_characters_for_search(filter_characters_by_search(filtered_items, search), search)
-    return sorted(filtered_items, key=_character_public_sort_key)
+    # Stable sort: seasonal heroes move to the top and keep their curated order.
+    return sorted(sorted(filtered_items, key=_character_public_sort_key), key=lambda item: not item["is_seasonal"])
 
 
 def get_category_by_slug(slug: str) -> dict[str, Any] | None:
@@ -3225,6 +3258,10 @@ def get_character_by_slug(slug: str, include_hidden: bool = False) -> dict[str, 
         if not row:
             return None
         character = _character_row_to_dict(row)
+        season = seasons.active_season()
+        if not include_hidden and not seasons.character_season_visible(character, season):
+            return None
+        character["is_seasonal"] = seasons.is_seasonal_now(character, season)
         character["media"] = _get_media_for_character(connection, row["id"])
         category_ids, tag_ids = _get_taxonomy_assignments(connection, row["id"])
         character["category_ids"] = category_ids
@@ -3475,6 +3512,7 @@ def create_character(data: dict[str, Any]) -> int:
     age_to = _normalize_non_negative_int(data.get("age_to"), 0) if entity_type == ENTITY_TYPE_SHOW_PROGRAM and str(data.get("age_to", "")).strip() else None
     ensemble_members, ensemble_included_count, ensemble_extra_member_price = _normalize_ensemble_fields(data, entity_type)
     program_features, program_cast, included_items = _show_content_values(data, entity_type)
+    season, season_only = _season_values(data)
     with _get_connection() as connection:
         final_slug = _ensure_unique_slug(connection, "managed_characters", data.get("slug") or data.get("name", "character"))
         cursor = connection.execute(
@@ -3486,10 +3524,10 @@ def create_character(data: dict[str, Any]) -> int:
                 sort_order, age_from, age_to, show_category, format_tags, included_items, suitable_for,
                 restrictions, video_url, variant_group_slug, variant_group_name, variant_label,
                 ensemble_members, ensemble_included_count, ensemble_extra_member_price,
-                program_features, program_cast,
+                program_features, program_cast, season, season_only,
                 status, entity_type, source_path, created_at, updated_at
             )
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """,
             (
                 data.get("name", "").strip(),
@@ -3524,6 +3562,8 @@ def create_character(data: dict[str, Any]) -> int:
                 ensemble_extra_member_price,
                 program_features,
                 program_cast,
+                season,
+                season_only,
                 data.get("status", "active"),
                 entity_type,
                 "",
@@ -3577,6 +3617,12 @@ def update_character(character_id: int, data: dict[str, Any]) -> None:
         stored = get_character_by_id(character_id) or {}
         data = {"program_features": stored.get("program_features"), "program_cast": stored.get("program_cast"), **data}
     program_features, program_cast, included_items = _show_content_values(data, entity_type)
+    if "season" in data:
+        season, season_only = _season_values(data)
+    else:
+        # Forms that do not know about seasons keep what the Next admin set.
+        stored = get_character_by_id(character_id) or {}
+        season, season_only = stored.get("season", ""), int(bool(stored.get("season_only")))
     with _get_connection() as connection:
         final_slug = _ensure_unique_slug(connection, "managed_characters", data.get("slug") or data.get("name", "character"), exclude_id=character_id)
         connection.execute(
@@ -3625,6 +3671,8 @@ def update_character(character_id: int, data: dict[str, Any]) -> None:
                 ensemble_extra_member_price = ?,
                 program_features = ?,
                 program_cast = ?,
+                season = ?,
+                season_only = ?,
                 updated_at = ?
             WHERE id = ?
             """,
@@ -3671,6 +3719,8 @@ def update_character(character_id: int, data: dict[str, Any]) -> None:
                 ensemble_extra_member_price,
                 program_features,
                 program_cast,
+                season,
+                season_only,
                 utcnow_iso(),
                 character_id,
             ),

@@ -13,6 +13,8 @@ DATABASE_PATH = PROJECT_ROOT / "content" / "data" / "admin" / "site_admin.sqlite
 OUTPUT_PATH = WEBAPP_ROOT / "src" / "data" / "catalog.generated.json"
 
 
+PRIVATE_SETTINGS = {"visitor_id_salt"}
+
 def without_decorative_emoji(value: Any) -> Any:
     if isinstance(value, str):
         return " ".join(value.replace("\U0001f31f", "").split())
@@ -174,9 +176,11 @@ def export_catalog() -> dict[str, Any]:
         ORDER BY sort_order, name
         """,
     )
+    # The export is committed and shipped to the browser: private keys stay out.
     settings = {
         row["key"]: row["value"]
         for row in rows(connection, "SELECT key, value FROM site_settings ORDER BY key")
+        if row["key"] not in PRIVATE_SETTINGS
     }
     connection.close()
 

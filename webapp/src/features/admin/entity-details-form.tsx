@@ -45,6 +45,8 @@ type EditableEntity = Pick<
 > & {
   program_features: NonNullable<CatalogEntity["program_features"]>;
   program_cast: string[];
+  season: NonNullable<CatalogEntity["season"]>;
+  season_only: boolean;
 };
 
 function normalizeAddonSettings(addons: Array<Partial<Addon> & Pick<Addon, "id" | "name" | "slug" | "price" | "duration_minutes">>): Addon[] {
@@ -97,6 +99,8 @@ function emptyEntity(kind: "character" | "show_program"): EditableEntity {
     addons: [],
     program_features: [],
     program_cast: [],
+    season: "",
+    season_only: false,
   };
 }
 
@@ -322,6 +326,17 @@ export function EntityDetailsForm({
               <div className="ensemble-preview" aria-live="polite"><span>Как увидит клиент</span><strong>{ensembleMemberCount === 2 ? "Пара — выбираются оба персонажа" : `${value.ensemble_included_count} из ${ensembleMemberCount} включены`}</strong><small>{ensembleMemberCount > value.ensemble_included_count ? `Ещё один участник: +${priceFormatter.format(value.ensemble_extra_member_price)} сум` : "Доплаты внутри карточки нет"}</small></div>
             </div>
           ) : null}
+        </section>
+      ) : null}
+      {kind === "character" ? (
+        <section className="ensemble-editor season-editor" aria-labelledby="season-editor-title">
+          <div className="ensemble-editor-head">
+            <div><p className="eyebrow">СЕЗОН</p><h3 id="season-editor-title">Сезонный герой</h3><p>Когда сезон включён в «Настройках», герой стоит первым в каталоге и карусели на главной и получает сезонный бейдж.</p></div>
+          </div>
+          <div className="season-editor-body">
+            <label>Сезон<select value={value.season} onChange={(event) => { const season = event.target.value as EditableEntity["season"]; setValue((current) => ({ ...current, season, season_only: season ? current.season_only : false })); }}><option value="">Круглый год</option><option value="halloween">🎃 Хэллоуин</option><option value="new_year">🎄 Новый год</option></select></label>
+            <label className={`admin-toggle${value.season ? "" : " is-disabled"}`}><span><strong>Только в сезон</strong><small>{value.season_only ? "Вне сезона карточка скрыта с сайта и недоступна для заказа." : "Карточка продаётся круглый год, в сезон — наверху с бейджем."}</small></span><input checked={value.season_only} disabled={!value.season} onChange={(event) => field("season_only", event.target.checked)} type="checkbox" /><i /></label>
+          </div>
         </section>
       ) : null}
       {kind === "show_program" ? (

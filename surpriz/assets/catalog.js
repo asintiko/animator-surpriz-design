@@ -333,7 +333,8 @@
 
   const primaryLabel = (categories) => {
     const list = Array.isArray(categories) ? categories : [];
-    const match = CATEGORY_ORDER.find((category) => list.includes(category));
+    // Season chips (season-*) are a filter, not what the hero is; season.js adds its own badge.
+    const match = CATEGORY_ORDER.find((category) => !category.startsWith("season-") && list.includes(category));
     return match ? CATEGORY_LABELS[match] : "Персонаж";
   };
 

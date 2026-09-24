@@ -24,6 +24,8 @@ DB_PATH = DB_ROOT / "site_admin.sqlite3"
 MAX_LOGIN_ATTEMPTS = 3
 LOGIN_LOCK_MINUTES = 15
 VISITOR_ID_SALT_SETTING = "visitor_id_salt"
+# Settings stored in site_settings that are not boolean public flags.
+NON_FLAG_SETTINGS = frozenset({VISITOR_ID_SALT_SETTING, "active_season", "season_effects"})
 VISITOR_SESSION_TIMEOUT_MINUTES = 30
 VISITOR_EVENT_RETENTION_DAYS = 180
 SQLITE_BUSY_TIMEOUT_SECONDS = 5.0
@@ -454,8 +456,9 @@ def get_public_settings() -> dict[str, bool]:
 
     for row in rows:
         key = str(row["key"])
-        if key in DEFAULT_PARTY_BUILDER_SETTINGS or key == VISITOR_ID_SALT_SETTING:
-            # Builder numbers and the private visitor salt are not public boolean flags.
+        if key in DEFAULT_PARTY_BUILDER_SETTINGS or key in NON_FLAG_SETTINGS:
+            # Builder numbers, the private visitor salt and the season (managed by
+            # core.seasons) are not public boolean flags.
             continue
         settings[key] = row["value"] == "1"
     return settings
@@ -468,8 +471,8 @@ def update_public_settings(values: dict[str, bool]) -> dict[str, bool]:
 
     with _get_connection() as connection:
         for key, value in current.items():
-            if key in DEFAULT_PARTY_BUILDER_SETTINGS or key == VISITOR_ID_SALT_SETTING:
-                # Never coerce builder numbers or the private visitor salt to booleans.
+            if key in DEFAULT_PARTY_BUILDER_SETTINGS or key in NON_FLAG_SETTINGS:
+                # Never coerce builder numbers, the visitor salt or the season to booleans.
                 continue
             connection.execute(
                 """
