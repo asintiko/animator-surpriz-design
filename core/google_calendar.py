@@ -24,10 +24,12 @@ import re
 import secrets
 import socket
 import threading
+import time as time_module
 from collections import Counter
+from contextlib import contextmanager
 from dataclasses import dataclass, field
 from datetime import date, datetime, time, timedelta, timezone
-from typing import Any, Iterable
+from typing import Any, Iterable, Iterator
 from urllib.parse import quote, urlencode
 
 import requests
@@ -75,7 +77,10 @@ DEFAULT_TITLE_TEMPLATE = "{program} ({characters}) — {celebrant}, {age}"
 DEFAULT_COLOR_ID = "6"
 TITLE_MAX_LENGTH = 200
 WORKER_TICK_SECONDS = 10
-WORKER_LEASE_SECONDS = 90
+SYNC_LEASE_NAME = "sync-worker"
+SYNC_LEASE_SECONDS = 90
+SYNC_LEASE_RENEW_SECONDS = 20
+MANUAL_SYNC_WAIT_SECONDS = 5.0
 EVENT_ID_ALPHABET = "0123456789abcdefghijklmnopqrstuv"
 
 EVENT_COLORS: tuple[dict[str, str], ...] = (
@@ -136,6 +141,10 @@ class GoogleCalendarAuthError(GoogleCalendarError):
 
 class GoogleCalendarNotConfigured(GoogleCalendarError):
     """The integration is not connected or not fully configured yet."""
+
+
+class GoogleCalendarSyncBusy(GoogleCalendarError):
+    """Another process is running a sync cycle right now."""
 
 
 def init_google_calendar() -> None:
@@ -1294,7 +1303,42 @@ def enqueue_upcoming_confirmed_orders() -> int:
 # --- background worker ------------------------------------------------------------
 
 
-def run_sync_cycle(*, force_import: bool = False) -> dict[str, Any]:
+@contextmanager
+def sync_lease(*, wait_seconds: float = 0.0) -> Iterator[str]:
+    """Hold the single cross-process sync lease for the whole block.
+
+    Every entry point that talks to Google (background worker, manual sync,
+    imports triggered from the admin) runs under this lease, so cycles never
+    overlap. A heartbeat keeps renewing it while the block runs, and it is
+    released at the end so a manual sync does not wait for the TTL.
+    """
+    owner = f"{socket.gethostname()}:{os.getpid()}:{threading.get_ident()}:{secrets.token_hex(3)}"
+    deadline = time_module.monotonic() + max(0.0, wait_seconds)
+    while not store.claim_lease(SYNC_LEASE_NAME, owner, SYNC_LEASE_SECONDS):
+        if time_module.monotonic() >= deadline:
+            raise GoogleCalendarSyncBusy("Синхронизация уже выполняется. Обновите страницу через минуту.")
+        time_module.sleep(0.5)
+
+    stop = threading.Event()
+
+    def heartbeat() -> None:
+        while not stop.wait(SYNC_LEASE_RENEW_SECONDS):
+            try:
+                store.claim_lease(SYNC_LEASE_NAME, owner, SYNC_LEASE_SECONDS)
+            except Exception:  # noqa: BLE001 - a missed renewal is retried on the next beat
+                continue
+
+    renewer = threading.Thread(target=heartbeat, name="gcal-lease", daemon=True)
+    renewer.start()
+    try:
+        yield owner
+    finally:
+        stop.set()
+        renewer.join(timeout=5)
+        store.release_lease(SYNC_LEASE_NAME, owner)
+
+
+def _sync_cycle(*, force_import: bool) -> dict[str, Any]:
     result: dict[str, Any] = {}
     try:
         result["export"] = process_order_queue()
@@ -1309,6 +1353,18 @@ def run_sync_cycle(*, force_import: bool = False) -> dict[str, Any]:
     return result
 
 
+def run_sync_cycle(*, force_import: bool = False, wait_seconds: float = 0.0) -> dict[str, Any]:
+    """Push queued orders and re-read the calendar when due, under the sync lease."""
+    with sync_lease(wait_seconds=wait_seconds):
+        return _sync_cycle(force_import=force_import)
+
+
+def import_now(*, wait_seconds: float = MANUAL_SYNC_WAIT_SECONDS) -> dict[str, Any]:
+    """Re-read the calendar right away (admin actions), under the sync lease."""
+    with sync_lease(wait_seconds=wait_seconds):
+        return import_calendar_events()
+
+
 _WORKER_THREAD: threading.Thread | None = None
 _WORKER_LOCK = threading.Lock()
 _WORKER_WAKE = threading.Event()
@@ -1319,11 +1375,11 @@ def wake_worker() -> None:
 
 
 def _worker_loop(stop_event: threading.Event) -> None:
-    owner = f"{socket.gethostname()}:{os.getpid()}:{secrets.token_hex(3)}"
     while not stop_event.is_set():
         try:
-            if store.claim_lease("sync-worker", owner, WORKER_LEASE_SECONDS):
-                run_sync_cycle()
+            run_sync_cycle()
+        except GoogleCalendarSyncBusy:
+            pass
         except Exception as exc:  # noqa: BLE001 - the worker must survive any failure
             print(f"[gcal] sync cycle deferred after {type(exc).__name__}", flush=True)
         _WORKER_WAKE.wait(WORKER_TICK_SECONDS)

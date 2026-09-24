@@ -4,6 +4,7 @@ import json
 import os
 import sqlite3
 import tempfile
+import time
 import unittest
 from datetime import date, datetime, timedelta, timezone
 from pathlib import Path
@@ -525,6 +526,38 @@ class OAuthTests(TempDatabaseMixin, unittest.TestCase):
         self.assertEqual(google_calendar_store.get_setting("refresh_token"), "")
 
 
+class SyncLeaseTests(TempDatabaseMixin, unittest.TestCase):
+    def test_manual_sync_does_not_overlap_a_running_cycle(self) -> None:
+        self.assertTrue(google_calendar_store.claim_lease(google_calendar.SYNC_LEASE_NAME, "worker", 90))
+        with self.assertRaises(google_calendar.GoogleCalendarSyncBusy):
+            google_calendar.run_sync_cycle(force_import=True, wait_seconds=0)
+        with self.assertRaises(google_calendar.GoogleCalendarSyncBusy):
+            google_calendar.import_now(wait_seconds=0)
+
+        google_calendar_store.release_lease(google_calendar.SYNC_LEASE_NAME, "worker")
+        self.assertEqual(google_calendar.run_sync_cycle(force_import=True), {"export": {"skipped": True}, "import": {"skipped": True}})
+        # The lease is released at the end, so the next caller does not wait for the TTL.
+        self.assertTrue(google_calendar_store.claim_lease(google_calendar.SYNC_LEASE_NAME, "next", 90))
+
+    def test_lease_is_renewed_while_a_long_cycle_runs(self) -> None:
+        observed: dict[str, bool] = {}
+
+        def slow_cycle(*, force_import: bool) -> dict[str, Any]:
+            # Without renewal a 2-second lease (stored with 1 s precision) is gone by now.
+            time.sleep(3.0)
+            observed["intruder"] = google_calendar_store.claim_lease(google_calendar.SYNC_LEASE_NAME, "intruder", 1)
+            return {}
+
+        with (
+            patch.object(google_calendar, "SYNC_LEASE_SECONDS", 2),
+            patch.object(google_calendar, "SYNC_LEASE_RENEW_SECONDS", 0.2),
+            patch.object(google_calendar, "_sync_cycle", slow_cycle),
+        ):
+            google_calendar.run_sync_cycle()
+        self.assertFalse(observed["intruder"], "the lease expired while the cycle was still running")
+        self.assertTrue(google_calendar_store.claim_lease(google_calendar.SYNC_LEASE_NAME, "intruder", 1))
+
+
 class AdapterCalendarEndpointsTests(unittest.TestCase):
     def test_calendar_section_requires_admin_and_returns_payload(self) -> None:
         from webapp.adapter import app as adapter_app
@@ -546,7 +579,7 @@ class AdapterCalendarEndpointsTests(unittest.TestCase):
                 get_calendar_admin_payload=lambda base: {"status": {"redirect_uri": f"{base}cb"}, "events": []},
                 preview_recognition=lambda text: {"programs": [], "characters": [text], "matched": True},
                 complete_authorization=lambda code, state: {"account_email": "owner@gmail.com"},
-                import_calendar_events=lambda: {"total": 0},
+                import_calendar_now=lambda: {"total": 0},
             ),
         ):
             application = adapter_app.create_app()

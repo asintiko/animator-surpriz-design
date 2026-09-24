@@ -653,3 +653,9 @@ def claim_lease(name: str, owner: str, ttl_seconds: int) -> bool:
         )
         connection.commit()
     return True
+
+
+def release_lease(name: str, owner: str) -> None:
+    with get_connection() as connection:
+        connection.execute("DELETE FROM google_calendar_locks WHERE name = ? AND owner = ?", (name, owner))
+        connection.commit()
