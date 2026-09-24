@@ -1,4 +1,4 @@
-/* Shared season layer: ribbon, hero badges and the effect sprites that
+/* Shared season layer: hero badges and the effect sprites that
    season.js mounts. Each season tunes the look through the --season-* custom
    properties in its own season.css. */
 
@@ -6,67 +6,15 @@
   --season-ink: #1b0f2e;
   --season-cream: #fff4de;
   --season-accent: #ff7a1a;
-  --season-ribbon-bg: linear-gradient(90deg, #ff7a1a, #ff4d0b 55%, #6c1be3);
   --season-badge-bg: linear-gradient(120deg, #1b0f2e, #3a1a66);
-}
-
-/* --- ribbon ------------------------------------------------------------------ */
-
-.season-ribbon {
-  align-items: center;
-  background: var(--season-ribbon-bg);
-  box-shadow: 0 8px 20px rgba(27, 15, 46, .22);
-  color: #fff;
-  display: flex;
-  font: 700 13px/1.25 "Rubik", sans-serif;
-  gap: 10px;
-  justify-content: center;
-  left: 0;
-  min-height: 34px;
-  padding: 6px 44px;
-  position: absolute;
-  right: 0;
-  text-align: center;
-  top: 100%;
-  transition: opacity .25s ease, transform .25s ease;
-}
-
-.season-ribbon[hidden] { display: none; }
-html.has-season-ribbon body { margin-top: var(--season-ribbon-h, 34px); }
-.season-ribbon.is-tucked { opacity: 0; pointer-events: none; transform: translateY(-8px); }
-.season-ribbon strong { font-family: "Balsamiq Sans", "Rubik", sans-serif; font-size: 14px; white-space: nowrap; }
-html body .season-ribbon a,
-html body .season-ribbon a:hover { color: #fff; text-decoration: underline; text-underline-offset: 3px; white-space: nowrap; }
-.season-ribbon__close {
-  align-items: center;
-  background: rgba(27, 15, 46, .25);
-  border: 0;
-  border-radius: 50%;
-  color: #fff !important;
-  cursor: pointer;
-  display: flex;
-  font-size: 16px;
-  height: 26px;
-  justify-content: center;
-  line-height: 1;
-  position: absolute;
-  right: 10px;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 26px;
-}
-.season-ribbon__close:hover { background: rgba(27, 15, 46, .45); }
-.season-ribbon__close:focus-visible,
-.season-ribbon a:focus-visible { outline: 2px solid var(--season-cream); outline-offset: 2px; }
-
-@media (max-width: 767px) {
-  .season-ribbon { font-size: 12px; min-height: 30px; padding: 5px 40px 5px 12px; }
-  .season-ribbon span { display: none; }
 }
 
 /* --- seasonal hero badges ------------------------------------------------------ */
 
 .season-badge-host { position: relative; }
+
+/* The catalog paints active chip icons white; a season icon keeps its colours. */
+html[data-season] body .cat-filter img[src*="/assets/seasons/"] { filter: none; }
 
 .season-badge {
   align-items: center;
@@ -119,41 +67,6 @@ html[data-season] body .is-season-card {
 .season-pill__icon { height: 18px; width: 18px; }
 
 /* --- effects (season.js) ----------------------------------------------------- */
-
-.season-fx {
-  inset: 0;
-  overflow: hidden;
-  pointer-events: none;
-  position: absolute;
-  z-index: 2;
-}
-
-.season-bat {
-  height: auto;
-  left: 0;
-  position: absolute;
-  top: 0;
-  width: 64px;
-  will-change: transform;
-}
-
-.season-bat img {
-  display: block;
-  filter: drop-shadow(0 6px 10px rgba(17, 8, 32, .35));
-  width: 100%;
-}
-
-.season-bat img + img {
-  left: 0;
-  position: absolute;
-  top: 0;
-}
-
-.season-bat img:first-child { animation: season-flap-a .32s steps(1) infinite; }
-.season-bat img + img { animation: season-flap-b .32s steps(1) infinite; }
-
-@keyframes season-flap-a { 0% { opacity: 1; } 50% { opacity: 0; } }
-@keyframes season-flap-b { 0% { opacity: 0; } 50% { opacity: 1; } }
 
 .season-spider {
   height: 190px;
@@ -210,7 +123,6 @@ html[data-season] body .is-season-card {
 }
 
 .season-pumpkin--footer { left: 112px; top: -4px; width: 52px; }
-.season-pumpkin--dock { height: 30px; left: calc(50% + 14px); top: -22px; width: 30px; }
 
 @keyframes season-flicker {
   0%, 100% { filter: drop-shadow(0 0 6px rgba(255, 122, 26, .35)); transform: rotate(-3deg); }
@@ -220,22 +132,17 @@ html[data-season] body .is-season-card {
 }
 
 .season-paused .season-pumpkin,
-.season-paused .season-bat img,
 .season-paused .season-spider__drop img { animation-play-state: paused; }
 
-html[data-season-effects="off"] .season-fx,
 html[data-season-effects="off"] .season-spider,
 html[data-season-effects="off"] .season-pumpkin { display: none !important; }
 
 @media (prefers-reduced-motion: reduce) {
-  .season-fx,
   .season-spider { display: none !important; }
   .season-pumpkin { animation: none; }
-  .season-ribbon { transition: none; }
 }
 
 @media (max-width: 767px) {
   .season-spider { display: none; }
-  .season-bat { width: 44px; }
 }
 

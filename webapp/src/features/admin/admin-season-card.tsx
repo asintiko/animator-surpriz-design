@@ -130,7 +130,7 @@ export function AdminSeasonCard({ state, onChanged }: { state: SeasonAdminState;
         <label className={`admin-toggle${selected === "none" ? " is-disabled" : ""}`}>
           <span>
             <strong>Анимации сезона</strong>
-            <small>Летучие мыши и паучок над баннером, мерцающие тыквы. Для посетителей с «уменьшением движения» отключены всегда.</small>
+            <small>Паучок над баннером и мерцающая тыква в подвале. Для посетителей с «уменьшением движения» отключены всегда.</small>
           </span>
           <input checked={effects} disabled={selected === "none"} onChange={(event) => setEffects(event.target.checked)} type="checkbox" />
           <i />

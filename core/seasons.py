@@ -26,8 +26,6 @@ class Season:
     label: str
     emoji: str
     theme_color: str
-    ribbon_title: str
-    ribbon_text: str
     catalog_label: str
     hero_label: str
     filter_icon: str
@@ -39,8 +37,6 @@ SEASONS: dict[str, Season] = {
         label="Хэллоуин",
         emoji="🎃",
         theme_color="#1b0f2e",
-        ribbon_title="Хэллоуин в Сюрприз",
-        ribbon_text="Руми и Джину, Пираты и Моряки уже готовят костюмы — бронируйте праздник на октябрь.",
         catalog_label="Герои Хэллоуина",
         hero_label="Герой Хэллоуина",
         filter_icon="/surpriz/assets/seasons/halloween/filter.webp",
@@ -50,8 +46,6 @@ SEASONS: dict[str, Season] = {
         label="Новый год",
         emoji="🎄",
         theme_color="#0f2a4a",
-        ribbon_title="Новый год в Сюрприз",
-        ribbon_text="Бронируйте новогодний праздник заранее — лучшие даты разбирают первыми.",
         catalog_label="Новогодние герои",
         hero_label="Новогодний герой",
         filter_icon="/surpriz/assets/icons/categories/all-heroes.svg",
@@ -216,8 +210,6 @@ def season_public_payload(season: Season | None) -> dict[str, Any] | None:
         "id": season.id,
         "label": season.label,
         "emoji": season.emoji,
-        "ribbon_title": season.ribbon_title,
-        "ribbon_text": season.ribbon_text,
         "catalog_label": season.catalog_label,
         "hero_label": season.hero_label,
         "effects": effects_enabled(),

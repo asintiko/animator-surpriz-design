@@ -1,11 +1,9 @@
 /* Season layer for the public site. core/season_theme.py injects this script
    together with the #surpriz-season JSON only while a season is on.
-   - ribbon under the header (dismissible for the session);
    - badges on the cards of seasonal heroes, wherever the cards are rendered;
-   - «careful» effects: a few bats and a spider over the hero banner and
-     glowing pumpkins. At most six animated elements; phones get bats and
-     pumpkins only. Effects respect the admin switch, prefers-reduced-motion
-     and pause while the tab is hidden. */
+   - «careful» effects: a spider over the hero banner and a glowing pumpkin
+     in the footer; phones get the pumpkin only. Effects respect the admin
+     switch, prefers-reduced-motion and pause while the tab is hidden. */
 (function () {
   "use strict";
 
@@ -25,8 +23,6 @@
   var mobile = window.matchMedia("(max-width: 767px)");
   var reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
   var effectsOn = season.effects && root.getAttribute("data-season-effects") !== "off" && !reducedMotion.matches;
-  var ribbonKey = "surpriz-season-ribbon-" + season.id;
-  var animations = [];
 
   function el(tag, className, attributes) {
     var node = document.createElement(tag);
@@ -47,52 +43,6 @@
   function sprite(name, className) {
     if (!sprites[name]) return null;
     return el("img", className || "", { src: sprites[name], alt: "", "aria-hidden": "true", decoding: "async", draggable: "false" });
-  }
-
-  /* --- ribbon -------------------------------------------------------------- */
-
-  function mountRibbon(header) {
-    try {
-      if (window.sessionStorage.getItem(ribbonKey) === "closed") return;
-    } catch (error) { /* storage can be blocked; the ribbon just stays */ }
-
-    var ribbon = el("div", "season-ribbon", { role: "note" });
-    var title = el("strong");
-    title.textContent = (season.emoji ? season.emoji + " " : "") + season.ribbon_title;
-    var text = el("span");
-    text.textContent = season.ribbon_text;
-    var link = el("a", "", { href: "/catalog/?character=season-" + season.id });
-    link.textContent = season.catalog_label + " →";
-    var close = el("button", "season-ribbon__close", { type: "button", "aria-label": "Скрыть" });
-    close.textContent = "×";
-    close.addEventListener("click", function () {
-      ribbon.hidden = true;
-      root.classList.remove("has-season-ribbon");
-      try { window.sessionStorage.setItem(ribbonKey, "closed"); } catch (error) { /* ignore */ }
-    });
-    ribbon.append(title, text, link, close);
-    header.appendChild(ribbon);
-    // The page shifts down by the ribbon height, so nothing hides under it.
-    function measure() {
-      root.style.setProperty("--season-ribbon-h", ribbon.offsetHeight + "px");
-    }
-    measure();
-    root.classList.add("has-season-ribbon");
-    window.addEventListener("resize", measure, { passive: true });
-
-    // The ribbon floats over the page top; it tucks away as soon as the visitor scrolls.
-    var ticking = false;
-    function sync() {
-      ticking = false;
-      ribbon.classList.toggle("is-tucked", window.scrollY > 24);
-    }
-    window.addEventListener("scroll", function () {
-      if (!ticking) {
-        ticking = true;
-        window.requestAnimationFrame(sync);
-      }
-    }, { passive: true });
-    sync();
   }
 
   /* --- badges on seasonal heroes -------------------------------------------- */
@@ -160,60 +110,6 @@
 
   /* --- effects ---------------------------------------------------------------- */
 
-  function flightPath(width, height, fromLeft, lift) {
-    var startX = fromLeft ? -90 : width + 90;
-    var endX = fromLeft ? width + 90 : -90;
-    var y = height * lift;
-    var flip = fromLeft ? 1 : -1;
-    function scale(value) { return " scale(" + value * flip + "," + value + ")"; }
-    return [
-      { transform: "translate(" + startX + "px," + y + "px)" + scale(.7) },
-      { transform: "translate(" + (startX + (endX - startX) * .3) + "px," + (y - height * .16) + "px)" + scale(.95), offset: .3 },
-      { transform: "translate(" + (startX + (endX - startX) * .62) + "px," + (y + height * .06) + "px)" + scale(1), offset: .62 },
-      { transform: "translate(" + endX + "px," + (y - height * .22) + "px)" + scale(.8) }
-    ];
-  }
-
-  function launchBats(hero) {
-    if (!sprites.bat || !sprites["bat-glide"]) return;
-    var layer = el("div", "season-fx", { "aria-hidden": "true" });
-    var count = mobile.matches ? 2 : 3;
-    var bats = [];
-    for (var index = 0; index < count; index += 1) {
-      var bat = el("span", "season-bat");
-      bat.append(sprite("bat"), sprite("bat-glide"));
-      bat.style.opacity = "0";
-      layer.appendChild(bat);
-      bats.push(bat);
-    }
-    hero.classList.add("season-badge-host");
-    hero.appendChild(layer);
-
-    var flights = 0;
-    function fly() {
-      flights += 1;
-      var width = layer.clientWidth;
-      var height = layer.clientHeight;
-      bats.forEach(function (bat, index) {
-        var fromLeft = (index + flights) % 2 === 0;
-        var animation = bat.animate(flightPath(width, height, fromLeft, .18 + index * .14), {
-          delay: index * 900,
-          duration: (mobile.matches ? 5200 : 7600) + index * 1300,
-          easing: "cubic-bezier(.45, .05, .55, .95)",
-          fill: "both"
-        });
-        bat.style.opacity = "1";
-        animations.push(animation);
-        animation.onfinish = function () {
-          bat.style.opacity = "0";
-          animations.splice(animations.indexOf(animation), 1);
-        };
-      });
-      if (flights < 2) window.setTimeout(fly, 14000);
-    }
-    window.setTimeout(fly, 1200);
-  }
-
   function mountSpider(hero) {
     if (!sprites.spider || mobile.matches) return;
     var spider = el("div", "season-spider");
@@ -237,7 +133,7 @@
     window.setTimeout(function () { spider.classList.add("is-down"); }, 2600);
   }
 
-  function mountPumpkins() {
+  function mountPumpkin() {
     var footerBrand = document.querySelector(".surpriz-site-footer__brand");
     if (footerBrand) {
       var footerPumpkin = sprite("pumpkin", "season-pumpkin season-pumpkin--footer");
@@ -246,33 +142,21 @@
         footerBrand.appendChild(footerPumpkin);
       }
     }
-    var fab = document.querySelector(".mobile-dock__create");
-    if (fab && mobile.matches) {
-      var dockPumpkin = sprite("pumpkin", "season-pumpkin season-pumpkin--dock");
-      if (dockPumpkin) fab.appendChild(dockPumpkin);
-    }
   }
 
   function pauseWhenHidden() {
     document.addEventListener("visibilitychange", function () {
-      animations.forEach(function (animation) {
-        if (document.hidden) animation.pause();
-        else animation.play();
-      });
       root.classList.toggle("season-paused", document.hidden);
     });
   }
 
   function start() {
-    var header = document.querySelector("body > .header, header.header");
-    if (header && season.ribbon_title) mountRibbon(header);
     markCharacterPage();
     watchCards();
     if (!effectsOn) return;
     var hero = document.querySelector(".hero, .show-hero");
-    if (hero && typeof hero.animate === "function") launchBats(hero);
     if (hero) mountSpider(hero);
-    mountPumpkins();
+    mountPumpkin();
     pauseWhenHidden();
   }
 

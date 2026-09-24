@@ -152,7 +152,7 @@ class SeasonThemeTests(unittest.TestCase):
         self.landing_root = Path(self.temp_dir.name)
         season_dir = self.landing_root / "assets" / "seasons" / "halloween"
         (season_dir / "sprites").mkdir(parents=True)
-        for name in ("season.css", "home-desktop.avif", "home-mobile.webp", "logo.webp", "favicon.png", "detail-bg-desktop.webp", "sprites/bat.webp"):
+        for name in ("season.css", "home-desktop.avif", "home-mobile.webp", "logo.webp", "favicon.png", "detail-bg-desktop.webp", "sprites/spider.webp"):
             (season_dir / name).write_bytes(name.encode())
         (self.landing_root / "assets" / "seasons" / "season.js").write_text("/* js */")
         (self.landing_root / "assets" / "seasons" / "season.css").write_text("/* css */")
@@ -180,7 +180,7 @@ class SeasonThemeTests(unittest.TestCase):
         payload = json.loads(html[start : html.index("</script>", start)])
         self.assertEqual(payload["id"], "halloween")
         self.assertEqual(payload["characters"], ["rumi-jinu"])
-        self.assertEqual(list(payload["sprites"]), ["bat"])
+        self.assertEqual(list(payload["sprites"]), ["spider"])
         self.assertTrue(payload["effects"])
 
     def test_swaps_only_existing_seasonal_images(self) -> None:

@@ -21,7 +21,6 @@ html[data-season="halloween"] {
   --season-ink: var(--hw-night);
   --season-cream: var(--hw-cream);
   --season-accent: var(--hw-pumpkin);
-  --season-ribbon-bg: linear-gradient(90deg, #ff7a1a, #ff4d0b 55%, #6c1be3);
   --season-badge-bg: linear-gradient(120deg, #1b0f2e, #3a1a66);
   color-scheme: light;
 }
