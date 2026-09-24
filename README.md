@@ -78,3 +78,7 @@ Test flow:
 
 - Open `/register/`, enter name and phone, submit, then enter the 6-digit code from Telegram Verification Codes on `/auth/telegram-code/`.
 - Open `/login/`, enter the registered phone, submit, then enter the 6-digit Telegram code.
+
+## Google Calendar
+
+Admin page `/admin/calendar` connects the manager calendar through Google OAuth. Events in the calendar close time on the site (date and time come from the event, show programs and characters are recognised in the title/description); orders confirmed in the Telegram bot or the admin panel are written back to the calendar in the Telegram order-card format. The sync runs inside the Telegram worker (`python -m core.admin_notifications`) or standalone via `python -m core.google_calendar`. Setup steps and details: `docs/Google-Calendar.md`.

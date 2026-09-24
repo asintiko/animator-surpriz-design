@@ -89,6 +89,27 @@ from core.customer_store import (  # noqa: E402
     update_order_status,
     ORDER_STATUS_LABELS,
 )
+from core.google_calendar import (  # noqa: E402
+    GoogleCalendarError,
+    add_alias as add_calendar_alias,
+    build_authorization_url,
+    complete_authorization,
+    disconnect as disconnect_calendar,
+    enqueue_upcoming_confirmed_orders,
+    get_admin_payload as get_calendar_admin_payload,
+    import_calendar_events,
+    init_google_calendar,
+    list_calendars,
+    preview_recognition,
+    remove_alias as remove_calendar_alias,
+    resolve_redirect_uri,
+    run_sync_cycle,
+    save_client_credentials,
+    save_sync_settings,
+    select_calendar,
+    set_event_ignored,
+)
+from core.google_calendar_store import get_order_event_links  # noqa: E402
 from core.partner_store import (  # noqa: E402
     create_partner,
     delete_partner,
@@ -578,6 +599,81 @@ def _order_for_json(order: dict[str, Any]) -> dict[str, Any]:
     return value
 
 
+def _attach_calendar_links(orders: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    links = get_order_event_links(int(order["id"]) for order in orders if order.get("id"))
+    for order in orders:
+        order["calendar_event_link"] = links.get(int(order.get("id") or 0), "")
+    return orders
+
+
+def _calendar_sync_message(result: dict[str, Any]) -> tuple[bool, str]:
+    errors = [str(result[key]) for key in ("import_error", "export_error") if result.get(key)]
+    if errors:
+        return False, " ".join(errors)
+    parts: list[str] = []
+    imported = result.get("import") or {}
+    if not imported.get("skipped") and "total" in imported:
+        parts.append(f"Прочитано событий: {imported.get('total', 0)}, закрывают время: {imported.get('matched', 0)}.")
+    exported = result.get("export") or {}
+    if exported.get("processed"):
+        parts.append(f"Выгружено заказов: {exported.get('succeeded', 0)} из {exported.get('processed', 0)}.")
+    return True, " ".join(parts) or "Синхронизация выполнена."
+
+
+def _calendar_mutation(action: str, payload: dict[str, Any]):
+    if action == "save_client":
+        save_client_credentials(str(payload.get("client_id", "")), str(payload.get("client_secret", "")))
+        return jsonify(success=True, message="Данные приложения Google сохранены.")
+    if action == "oauth_start":
+        auth_url = build_authorization_url(resolve_redirect_uri(request.host_url))
+        return jsonify(success=True, auth_url=auth_url, message="Открываем Google…")
+    if action == "disconnect":
+        disconnect_calendar()
+        return jsonify(success=True, message="Google Календарь отключён.")
+    if action == "list_calendars":
+        return jsonify(success=True, calendars=list_calendars(), message="Календари загружены.")
+    if action == "select_calendar":
+        selected = select_calendar(str(payload.get("calendar_id", "")))
+        ok, message = True, f"Выбран календарь «{selected['summary']}»."
+        try:
+            import_calendar_events()
+        except GoogleCalendarError as exc:
+            ok, message = False, f"Календарь выбран, но прочитать события не удалось: {exc}"
+        return jsonify(success=ok, message=message)
+    if action == "save_settings":
+        values = payload.get("settings") if isinstance(payload.get("settings"), dict) else payload
+        save_sync_settings(values)
+        return jsonify(success=True, message="Настройки синхронизации сохранены.")
+    if action == "sync_now":
+        ok, message = _calendar_sync_message(run_sync_cycle(force_import=True))
+        return jsonify(success=ok, message=message)
+    if action == "backfill":
+        count = enqueue_upcoming_confirmed_orders()
+        ok, message = _calendar_sync_message(run_sync_cycle())
+        prefix = f"В очередь поставлено подтверждённых заказов: {count}."
+        return jsonify(success=ok, message=f"{prefix} {message}")
+    if action == "toggle_ignore":
+        set_event_ignored(str(payload.get("event_key", "")), bool(payload.get("ignored")))
+        try:
+            import_calendar_events()
+        except GoogleCalendarError:
+            pass
+        return jsonify(success=True, message="Событие обновлено.")
+    if action == "add_alias":
+        add_calendar_alias(str(payload.get("phrase", "")), str(payload.get("entity_slug", "")))
+        try:
+            import_calendar_events()
+        except GoogleCalendarError:
+            pass
+        return jsonify(success=True, message="Слово добавлено в словарь.")
+    if action == "delete_alias":
+        removed = remove_calendar_alias(int(payload.get("id") or 0))
+        return jsonify(success=removed, message="Слово удалено." if removed else "Слово не найдено.")
+    if action == "preview":
+        return jsonify(success=True, recognition=preview_recognition(str(payload.get("text", ""))), message="Готово.")
+    return jsonify(success=False, message="Операция не поддерживается."), 400
+
+
 def create_app() -> Flask:
     _initialize_idempotency_database()
     init_customer_store()
@@ -587,6 +683,7 @@ def create_app() -> Flask:
     init_recommendation_store()
     init_promotion_store()
     init_admin_notifications_store()
+    init_google_calendar()
     app = Flask(__name__)
     app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1)
     app.secret_key = _required_secret()
@@ -795,6 +892,7 @@ def create_app() -> Flask:
                 date_to=request.args.get("date_to", ""),
                 customer_id=int(request.args["customer_id"]) if request.args.get("customer_id", "").isdigit() else None,
             )
+            _attach_calendar_links(orders)
             return jsonify(
                 success=True,
                 items=orders,
@@ -880,6 +978,8 @@ def create_app() -> Flask:
                 gateway_token_masked=gateway_token_masked(),
                 recipients=list_recipients(),
             )
+        if section == "calendar":
+            return jsonify(success=True, **get_calendar_admin_payload(request.host_url))
         if section == "settings":
             public_settings = get_public_settings()
             party_builder_settings = get_party_builder_settings()
@@ -1081,6 +1181,12 @@ def create_app() -> Flask:
                     connection.commit()
                 return jsonify(success=cursor.rowcount > 0)
 
+        if section == "calendar":
+            try:
+                return _calendar_mutation(action, payload)
+            except GoogleCalendarError as exc:
+                return jsonify(success=False, message=str(exc)), 400
+
         if section == "notifications":
             if action == "add_recipient":
                 return jsonify(add_recipient(str(payload.get("chat_id", "")), str(payload.get("label", ""))))
@@ -1106,6 +1212,22 @@ def create_app() -> Flask:
             return jsonify(success=True)
 
         return jsonify(success=False, message="Операция не поддерживается."), 400
+
+    @app.get("/api/v2/admin/google-calendar/callback")
+    def google_calendar_callback():
+        if not _current_admin():
+            return _admin_denied()
+        if request.args.get("error"):
+            return jsonify(success=False, message="Доступ к Google Календарю не выдан."), 400
+        try:
+            result = complete_authorization(request.args.get("code", ""), request.args.get("state", ""))
+        except GoogleCalendarError as exc:
+            return jsonify(success=False, message=str(exc)), 400
+        try:
+            import_calendar_events()
+        except GoogleCalendarError:
+            pass
+        return jsonify(success=True, account_email=result.get("account_email", ""), message="Google Календарь подключён.")
 
     @app.get("/api/v2/account")
     def account():

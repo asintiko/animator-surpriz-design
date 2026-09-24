@@ -1446,11 +1446,33 @@ def handle_callback(update: dict[str, Any]) -> dict[str, Any]:
         label = "Уже подтверждён" if confirmation_state == "confirmed" else "Уже не подтверждён"
     _answer_callback(callback_id, f"{label}: {public_id}")
     sync_order_messages(int(result.get("order_id") or 0))
+    if result.get("changed"):
+        # The order is already queued for Google Calendar in the same
+        # transaction; wake the sync thread so the event appears right away.
+        _wake_calendar_sync()
     return {
         "success": True,
         "changed": bool(result.get("changed")),
         "message": f"{public_id} → {confirmation_state}",
     }
+
+
+def _wake_calendar_sync() -> None:
+    try:
+        from .google_calendar import wake_worker
+
+        wake_worker()
+    except Exception:
+        return
+
+
+def _start_calendar_sync() -> None:
+    try:
+        from .google_calendar import start_worker_in_background
+
+        start_worker_in_background()
+    except Exception as exc:
+        print(f"[gcal] worker not started after {type(exc).__name__}", flush=True)
 
 
 def _handle_message(message: dict[str, Any]) -> dict[str, Any]:
@@ -1667,6 +1689,7 @@ def start_polling_in_background() -> None:
         return
     if _POLLING_THREAD is not None:
         return
+    _start_calendar_sync()
     if not _bot_token():
         return
     import threading
@@ -1679,6 +1702,9 @@ def run_polling_forever() -> None:
     """Run Telegram polling in one blocking process."""
     global _POLLING_STOP
     init_admin_notifications_store()
+    # The Telegram worker is the one long-running background process in
+    # production, so it also hosts the Google Calendar sync thread.
+    _start_calendar_sync()
     _POLLING_STOP = False
     _poll_loop()
 
