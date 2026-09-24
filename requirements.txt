@@ -4,3 +4,4 @@ Flask-Compress>=1.15
 gunicorn>=22
 python-dotenv>=1.0
 requests>=2.32
+cryptography>=46,<47

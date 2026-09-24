@@ -16,6 +16,7 @@
 | `categories` | Категории (auto-tag) |
 | `tags` | Теги |
 | `notifications` | Telegram bot+gateway токены, recipients ([[Telegram-Integration]]) |
+| `calendar` | Google Календарь: подключение, настройки, события, словарь ([[Google-Calendar]]) |
 | `settings` | Глобальные флаги |
 
 ## Auto-refresh заказов

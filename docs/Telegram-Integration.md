@@ -23,6 +23,10 @@
 
 `sendLocation` отдельным сообщением, если адрес распарсился в координаты.
 
+### Google Календарь
+
+«✅ Подтвердить» ставит заказ в очередь выгрузки в Google Календарь в той же транзакции, «↩️ Снять подтверждение» и «❌ Отклонить» — удаляют событие. Поток синхронизации живёт в этом же воркере, см. [[Google-Calendar]].
+
 ### Дедуп callback'ов
 
 3 worker'а gunicorn раньше получали один callback трижды. Решение: таблица `admin_telegram_processed_updates` с PRIMARY KEY на `update_id`, `INSERT INTO ... ON CONFLICT DO NOTHING` для атомарного claim.
