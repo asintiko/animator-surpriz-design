@@ -14,7 +14,7 @@ try:
 except Exception:
     pass
 
-from flask import Flask, abort, jsonify, redirect, render_template, request, send_file, send_from_directory, session
+from flask import Flask, Response, abort, jsonify, redirect, render_template, request, send_file, send_from_directory, session
 from flask_compress import Compress
 from werkzeug.middleware.proxy_fix import ProxyFix
 
@@ -465,9 +465,9 @@ def _landing_page_exists(filename: str) -> bool:
 
 
 def _serve_landing_page(filename: str):
-    # The season hook rewrites the HTML, so conditional handling happens there
-    # on the final body instead of on the file.
-    response = send_from_directory(SURPRIZ_LANDING_ROOT, filename, conditional=False, etag=False)
+    # Read into memory, not streamed: the season hook rewrites the HTML, and the
+    # conditional handling happens there on the final body instead of on the file.
+    response = Response((SURPRIZ_LANDING_ROOT / filename).read_bytes(), mimetype="text/html")
     response.surpriz_conditional = True
     response.headers["Cache-Control"] = "private, no-cache, max-age=0, must-revalidate"
     return response

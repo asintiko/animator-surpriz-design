@@ -7,7 +7,7 @@ import unittest
 from pathlib import Path
 from unittest.mock import patch
 
-from flask import Flask, Response
+from flask import Flask, Response, send_file
 
 from core import catalog_store, seasons
 from core.catalog_site import build_frontend_catalog_payload
@@ -232,6 +232,28 @@ class SeasonThemeTests(unittest.TestCase):
             # A cached regular page is not reused once the season is on.
             self.assertEqual(client.get("/", headers={"If-None-Match": plain.headers["ETag"]}).status_code, 200)
             self.assertNotIn(b"data-season", client.get("/admin/").data)
+
+
+class SeasonHookStreamTests(unittest.TestCase):
+    def test_streamed_files_are_not_buffered(self) -> None:
+        temp_dir = tempfile.TemporaryDirectory()
+        self.addCleanup(temp_dir.cleanup)
+        page = Path(temp_dir.name) / "page.html"
+        page.write_text(PAGE, encoding="utf-8")
+        app = Flask(__name__)
+        register_season_theme(app, Path(temp_dir.name))
+
+        @app.get("/file")
+        def file_page():
+            return send_file(page, mimetype="text/html")
+
+        with (
+            patch.object(seasons, "active_season", return_value=HALLOWEEN),
+            patch.object(seasons, "seasonal_character_slugs", return_value=[]),
+        ):
+            response = app.test_client().get("/file")
+            self.assertNotIn(b"data-season", response.data)
+            response.close()
 
 
 class SeasonCatalogPayloadTests(unittest.TestCase):

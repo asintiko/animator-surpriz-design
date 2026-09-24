@@ -158,18 +158,17 @@ def _is_public_html(response: Response) -> bool:
 def register_season_theme(app: Flask, landing_root: Path) -> None:
     @app.after_request
     def apply_season_theme(response: Response) -> Response:
-        if not _is_public_html(response):
+        # Streamed bodies (send_file) are left alone: buffering them here would
+        # replace the file iterator before WSGI gets the chance to close it.
+        if not _is_public_html(response) or response.is_streamed:
             return response
         season = seasons.active_season()
         if season is not None:
-            # Landing pages come from send_from_directory as a file stream.
-            response.direct_passthrough = False
             html = response.get_data(as_text=True)
             response.set_data(decorate_html(html, season, landing_root, effects=seasons.effects_enabled()))
         if getattr(response, "surpriz_conditional", False):
             # The body depends on the season, so the ETag must come from the
             # final HTML, not from the file on disk.
-            response.direct_passthrough = False
             response.add_etag(overwrite=True)
             response.make_conditional(request)
         return response
