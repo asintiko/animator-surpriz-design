@@ -86,8 +86,7 @@ body.v2-landing-shell a {
 }
 
 /* «Все персонажи» / «Все шоу» — как «Смотреть все» на главной. */
-body.v2-landing-shell .v2-section-head__link,
-body.v2-landing-shell .sp-bandhead__link {
+body.v2-landing-shell .v2-section-head__link {
   color: var(--detail-violet);
   font-weight: 800;
 }
@@ -301,55 +300,6 @@ body.v2-landing-shell .v2-char-tile__more {
   body.v2-landing-shell .v2-charpage__info h1 {
     font-size: clamp(30px, 8vw, 42px);
   }
-}
-
-/* ── Страница шоу-программы: те же акценты, что в каталоге ────── */
-
-body.v2-landing-shell .sp-title {
-  color: var(--detail-ink);
-  font: 700 clamp(36px, 4vw, 60px)/1.0 "Balsamiq Sans", sans-serif;
-  letter-spacing: -.045em;
-}
-
-body.v2-landing-shell .sp-eyebrow,
-body.v2-landing-shell .sp-kicker {
-  color: var(--detail-orange);
-  font-weight: 800;
-  letter-spacing: .06em;
-}
-
-body.v2-landing-shell .sp-price,
-body.v2-landing-shell .sp-buy__price {
-  color: var(--detail-orange);
-  font-family: "Balsamiq Sans", sans-serif;
-  letter-spacing: -.03em;
-}
-
-body.v2-landing-shell .sp-hero__frame,
-body.v2-landing-shell .sp-buy,
-body.v2-landing-shell .sp-addon,
-body.v2-landing-shell .sp-band {
-  border-radius: 26px;
-}
-
-body.v2-landing-shell .sp-hero__frame {
-  box-shadow: 0 18px 46px rgba(54, 28, 96, .13);
-  overflow: hidden;
-}
-
-body.v2-landing-shell .sp-addon__name,
-body.v2-landing-shell .sp-bandhead__title {
-  color: var(--detail-ink);
-  font-family: "Balsamiq Sans", sans-serif;
-  letter-spacing: -.03em;
-}
-
-body.v2-landing-shell .sp-buy__cta {
-  background: var(--detail-cta);
-  border-radius: 10px;
-  box-shadow: 0 12px 24px rgba(255, 79, 11, .22);
-  color: #fff;
-  font-weight: 900;
 }
 
 /* ── Крупнее фото героя, как карточки на главной ──────────────── */

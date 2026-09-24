@@ -9,6 +9,7 @@ from .addon_store import list_program_addons_for_public
 from .catalog_store import (
     ENTITY_TYPE_CHARACTER,
     ENTITY_TYPE_SHOW_PROGRAM,
+    FIXED_CAST_PROGRAM_DETAILS,
     get_category_by_slug,
     get_character_by_slug,
     get_tag_by_slug,
@@ -16,13 +17,18 @@ from .catalog_store import (
     list_characters,
     list_characters_for_public,
     list_tags,
+    show_features_from_text,
 )
 from .config import STATIC_ROOT
-from .customer_store import list_show_programs_for_public, list_show_programs_grouped_for_public
+from .customer_store import (
+    calculate_program_character_surcharge,
+    list_show_programs_for_public,
+    list_show_programs_grouped_for_public,
+)
 from .loader import PageBundle
 from .partner_store import list_partners
 from .recommendation_store import HOMEPAGE_SLOTS, get_featured_slugs, sort_by_featured
-from .v2_theme import PHONE_DISPLAY, PHONE_TEL, TELEGRAM_URL, render_v2_page
+from .v2_theme import PHONE_DISPLAY, PHONE_TEL, TELEGRAM_URL, _asset_version, render_v2_page
 
 SHOW_PROGRAMS_ROUTE = "/show-programs/"
 DEFAULT_OG_IMAGE = "/surpriz/assets/img/show-programs/hero-desktop.webp"
@@ -77,6 +83,11 @@ _GENERATED_CHARACTER_MEDIA_RE = re.compile(
 _CURATED_CHARACTER_MEDIA_RE = re.compile(
     r"^(?P<base>/surpriz/assets/img/characters/.+?)-(?:800|1200)\.webp(?:[?#].*)?$"
 )
+SHOW_DETAIL_ASSET_DIR = STATIC_ROOT / "v2" / "show-detail"
+_SHOW_CARD_MEDIA_RE = re.compile(
+    r"^(?P<base>/surpriz/assets/img/show-programs/cards/.+?)-1200\.webp(?:[?#].*)?$"
+)
+SHOW_DETAIL_FEATURED_CHARACTERS = 8
 
 
 def _build_page_bundle(
@@ -529,6 +540,269 @@ def _show_addon_summary(addon: dict[str, object]) -> dict[str, object]:
     return item
 
 
+def _plural(count: int, forms: tuple[str, str, str]) -> str:
+    tail = abs(count) % 100
+    if 11 <= tail <= 14:
+        return forms[2]
+    tail %= 10
+    if tail == 1:
+        return forms[0]
+    if 2 <= tail <= 4:
+        return forms[1]
+    return forms[2]
+
+
+def _srcset(url_for_width, widths: list[int], image_format: str) -> str:
+    return ", ".join(f"{url_for_width(width, image_format)} {width}w" for width in widths)
+
+
+def _show_detail_image(path: object) -> dict[str, str] | None:
+    """Responsive sources for any show or character image stored in the catalog."""
+    path = str(path or "").strip()
+    if not path:
+        return None
+    generated = _GENERATED_CHARACTER_MEDIA_RE.fullmatch(path)
+    card = _SHOW_CARD_MEDIA_RE.fullmatch(path)
+    if generated:
+        base = generated.group("base")
+        maximum_width = int(generated.group("width"))
+        widths = sorted({width for width in (480, 768, 1280, maximum_width) if width <= maximum_width})
+
+        def url_for_width(width: int, image_format: str) -> str:
+            return f"{base}/{width}.{image_format}"
+    elif card:
+        base = card.group("base")
+        widths = [480, 768, 1200]
+
+        def url_for_width(width: int, image_format: str) -> str:
+            return f"{base}-{width}.{image_format}?v={FRONTEND_SHOW_IMAGE_VERSION}"
+    else:
+        sources = _frontend_character_image_sources({"hero_file_path": path})
+        if not sources:
+            return {"src": path, "avif": "", "webp": ""}
+        return {
+            "src": str(sources["fallback"]),
+            "avif": ", ".join(f"{item['src']} {item['width']}w" for item in sources["avif"]),
+            "webp": ", ".join(f"{item['src']} {item['width']}w" for item in sources["webp"]),
+        }
+    return {
+        "src": url_for_width(widths[-1], "webp"),
+        "avif": _srcset(url_for_width, widths, "avif"),
+        "webp": _srcset(url_for_width, widths, "webp"),
+    }
+
+
+def _show_detail_assets() -> dict[str, object]:
+    """Generated 3D icons and page backgrounds, picked up only when the files exist."""
+
+    def url(path) -> str:
+        return f"/v2/show-detail/{path.relative_to(SHOW_DETAIL_ASSET_DIR).as_posix()}?v={int(path.stat().st_mtime)}"
+
+    icons_dir = SHOW_DETAIL_ASSET_DIR / "icons"
+    icons = {path.stem: url(path) for path in sorted(icons_dir.glob("*.webp"))} if icons_dir.is_dir() else {}
+    backgrounds = {
+        name: url(SHOW_DETAIL_ASSET_DIR / f"{name}.webp")
+        for name in ("bg-desktop", "bg-mobile")
+        if (SHOW_DETAIL_ASSET_DIR / f"{name}.webp").is_file()
+    }
+    return {"icons": icons, "backgrounds": backgrounds}
+
+
+def _show_program_features(show: dict[str, object], *, skip_gift_choice: bool) -> list[dict[str, str]]:
+    """Admin-edited items when present, otherwise the legacy «Что входит» text."""
+    features = list(show.get("program_features") or []) or show_features_from_text(show.get("included_items"))
+    if skip_gift_choice:
+        # The gift has its own tile, so a «маски или шары» line would repeat it.
+        features = [item for item in features if "маски или шары" not in item["text"].casefold()]
+    return features
+
+
+def _show_cast_members(show: dict[str, object]) -> list[str]:
+    return list(show.get("program_cast") or FIXED_CAST_PROGRAM_DETAILS.get(str(show.get("slug") or ""), ()))
+
+
+def _show_gift_label(show: dict[str, object]) -> str:
+    for group in show.get("gift_choice_groups") or []:
+        names = [str(addon.get("name") or "").strip() for addon in group.get("addons") or []]
+        names = [name for name in names if name]
+        if names:
+            label = " или ".join(names).casefold()
+            return label[0].upper() + label[1:]
+    bundles = [str(addon.get("name") or "").strip() for addon in show.get("gift_bundles") or []]
+    return ", ".join(name for name in bundles if name)
+
+
+def _show_price_tiers(show: dict[str, object]) -> list[dict[str, object]]:
+    """Price by hero count, priced exactly like the builder does it."""
+    included = int(show.get("included_characters_count") or 0)
+    if _show_cast_members(show) or included <= 0 or int(show.get("extra_character_price_3") or 0) <= 0:
+        return []
+    base_price = int(show.get("base_price") or 0)
+    tiers: list[dict[str, object]] = []
+    for count in range(included, included + 3):
+        tiers.append(
+            {
+                "count": count,
+                "label": f"{count} {_plural(count, ('герой', 'героя', 'героев'))}",
+                "price_label": _format_money(base_price + calculate_program_character_surcharge(show, count)),
+            }
+        )
+    return tiers
+
+
+def _show_gallery(show: dict[str, object]) -> list[dict[str, object]]:
+    hero_path = str(show.get("hero_file_path") or "").strip()
+    paths: list[str] = [hero_path] if hero_path else []
+    media = sorted(
+        (item for item in show.get("media") or [] if str(item.get("media_type") or "image") == "image"),
+        key=lambda item: int(item.get("sort_order") or 0),
+    )
+    paths.extend(str(item.get("file_path") or "").strip() for item in media)
+    desktop = _frontend_image_position(show)
+    mobile = _frontend_mobile_image_position(show)
+    hero_style = f"--pos: {desktop['x']}% {desktop['y']}%; --pos-m: {mobile['x']}% {mobile['y']}%"
+    gallery: list[dict[str, object]] = []
+    for path in dict.fromkeys(path for path in paths if path):
+        image = _show_detail_image(path)
+        if image:
+            gallery.append({**image, "style": hero_style if path == hero_path else ""})
+    return gallery
+
+
+def _show_variants(show: dict[str, object], candidates: list[dict[str, object]]) -> list[dict[str, object]]:
+    group = str(show.get("variant_group_slug") or "").strip()
+    if not group:
+        return []
+    siblings = sorted(
+        (item for item in candidates if str(item.get("variant_group_slug") or "").strip() == group),
+        key=lambda item: (int(item.get("sort_order") or 0), str(item.get("name") or "")),
+    )
+    if len(siblings) < 2:
+        return []
+    variants: list[dict[str, object]] = []
+    for item in siblings:
+        slug = str(item.get("slug") or "")
+        variants.append(
+            {
+                "slug": slug,
+                "label": str(item.get("variant_label") or item.get("name") or "").strip(),
+                "name": str(item.get("name") or "").strip(),
+                "route": f"{SHOW_PROGRAMS_ROUTE}{slug}/",
+                "is_current": slug == show.get("slug"),
+                "price_label": _format_money(int(item.get("base_price") or 0)),
+                "duration_label": _format_duration(int(item.get("default_duration_minutes") or 0)),
+                "summary": str(item.get("short_description") or "").strip(),
+                "features": _show_program_features(item, skip_gift_choice=True),
+            }
+        )
+    return variants
+
+
+def _show_cast(show: dict[str, object]) -> dict[str, object]:
+    fixed = _show_cast_members(show)
+    if fixed:
+        count = len(fixed)
+        items = [item.casefold() for item in _split_show_text(str(show.get("included_items") or "").replace(",", ";"))]
+        return {
+            "kind": "fixed",
+            "members": list(fixed),
+            "with_dj": any("диджей" in item and "дополнительн" not in item for item in items),
+            "fact": fixed[0] if count == 1 else f"{count} {_plural(count, ('артист', 'артиста', 'артистов'))} в образах",
+        }
+    included = int(show.get("included_characters_count") or 0)
+    if included > 0:
+        return {
+            "kind": "choice",
+            "count": included,
+            "fact": f"{included} {_plural(included, ('герой', 'героя', 'героев'))} на выбор",
+            "note": (
+                f"{included} {_plural(included, ('герой входит', 'героя входят', 'героев входят'))} в цену — "
+                "выберите любых из каталога. Нажмите на героя, и конструктор откроется "
+                "с этой программой и выбранным героем."
+            ),
+        }
+    return {"kind": "none"}
+
+
+_ORDINAL_HERO = {2: "Второй", 3: "Третий", 4: "Четвёртый", 5: "Пятый"}
+
+
+def _show_price_note(show: dict[str, object], tiers: list[dict[str, object]]) -> str:
+    if not tiers:
+        return ""
+    included = int(tiers[0]["count"])
+    extra = _format_money(int(show.get("extra_character_price_3") or 0))
+    ordinal = _ORDINAL_HERO.get(included + 1, "Следующий")
+    return f"{tiers[0]['label'].capitalize()} уже в цене. {ordinal} — плюс {extra}."
+
+
+def _show_variants_note(variants: list[dict[str, object]]) -> str:
+    durations = {str(item["duration_label"]) for item in variants}
+    if len(durations) == 1:
+        return f"Все форматы длятся {durations.pop()} и отличаются наполнением — выберите тот, что подходит вашему празднику."
+    return "Форматы отличаются длительностью и наполнением — выберите тот, что подходит вашему празднику."
+
+
+def _show_featured_characters(show_slug: str) -> tuple[list[dict[str, object]], int]:
+    rows = list_characters_for_public(entity_type=ENTITY_TYPE_CHARACTER)
+    by_slug = {str(item.get("slug") or ""): item for item in rows}
+    curated = get_featured_slugs(ENTITY_TYPE_CHARACTER) or list(FRONTEND_HOMEPAGE_CHARACTER_SLUGS)
+    ordered = [by_slug[slug] for slug in curated if slug in by_slug]
+    curated_slugs = set(curated)
+    ordered.extend(item for item in rows if str(item.get("slug") or "") not in curated_slugs)
+    characters: list[dict[str, object]] = []
+    for item in ordered:
+        image = _show_detail_image(item.get("hero_file_path"))
+        if not image:
+            continue
+        slug = str(item.get("slug") or "")
+        position = _frontend_image_position(item)
+        characters.append(
+            {
+                "name": str(item.get("name") or "").strip(),
+                "image": image,
+                "position": f"{position['x']}% {position['y']}%",
+                "href": f"/party-builder/?{urlencode({'program': show_slug, 'character': slug})}",
+            }
+        )
+        if len(characters) >= SHOW_DETAIL_FEATURED_CHARACTERS:
+            break
+    return characters, len(rows)
+
+
+def _show_faq(show: dict[str, object], tiers: list[dict[str, object]], cast: dict[str, object]) -> list[dict[str, str]]:
+    name = str(show.get("name") or "")
+    price = _format_money(int(show.get("base_price") or 0))
+    duration = str(show.get("duration_label") or "")
+    if tiers:
+        extra = _format_money(int(show.get("extra_character_price_3") or 0))
+        count = int(cast.get("count") or 0)
+        price_answer = (
+            f"{price} за {duration}, {count} {_plural(count, ('герой входит', 'героя входят', 'героев входят'))} в цену. "
+            f"Следующий герой — плюс {extra}. Итоговая сумма зависит от числа героев и длительности "
+            "и видна сразу в конструкторе праздника."
+        )
+    elif cast.get("kind") == "fixed":
+        price_answer = f"{price} за {duration} — это цена за весь состав. Итоговая сумма видна сразу в конструкторе праздника."
+    else:
+        price_answer = f"{price} за {duration}. Итоговая сумма видна сразу в конструкторе праздника."
+    return [
+        {"question": f"Сколько стоит «{name}»?", "answer": price_answer},
+        {"question": "Нужна ли предоплата?", "answer": "Нет. Оплата после мероприятия — наличными или переводом на карту."},
+        {
+            "question": "За сколько дней нужно бронировать праздник?",
+            "answer": (
+                "Обычно за 3–7 дней. Онлайн-бронирование доступно минимум за 24 часа до начала. "
+                f"Если праздник сегодня или ночью — звоните напрямую: {PHONE_DISPLAY}."
+            ),
+        },
+        {
+            "question": "Куда вы выезжаете?",
+            "answer": "Ташкент и Ташкентская область: квартиры и дома, детские сады, школы, кафе, корпоративные площадки.",
+        },
+    ]
+
+
 def _build_variant_summary(variant: dict[str, object], summary_by_slug: dict[str, dict[str, object]]) -> dict[str, object]:
     """Combine raw variant data with the enriched summary fields used by the catalog template."""
     slug = str(variant.get("slug") or "").strip()
@@ -763,10 +1037,52 @@ def build_show_program_page(slug: str) -> PageBundle | None:
             break
         related_shows.append(_show_program_summary(candidate))
 
+    for item in related_shows:
+        position = _frontend_image_position(item)
+        item["image"] = _show_detail_image(item.get("hero_file_path"))
+        item["image_style"] = f"object-position: {position['x']}% {position['y']}%"
+
+    variants = _show_variants(show, candidates)
+    gift_label = _show_gift_label(show)
+    cast = _show_cast(show)
+    price_tiers = _show_price_tiers(show)
+    restrictions = list(show.get("restrictions_list") or [])
+    indoor_only = any("помещени" in item.casefold() for item in restrictions)
+    facts = [{"icon": "clock", "label": "Длительность", "value": show["duration_label"]}]
+    if cast["kind"] != "none":
+        facts.append({"icon": "users", "label": "Состав" if cast["kind"] == "fixed" else "Герои", "value": cast["fact"]})
+    if gift_label:
+        facts.append({"icon": "gift", "label": "Подарок", "value": gift_label})
+    facts.append(
+        {"icon": "home", "label": "Площадка", "value": "Только в помещении"}
+        if indoor_only
+        else {"icon": "map-pin", "label": "Выезд", "value": "Ташкент и область"}
+    )
+    featured_characters, characters_total = (
+        _show_featured_characters(str(show["slug"])) if cast["kind"] == "choice" else ([], 0)
+    )
+
     content_html = render_template(
         "site/show_program_content.html",
         show=show,
         related_shows=related_shows,
+        gallery=_show_gallery(show),
+        variants=variants,
+        variants_note=_show_variants_note(variants) if variants else "",
+        features=_show_program_features(show, skip_gift_choice=bool(gift_label)),
+        gift_label=gift_label,
+        facts=facts[:4],
+        cast=cast,
+        price_tiers=price_tiers,
+        price_value=_format_money(int(show.get("base_price") or 0)),
+        restrictions=restrictions,
+        featured_characters=featured_characters,
+        characters_total=characters_total,
+        faq=_show_faq(show, price_tiers, cast),
+        price_note=_show_price_note(show, price_tiers),
+        characters_label=f"Все {characters_total} {_plural(characters_total, ('герой', 'героя', 'героев'))}",
+        stylesheet_version=_asset_version("v2/show-detail.css"),
+        assets=_show_detail_assets(),
         phone_display=PHONE_DISPLAY,
         phone_tel=PHONE_TEL,
         telegram_url=TELEGRAM_URL,

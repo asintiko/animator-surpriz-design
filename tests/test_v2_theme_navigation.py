@@ -37,6 +37,12 @@ class V2ThemeNavigationTests(unittest.TestCase):
         v2_index = suffix.index('/v2/v2.js')
         self.assertLess(navigation_index, v2_index)
 
+    def test_legacy_site_pages_are_removed_from_header_navigation(self) -> None:
+        header = build_header_html(active="home")
+
+        self.assertNotIn('href="/prices/"', header)
+        self.assertNotIn('href="/contacts/"', header)
+
     def test_inline_icon_sprite_contains_selection_checkmark(self) -> None:
         prefix = build_body_prefix_html()
 

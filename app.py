@@ -42,10 +42,7 @@ from core.forms import handle_admin_ajax
 from core.loader import build_runtime_page_bundle, load_page_bundle
 from core.routing import resolve_route_redirect
 from core.static_assets import resolve_static_file
-from core.v2_pages import build_about_page, build_contacts_page, build_home_page, build_prices_page
-from core.v3_pages import build_cinematic_page
-from core.v4_pages import build_v4_page
-from core.v5_pages import build_v5_page
+from core.v2_pages import build_home_page
 
 
 def load_local_env() -> None:
@@ -621,43 +618,14 @@ def v2_home():
     return render_public_page(page)[0]
 
 
-@app.get("/prices/")
-def v2_prices():
-    page = build_prices_page()
-    if not page:
-        abort(404)
-    return render_public_page(page)[0]
-
-
-@app.get("/contacts/")
-def v2_contacts():
-    page = build_contacts_page()
-    if not page:
-        abort(404)
-    return render_public_page(page)[0]
-
-
-@app.get("/o-nas/")
-def v2_about():
-    page = build_about_page()
-    if not page:
-        abort(404)
-    return render_public_page(page)[0]
-
-
-@app.get("/v3/")
-def v3_cinematic():
-    return build_cinematic_page()
-
-
-@app.get("/v4/")
-def v4_mobile_catalog():
-    return build_v4_page()
-
-
-@app.get("/v5/")
-def v5_final_concept():
-    return build_v5_page()
+LEGACY_SITE_REDIRECTS = {
+    "prices": "/show-programs/",
+    "contacts": "/",
+    "o-nas": "/",
+    "v3": "/",
+    "v4": "/",
+    "v5": "/",
+}
 
 
 _TEXT_STATIC_MIMETYPES = {

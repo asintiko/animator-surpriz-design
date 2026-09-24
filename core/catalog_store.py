@@ -635,6 +635,133 @@ def _ensure_character_ensemble_columns() -> None:
             connection.commit()
 
 
+#: 3D icons the show page can draw next to an «Что входит» item; the files live in
+#: static/v2/show-detail/icons/<name>.webp and the admin offers exactly this set.
+SHOW_FEATURE_ICONS: tuple[str, ...] = (
+    "note", "users", "sparkles", "confetti", "star", "wand", "clock", "gift",
+    "mask", "box", "map-pin", "home", "calendar", "cash", "info", "party-hat",
+)
+SHOW_FEATURE_DEFAULT_ICON = "party-hat"
+SHOW_FEATURES_LIMIT = 20
+SHOW_FEATURE_TEXT_LIMIT = 160
+SHOW_CAST_LIMIT = 12
+SHOW_CAST_NAME_LIMIT = 80
+# First match wins, so the narrow phrases go before the broad ones
+# («аквагример работает 1 час до…» is a schedule note, not the service itself).
+_SHOW_FEATURE_ICON_RULES: tuple[tuple[tuple[str, ...], str], ...] = (
+    (("час до",), "clock"),
+    (("аквагрим", "рисун"), "wand"),
+    (("диджей",), "note"),
+    (("прожектор",), "star"),
+    (("лент", "серпантин"), "confetti"),
+    (("пузыр", "дым"), "sparkles"),
+    (("браслет", "попкорн"), "gift"),
+    (("реквизит",), "box"),
+    (("маски", "шары"), "mask"),
+    (("ведущ", "персонаж", "артист", "химик", "охранник"), "users"),
+)
+
+
+def _ensure_show_program_content_columns() -> None:
+    columns = {
+        "program_features": "TEXT NOT NULL DEFAULT ''",
+        "program_cast": "TEXT NOT NULL DEFAULT ''",
+    }
+    with _get_connection() as connection:
+        added = False
+        for column, definition in columns.items():
+            if _has_column(connection, "managed_characters", column):
+                continue
+            connection.execute(f"ALTER TABLE managed_characters ADD COLUMN {column} {definition}")
+            added = True
+        if added:
+            connection.commit()
+
+
+def guess_show_feature_icon(text: str) -> str:
+    lowered = text.casefold()
+    for needles, icon in _SHOW_FEATURE_ICON_RULES:
+        if any(needle in lowered for needle in needles):
+            return icon
+    return SHOW_FEATURE_DEFAULT_ICON
+
+
+def show_features_from_text(value: Any) -> list[dict[str, str]]:
+    """Turn the legacy comma/line separated «Что входит» text into icon items."""
+    features: list[dict[str, str]] = []
+    for chunk in re.split(r"[\n;,]+", str(value or "")):
+        text = chunk.strip(" -•\t.")
+        if not text:
+            continue
+        text = text[0].upper() + text[1:]
+        features.append({"icon": guess_show_feature_icon(text), "text": text})
+    return features[:SHOW_FEATURES_LIMIT]
+
+
+def normalize_show_features(value: Any) -> list[dict[str, str]]:
+    """Accept the admin list (or its JSON form) and keep only valid, non-empty items."""
+    if isinstance(value, str):
+        try:
+            value = json.loads(value) if value.strip() else []
+        except json.JSONDecodeError:
+            return []
+    if not isinstance(value, list):
+        return []
+    features: list[dict[str, str]] = []
+    for item in value:
+        if not isinstance(item, dict):
+            continue
+        text = " ".join(str(item.get("text") or "").split())
+        if not text:
+            continue
+        if len(text) > SHOW_FEATURE_TEXT_LIMIT:
+            raise ValueError(f"Пункт «Что входит» длиннее {SHOW_FEATURE_TEXT_LIMIT} символов.")
+        icon = str(item.get("icon") or "").strip()
+        features.append({"icon": icon if icon in SHOW_FEATURE_ICONS else guess_show_feature_icon(text), "text": text})
+    if len(features) > SHOW_FEATURES_LIMIT:
+        raise ValueError(f"В «Что входит» можно указать не больше {SHOW_FEATURES_LIMIT} пунктов.")
+    return features
+
+
+def normalize_show_cast(value: Any) -> list[str]:
+    if isinstance(value, str):
+        try:
+            parsed = json.loads(value) if value.strip().startswith("[") else None
+        except json.JSONDecodeError:
+            parsed = None
+        value = parsed if isinstance(parsed, list) else value.split("\n")
+    if not isinstance(value, list):
+        return []
+    members: list[str] = []
+    for item in value:
+        name = " ".join(str(item or "").split())
+        if not name:
+            continue
+        if len(name) > SHOW_CAST_NAME_LIMIT:
+            raise ValueError(f"Имя в составе длиннее {SHOW_CAST_NAME_LIMIT} символов.")
+        members.append(name)
+    if len(members) > SHOW_CAST_LIMIT:
+        raise ValueError(f"В составе можно указать не больше {SHOW_CAST_LIMIT} артистов.")
+    return members
+
+
+def _show_content_values(data: dict[str, Any], entity_type: str) -> tuple[str, str, str]:
+    """Serialized features, cast and the legacy included_items text kept in sync with them."""
+    included_items = str(data.get("included_items") or "").strip()
+    if entity_type != ENTITY_TYPE_SHOW_PROGRAM:
+        return "", "", ""
+    features = normalize_show_features(data.get("program_features"))
+    cast = normalize_show_cast(data.get("program_cast"))
+    if features:
+        # Listing cards, the API and the builder still read the plain text.
+        included_items = "; ".join(item["text"] for item in features)
+    return (
+        json.dumps(features, ensure_ascii=False) if features else "",
+        json.dumps(cast, ensure_ascii=False) if cast else "",
+        included_items,
+    )
+
+
 def parse_ensemble_members(value: Any) -> list[str]:
     """Split the admin-entered member list ("Анна, Эльза, Олаф" or one per line)."""
     raw = str(value or "")
@@ -1559,6 +1686,7 @@ def init_catalog_store() -> None:
     pricing_columns_added = _ensure_show_program_pricing_columns()
     _ensure_character_cover_offset_columns()
     _ensure_character_ensemble_columns()
+    _ensure_show_program_content_columns()
     _ensure_category_linked_tag_column()
     _ensure_show_program_characters_table()
     _sync_entity_types_from_legacy()
@@ -2467,6 +2595,15 @@ def _media_type_for_path(path: str) -> str:
     return "image"
 
 
+def _stored_show_features(row: sqlite3.Row) -> list[dict[str, str]]:
+    if "program_features" not in row.keys() or not row["program_features"]:
+        return []
+    try:
+        return normalize_show_features(row["program_features"])
+    except ValueError:
+        return []
+
+
 def _character_row_to_dict(row: sqlite3.Row) -> dict[str, Any]:
     entity_type = _normalize_entity_type(row["entity_type"]) if "entity_type" in row.keys() else ENTITY_TYPE_CHARACTER
     route_prefix = "show-programs" if entity_type == ENTITY_TYPE_SHOW_PROGRAM else "character"
@@ -2536,6 +2673,8 @@ def _character_row_to_dict(row: sqlite3.Row) -> dict[str, Any]:
         "restrictions": row["restrictions"] if "restrictions" in row.keys() and row["restrictions"] is not None else "",
         "video_url": row["video_url"] if "video_url" in row.keys() and row["video_url"] is not None else "",
         "ensemble_members": ensemble_members,
+        "program_features": _stored_show_features(row),
+        "program_cast": normalize_show_cast(row["program_cast"]) if "program_cast" in row.keys() and row["program_cast"] else [],
         "ensemble_included_count": ensemble_included_count,
         "ensemble_extra_member_price": ensemble_extra_member_price,
         # A roster with two or more real performers is a grouped character
@@ -2741,6 +2880,8 @@ def _character_list_query(filter_sql: str = "", params: Iterable[Any] = ()) -> l
             ch.ensemble_members,
             ch.ensemble_included_count,
             ch.ensemble_extra_member_price,
+            ch.program_features,
+            ch.program_cast,
             ch.status,
             ch.entity_type,
             ch.hero_media_id,
@@ -3333,6 +3474,7 @@ def create_character(data: dict[str, Any]) -> int:
     age_from = _normalize_non_negative_int(data.get("age_from"), 0) if entity_type == ENTITY_TYPE_SHOW_PROGRAM and str(data.get("age_from", "")).strip() else None
     age_to = _normalize_non_negative_int(data.get("age_to"), 0) if entity_type == ENTITY_TYPE_SHOW_PROGRAM and str(data.get("age_to", "")).strip() else None
     ensemble_members, ensemble_included_count, ensemble_extra_member_price = _normalize_ensemble_fields(data, entity_type)
+    program_features, program_cast, included_items = _show_content_values(data, entity_type)
     with _get_connection() as connection:
         final_slug = _ensure_unique_slug(connection, "managed_characters", data.get("slug") or data.get("name", "character"))
         cursor = connection.execute(
@@ -3344,9 +3486,10 @@ def create_character(data: dict[str, Any]) -> int:
                 sort_order, age_from, age_to, show_category, format_tags, included_items, suitable_for,
                 restrictions, video_url, variant_group_slug, variant_group_name, variant_label,
                 ensemble_members, ensemble_included_count, ensemble_extra_member_price,
+                program_features, program_cast,
                 status, entity_type, source_path, created_at, updated_at
             )
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """,
             (
                 data.get("name", "").strip(),
@@ -3369,7 +3512,7 @@ def create_character(data: dict[str, Any]) -> int:
                 age_to,
                 data.get("show_category", "").strip() if entity_type == ENTITY_TYPE_SHOW_PROGRAM else "",
                 data.get("format_tags", "").strip() if entity_type == ENTITY_TYPE_SHOW_PROGRAM else "",
-                data.get("included_items", "").strip() if entity_type == ENTITY_TYPE_SHOW_PROGRAM else "",
+                included_items,
                 data.get("suitable_for", "").strip() if entity_type == ENTITY_TYPE_SHOW_PROGRAM else "",
                 data.get("restrictions", "").strip() if entity_type == ENTITY_TYPE_SHOW_PROGRAM else "",
                 data.get("video_url", "").strip() if entity_type == ENTITY_TYPE_SHOW_PROGRAM else "",
@@ -3379,6 +3522,8 @@ def create_character(data: dict[str, Any]) -> int:
                 ensemble_members,
                 ensemble_included_count,
                 ensemble_extra_member_price,
+                program_features,
+                program_cast,
                 data.get("status", "active"),
                 entity_type,
                 "",
@@ -3426,6 +3571,12 @@ def update_character(character_id: int, data: dict[str, Any]) -> None:
     age_from = _normalize_non_negative_int(data.get("age_from"), 0) if entity_type == ENTITY_TYPE_SHOW_PROGRAM and str(data.get("age_from", "")).strip() else None
     age_to = _normalize_non_negative_int(data.get("age_to"), 0) if entity_type == ENTITY_TYPE_SHOW_PROGRAM and str(data.get("age_to", "")).strip() else None
     ensemble_members, ensemble_included_count, ensemble_extra_member_price = _normalize_ensemble_fields(data, entity_type)
+    if entity_type == ENTITY_TYPE_SHOW_PROGRAM and not {"program_features", "program_cast"} <= data.keys():
+        # Callers that only know the legacy fields (the Flask form) must not wipe
+        # the structured content the Next admin saved.
+        stored = get_character_by_id(character_id) or {}
+        data = {"program_features": stored.get("program_features"), "program_cast": stored.get("program_cast"), **data}
+    program_features, program_cast, included_items = _show_content_values(data, entity_type)
     with _get_connection() as connection:
         final_slug = _ensure_unique_slug(connection, "managed_characters", data.get("slug") or data.get("name", "character"), exclude_id=character_id)
         connection.execute(
@@ -3472,6 +3623,8 @@ def update_character(character_id: int, data: dict[str, Any]) -> None:
                 ensemble_members = ?,
                 ensemble_included_count = ?,
                 ensemble_extra_member_price = ?,
+                program_features = ?,
+                program_cast = ?,
                 updated_at = ?
             WHERE id = ?
             """,
@@ -3496,7 +3649,7 @@ def update_character(character_id: int, data: dict[str, Any]) -> None:
                 age_to,
                 data.get("show_category", "").strip() if entity_type == ENTITY_TYPE_SHOW_PROGRAM else "",
                 data.get("format_tags", "").strip() if entity_type == ENTITY_TYPE_SHOW_PROGRAM else "",
-                data.get("included_items", "").strip() if entity_type == ENTITY_TYPE_SHOW_PROGRAM else "",
+                included_items,
                 data.get("suitable_for", "").strip() if entity_type == ENTITY_TYPE_SHOW_PROGRAM else "",
                 data.get("restrictions", "").strip() if entity_type == ENTITY_TYPE_SHOW_PROGRAM else "",
                 data.get("video_url", "").strip() if entity_type == ENTITY_TYPE_SHOW_PROGRAM else "",
@@ -3516,6 +3669,8 @@ def update_character(character_id: int, data: dict[str, Any]) -> None:
                 ensemble_members,
                 ensemble_included_count,
                 ensemble_extra_member_price,
+                program_features,
+                program_cast,
                 utcnow_iso(),
                 character_id,
             ),

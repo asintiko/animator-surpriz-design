@@ -5,6 +5,7 @@ import { useEffect, useMemo, useState, useTransition } from "react";
 import { toast } from "sonner";
 
 import { createEntityMutationPayload, normalizeEnsembleMembers } from "@/features/admin/entity-payload";
+import { ProgramCastEditor, ProgramFeaturesEditor } from "@/features/admin/program-content-editor";
 import { mutateJson } from "@/lib/client/mutate";
 import type { VariantGroup } from "@/lib/server/admin-entities";
 import type { Addon, CatalogEntity, TaxonomyItem } from "@/lib/types";
@@ -41,7 +42,10 @@ type EditableEntity = Pick<
   | "categories"
   | "tags"
   | "addons"
->;
+> & {
+  program_features: NonNullable<CatalogEntity["program_features"]>;
+  program_cast: string[];
+};
 
 function normalizeAddonSettings(addons: Array<Partial<Addon> & Pick<Addon, "id" | "name" | "slug" | "price" | "duration_minutes">>): Addon[] {
   return addons.map((addon) => ({
@@ -91,6 +95,8 @@ function emptyEntity(kind: "character" | "show_program"): EditableEntity {
     categories: ["all"],
     tags: ["all"],
     addons: [],
+    program_features: [],
+    program_cast: [],
   };
 }
 
@@ -110,6 +116,8 @@ function initialEntity(entity: CatalogEntity | undefined, kind: "character" | "s
     ...editable,
     ensemble_members: normalizeEnsembleMembers(entity.ensemble_members),
     addons: normalizeAddonSettings(entity.addons ?? []),
+    program_features: (entity.program_features ?? []).map((feature) => ({ ...feature })),
+    program_cast: [...(entity.program_cast ?? [])],
   };
 }
 
@@ -289,7 +297,7 @@ export function EntityDetailsForm({
         <label>Возраст от<input min={1} type="number" value={value.age_from ?? ""} onChange={(event) => field("age_from", event.target.value ? Number(event.target.value) : null)} /></label>
         <label>Возраст до<input min={1} type="number" value={value.age_to ?? ""} onChange={(event) => field("age_to", event.target.value ? Number(event.target.value) : null)} /></label>
         <label>Длительность, мин<input min={1} type="number" value={value.default_duration_minutes} onChange={(event) => field("default_duration_minutes", Number(event.target.value))} /></label>
-        {kind === "show_program" ? <><label>Цена, сум<input min={0} step={50_000} type="number" value={value.base_price} onChange={(event) => field("base_price", Number(event.target.value))} /></label><label>Персонажей включено<input min={0} type="number" value={value.included_characters_count} onChange={(event) => field("included_characters_count", Number(event.target.value))} /></label><label>Доплата за третьего<input min={0} step={50_000} type="number" value={value.extra_character_price_3} onChange={(event) => field("extra_character_price_3", Number(event.target.value))} /></label><label>Доплата за следующих<input min={0} step={50_000} type="number" value={value.extra_character_price_4_plus} onChange={(event) => field("extra_character_price_4_plus", Number(event.target.value))} /></label><label className="wide">Формат программы<select value={groupChoice} onChange={(event) => chooseGroup(event.target.value)}><option value="">Отдельная программа</option>{groupOptions.map((group) => <option key={group.slug} value={group.slug}>{group.name} — {group.variantCount} {group.variantCount === 1 ? "формат" : "формата"}</option>)}<option value={NEW_GROUP}>Новая группа форматов…</option></select><small className="admin-field-hint">{groupChoice ? "Карточки одной группы показываются на сайте как одна программа с выбором формата." : "Программа продаётся сама по себе, без выбора формата."}</small></label>{groupChoice === NEW_GROUP ? <label>Название группы<input placeholder="Например: Лента-шоу" value={value.variant_group_name} onChange={(event) => { const name = event.target.value; setValue((current) => ({ ...current, variant_group_name: name, variant_group_slug: slugifyGroup(name) })); }} /></label> : null}{groupChoice ? <label>Название формата<input placeholder="Например: Бумажное" value={value.variant_label} onChange={(event) => field("variant_label", event.target.value)} /></label> : null}<label>Видео URL<input value={value.video_url} onChange={(event) => field("video_url", event.target.value)} /></label><label className="wide">Что входит<textarea value={value.included_items} onChange={(event) => field("included_items", event.target.value)} /></label><label className="wide">Для кого подходит<textarea value={value.suitable_for} onChange={(event) => field("suitable_for", event.target.value)} /></label><label className="wide">Ограничения<textarea value={value.restrictions} onChange={(event) => field("restrictions", event.target.value)} /></label></> : null}
+        {kind === "show_program" ? <><label>Цена, сум<input min={0} step={50_000} type="number" value={value.base_price} onChange={(event) => field("base_price", Number(event.target.value))} /></label><label>Персонажей включено<input min={0} type="number" value={value.included_characters_count} onChange={(event) => field("included_characters_count", Number(event.target.value))} /></label><label>Доплата за третьего<input min={0} step={50_000} type="number" value={value.extra_character_price_3} onChange={(event) => field("extra_character_price_3", Number(event.target.value))} /></label><label>Доплата за следующих<input min={0} step={50_000} type="number" value={value.extra_character_price_4_plus} onChange={(event) => field("extra_character_price_4_plus", Number(event.target.value))} /></label><label className="wide">Формат программы<select value={groupChoice} onChange={(event) => chooseGroup(event.target.value)}><option value="">Отдельная программа</option>{groupOptions.map((group) => <option key={group.slug} value={group.slug}>{group.name} — {group.variantCount} {group.variantCount === 1 ? "формат" : "формата"}</option>)}<option value={NEW_GROUP}>Новая группа форматов…</option></select><small className="admin-field-hint">{groupChoice ? "Карточки одной группы показываются на сайте как одна программа с выбором формата." : "Программа продаётся сама по себе, без выбора формата."}</small></label>{groupChoice === NEW_GROUP ? <label>Название группы<input placeholder="Например: Лента-шоу" value={value.variant_group_name} onChange={(event) => { const name = event.target.value; setValue((current) => ({ ...current, variant_group_name: name, variant_group_slug: slugifyGroup(name) })); }} /></label> : null}{groupChoice ? <label>Название формата<input placeholder="Например: Бумажное" value={value.variant_label} onChange={(event) => field("variant_label", event.target.value)} /></label> : null}<label>Видео URL<input value={value.video_url} onChange={(event) => field("video_url", event.target.value)} /></label><label className="wide">Для кого подходит<textarea value={value.suitable_for} onChange={(event) => field("suitable_for", event.target.value)} /></label><label className="wide">Важно знать<textarea value={value.restrictions} onChange={(event) => field("restrictions", event.target.value)} /><small className="admin-field-hint">Каждый пункт с новой строки. На странице шоу выделяется в блоке «Важно знать», например: «Проводится только в закрытом помещении».</small></label></> : null}
       </div>
       {kind === "character" ? (
         <section className="ensemble-editor" aria-labelledby="ensemble-editor-title">
@@ -315,6 +323,12 @@ export function EntityDetailsForm({
             </div>
           ) : null}
         </section>
+      ) : null}
+      {kind === "show_program" ? (
+        <>
+          <ProgramFeaturesEditor features={value.program_features} onChange={(next) => field("program_features", next)} source={entity?.program_features_source} />
+          <ProgramCastEditor cast={value.program_cast} onChange={(next) => field("program_cast", next)} />
+        </>
       ) : null}
       {kind === "show_program" ? (
         <section className="ensemble-editor" aria-labelledby="program-addons-title">

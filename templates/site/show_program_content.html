@@ -1,288 +1,386 @@
-<link rel="stylesheet" href="/v2/v2-shows.css?v=20260720-4">
-{% import 'site/_v2_show_macros.html' as showui %}
-{% set sec = namespace(n=0) %}
-<div class="v2-show3">
-<main class="v2-main" id="content">
+<link rel="stylesheet" href="/v2/show-detail.css?v={{ stylesheet_version }}">
+{% set builder_href = '/party-builder/?program=' ~ show.slug %}
+{% macro picture(image, alt, sizes, loading='lazy', style='', fetchpriority='') -%}
+  <picture>
+    {% if image.avif %}<source type="image/avif" srcset="{{ image.avif }}" sizes="{{ sizes }}">{% endif %}
+    {% if image.webp %}<source type="image/webp" srcset="{{ image.webp }}" sizes="{{ sizes }}">{% endif %}
+    <img src="{{ image.src }}" alt="{{ alt }}" decoding="async" loading="{{ loading }}"{% if fetchpriority %} fetchpriority="{{ fetchpriority }}"{% endif %}{% if style %} style="{{ style }}"{% endif %} data-sd-img>
+  </picture>
+{%- endmacro %}
+{% macro icon(name) -%}<svg class="v2-i" aria-hidden="true"><use href="#i-{{ name }}"/></svg>{%- endmacro %}
+{% macro art(name) -%}
+  {%- if name in assets.icons -%}<img class="sd-art" src="{{ assets.icons[name] }}" alt="" width="128" height="128" loading="lazy" decoding="async">{%- else -%}{{ icon(name) }}{%- endif -%}
+{%- endmacro %}
 
-  <!-- ============ КРОШКИ + НАЗАД ============ -->
-  <div class="v2-container sp-topline">
-    <nav class="v2-crumbs" aria-label="Breadcrumb">
-      <a class="v2-crumbs__link" href="/">Главная</a>
-      <span class="v2-crumbs__sep" aria-hidden="true">/</span>
-      <a class="v2-crumbs__link" href="/show-programs/">Шоу-программы</a>
-      <span class="v2-crumbs__sep" aria-hidden="true">/</span>
-      <span class="v2-crumbs__current">{{ show.name }}</span>
+<div class="sd">
+<main class="v2-main{% if assets.backgrounds %} has-art-bg{% endif %}" id="content"{% if assets.backgrounds %} style="--sd-bg: url('{{ assets.backgrounds['bg-desktop'] or assets.backgrounds['bg-mobile'] }}'); --sd-bg-m: url('{{ assets.backgrounds['bg-mobile'] or assets.backgrounds['bg-desktop'] }}')"{% endif %}>
+
+  <div class="sd-wrap sd-topline">
+    <nav class="sd-crumbs" aria-label="Хлебные крошки">
+      <a href="/">Главная</a>
+      <span aria-hidden="true">/</span>
+      <a href="/show-programs/">Шоу-программы</a>
+      <span aria-hidden="true">/</span>
+      <span aria-current="page">{{ show.name }}</span>
     </nav>
-    <button class="v2-btn v2-btn--ghost v2-btn--sm sp-back" type="button" data-v2-back data-fallback="/show-programs/">
-      <svg class="v2-i" aria-hidden="true"><use href="#i-arrow-left"/></svg>
-      <span>Назад</span>
+    <button class="sd-back" type="button" data-sd-back data-fallback="/show-programs/">
+      {{ icon('arrow-left') }}<span>Назад</span>
     </button>
   </div>
 
-  <!-- ============ EDITORIAL HERO ============ -->
-  <section class="v2-container sp-hero">
-    <div class="sp-hero__info">
-      <p class="ed-eyebrow" data-reveal><span class="ed-eyebrow__rule" aria-hidden="true"></span>Шоу-программа</p>
-      <h1 class="sp-title" data-reveal data-reveal-delay="60">{{ show.name }}</h1>
-      <p class="sp-lead" data-reveal data-reveal-delay="120">{{ show.summary_text }}</p>
-      <div data-reveal data-reveal-delay="160">
-        {{ showui.meta_line(show.duration_label, show.age_label, show.format_label, show.category_label) }}
+  <!-- ============ HERO ============ -->
+  <section class="sd-wrap sd-hero" aria-labelledby="sd-title">
+    <div class="sd-gallery{% if not gallery %} is-empty{% endif %}" data-sd-gallery>
+      <div class="sd-gallery__stage">
+        {% if gallery %}
+          <div class="sd-gallery__track" data-sd-track tabindex="0" aria-label="Фотографии программы «{{ show.name }}»">
+            {% for image in gallery %}
+              <figure class="sd-gallery__slide" data-sd-slide>
+                {{ picture(image, show.name ~ (' — шоу-программа на детский праздник' if loop.first else ' — фото ' ~ loop.index), '(min-width: 1100px) 600px, (min-width: 768px) 50vw, 100vw', 'eager' if loop.first else 'lazy', image.style, 'high' if loop.first else '') }}
+              </figure>
+            {% endfor %}
+          </div>
+        {% endif %}
+        <div class="sd-gallery__placeholder" aria-hidden="true">
+          <span class="sd-gallery__placeholder-icon">{{ art('party-hat') }}</span>
+          <span>{{ show.name }}</span>
+        </div>
+        <span class="sd-gallery__badge">{{ icon('clock') }}{{ show.duration_label }}</span>
+        {% if show.video_url %}
+          <button class="sd-gallery__video" type="button" data-video-open data-video-url="{{ show.video_url|e }}">
+            <span class="sd-gallery__play">{{ icon('play') }}</span>
+            <span>Смотреть видео</span>
+          </button>
+        {% endif %}
+        {% if gallery|length > 1 %}
+          <p class="sd-gallery__count" aria-hidden="true"><span data-sd-current>1</span> / {{ gallery|length }}</p>
+        {% endif %}
       </div>
-
-      {% if show.promotions %}
-        <div class="sp-promos" data-reveal data-reveal-delay="200">
-          {{ showui.promo_badges(show.promotions) }}
+      {% if gallery|length > 1 %}
+        <div class="sd-gallery__thumbs" role="group" aria-label="Выбор фотографии">
+          {% for image in gallery %}
+            <button class="sd-gallery__thumb{% if loop.first %} is-active{% endif %}" type="button" data-sd-thumb="{{ loop.index0 }}" aria-label="Фото {{ loop.index }} из {{ gallery|length }}"{% if loop.first %} aria-current="true"{% endif %}>
+              <img src="{{ image.src }}" alt="" loading="lazy" decoding="async" data-sd-img>
+            </button>
+          {% endfor %}
         </div>
       {% endif %}
+    </div>
 
-      <div class="sp-buy" data-reveal data-reveal-delay="240" data-hero-cta>
-        {{ showui.price_accent(show.price_label) }}
-        <div class="sp-buy__cta">
-          <a class="v2-btn v2-btn--primary v2-btn--lg" href="/party-builder/?program={{ show.slug }}">
-            <svg class="v2-i" aria-hidden="true"><use href="#i-party-hat"/></svg>
-            <span>Собрать программу</span>
-          </a>
-          {% if show.video_url %}
-            <button class="v2-btn v2-btn--ghost v2-btn--lg" type="button" data-video-open data-video-url="{{ show.video_url|e }}">
-              <svg class="v2-i" aria-hidden="true"><use href="#i-play"/></svg>
-              <span>Видео</span>
-            </button>
-          {% endif %}
-        </div>
-      </div>
-
-      <p class="sp-phone" data-reveal data-reveal-delay="280">
-        <svg class="v2-i" aria-hidden="true"><use href="#i-phone"/></svg>
-        <span>Остались вопросы по программе? Позвоните: <a href="{{ phone_tel }}">{{ phone_display }}</a> — подскажем и поможем с выбором.</span>
+    <div class="sd-offer">
+      <p class="sd-kicker">
+        <span class="sd-kicker__dot" aria-hidden="true"></span>
+        Шоу-программа{% if variants and show.variant_group_name %} · {{ show.variant_group_name }}{% endif %}
       </p>
-    </div>
+      <h1 class="sd-title" id="sd-title">{{ show.name }}</h1>
+      <p class="sd-lead">{{ show.summary_text }}</p>
 
-    <figure class="sp-hero__media" data-reveal data-reveal-delay="140">
-      <span class="sp-hero__mat" aria-hidden="true"></span>
-      <span class="sp-hero__frame">
-        {{ showui.media_placeholder(show.has_image) }}
-        {% if show.has_image %}
-          <img alt="{{ show.name }} — шоу-программа" decoding="async" loading="eager" onerror="this.style.display='none'" src="{{ show.hero_file_path }}">
+      {% for promo in show.promotions or [] %}
+        <p class="sd-promo">{{ icon('sparkles') }}<strong>{{ promo.badge_text or promo.title }}</strong>{% if promo.tooltip_text %}<span>{{ promo.tooltip_text }}</span>{% endif %}</p>
+      {% endfor %}
+
+      {% if variants %}
+        <nav class="sd-variants" aria-label="Форматы программы">
+          <p class="sd-label">Формат</p>
+          <div class="sd-variants__list">
+            {% for variant in variants %}
+              <a class="sd-variant{% if variant.is_current %} is-current{% endif %}" href="{{ variant.route }}"{% if variant.is_current %} aria-current="page"{% endif %}>
+                <span class="sd-variant__name">{{ variant.label }}</span>
+                <span class="sd-variant__price">{{ variant.price_label }}</span>
+              </a>
+            {% endfor %}
+          </div>
+        </nav>
+      {% endif %}
+
+      <ul class="sd-facts">
+        {% for fact in facts %}
+          <li class="sd-fact">
+            <span class="sd-fact__icon">{{ art(fact.icon) }}</span>
+            <span class="sd-fact__text"><small>{{ fact.label }}</small><strong>{{ fact.value }}</strong></span>
+          </li>
+        {% endfor %}
+      </ul>
+
+      <div class="sd-buy" data-sd-buy>
+        {% if price_tiers %}
+          <fieldset class="sd-tiers">
+            <legend class="sd-label">Сколько героев на празднике</legend>
+            <div class="sd-tiers__options">
+              {% for tier in price_tiers %}
+                <label class="sd-tier">
+                  <input type="radio" name="sd-tier" value="{{ tier.count }}" data-sd-tier{% if loop.first %} checked{% endif %}>
+                  <span>{{ tier.label }}</span>
+                </label>
+              {% endfor %}
+            </div>
+          </fieldset>
+          <div class="sd-price" aria-live="polite">
+            {% for tier in price_tiers %}
+              <p class="sd-price__row" data-tier-price="{{ tier.count }}"{% if not loop.first %} hidden{% endif %}>
+                <strong class="sd-price__value">{{ tier.price_label }}</strong>
+                <span class="sd-price__unit">за {{ show.duration_label }}</span>
+              </p>
+            {% endfor %}
+            <p class="sd-price__note">{{ price_note }}</p>
+          </div>
+        {% else %}
+          <div class="sd-price">
+            <p class="sd-label">Стоимость</p>
+            <p class="sd-price__row">
+              <strong class="sd-price__value">{{ price_value }}</strong>
+              <span class="sd-price__unit">за {{ show.duration_label }}</span>
+            </p>
+            {% if cast.kind == 'fixed' %}<p class="sd-price__note">Цена за весь состав — выбирать героев не нужно.</p>{% endif %}
+          </div>
         {% endif %}
-      </span>
-    </figure>
-  </section>
-  <div data-sticky-sentinel aria-hidden="true"></div>
 
-  <!-- ============ СЕКЦИИ ============ -->
-  <div class="v2-container sp-body">
-
-    {% if show.description %}
-      {% set sec.n = sec.n + 1 %}
-      <section class="sp-section" data-reveal>
-        <header class="sp-section__side">
-          <span class="ed-num ed-num--sm" aria-hidden="true">{{ '%02d' % sec.n }}</span>
-          <h2 class="sp-section__title">О программе</h2>
-          <span class="sp-section__rule" aria-hidden="true"></span>
-        </header>
-        <div class="sp-section__body">
-          <p class="sp-prose">{{ show.description|replace('\n', '<br>')|safe }}</p>
+        <a class="sd-btn sd-btn--primary" href="{{ builder_href }}">
+          {{ icon('party-hat') }}<span>Собрать праздник</span>
+        </a>
+        <div class="sd-buy__alt">
+          <a class="sd-btn sd-btn--ghost" href="{{ phone_tel }}">{{ icon('phone') }}<span>Позвонить</span></a>
+          <a class="sd-btn sd-btn--ghost" href="{{ telegram_url }}" target="_blank" rel="noopener">{{ icon('telegram') }}<span>Telegram</span></a>
         </div>
-      </section>
-    {% endif %}
-
-    {% if show.included_items_list %}
-      {% set sec.n = sec.n + 1 %}
-      <section class="sp-section" data-reveal>
-        <header class="sp-section__side">
-          <span class="ed-num ed-num--sm" aria-hidden="true">{{ '%02d' % sec.n }}</span>
-          <h2 class="sp-section__title">Что входит</h2>
-          <span class="sp-section__rule" aria-hidden="true"></span>
-        </header>
-        <div class="sp-section__body">
-          <ul class="sp-list">
-            {% for item in show.included_items_list %}
-              <li><svg class="v2-i" aria-hidden="true"><use href="#i-check"/></svg><span>{{ item }}</span></li>
-            {% endfor %}
-          </ul>
-        </div>
-      </section>
-    {% endif %}
-
-    {% if show.suitable_for_list %}
-      {% set sec.n = sec.n + 1 %}
-      <section class="sp-section" data-reveal>
-        <header class="sp-section__side">
-          <span class="ed-num ed-num--sm" aria-hidden="true">{{ '%02d' % sec.n }}</span>
-          <h2 class="sp-section__title">Кому подходит</h2>
-          <span class="sp-section__rule" aria-hidden="true"></span>
-        </header>
-        <div class="sp-section__body">
-          <ul class="sp-list">
-            {% for item in show.suitable_for_list %}
-              <li><svg class="v2-i" aria-hidden="true"><use href="#i-heart"/></svg><span>{{ item }}</span></li>
-            {% endfor %}
-          </ul>
-        </div>
-      </section>
-    {% endif %}
-
-    {% if show.has_gifts %}
-      {% set sec.n = sec.n + 1 %}
-      <section class="sp-section" data-reveal>
-        <header class="sp-section__side">
-          <span class="ed-num ed-num--sm" aria-hidden="true">{{ '%02d' % sec.n }}</span>
-          <h2 class="sp-section__title">Подарки детям</h2>
-          <span class="sp-section__rule" aria-hidden="true"></span>
-        </header>
-        <div class="sp-section__body">
-          <div class="sp-band sp-band--gifts">
-            <ul class="sp-list sp-list--band">
-              {% for bundle in show.gift_bundles %}
-                <li>
-                  <svg class="v2-i" aria-hidden="true"><use href="#i-gift"/></svg>
-                  <span><strong>{{ bundle.name }}</strong> — включено бесплатно</span>
-                </li>
-              {% endfor %}
-              {% for gift_group in show.gift_choice_groups %}
-                <li>
-                  <svg class="v2-i" aria-hidden="true"><use href="#i-gift"/></svg>
-                  <span>На выбор: {% for addon in gift_group.addons %}<strong>{{ addon.name }}</strong>{% if not loop.last %}, {% endif %}{% endfor %}</span>
-                </li>
-              {% endfor %}
-            </ul>
-          </div>
-        </div>
-      </section>
-    {% endif %}
-
-    {% if show.restrictions_list %}
-      {% set sec.n = sec.n + 1 %}
-      <section class="sp-section" data-reveal>
-        <header class="sp-section__side">
-          <span class="ed-num ed-num--sm" aria-hidden="true">{{ '%02d' % sec.n }}</span>
-          <h2 class="sp-section__title">Важно знать</h2>
-          <span class="sp-section__rule" aria-hidden="true"></span>
-        </header>
-        <div class="sp-section__body">
-          <div class="sp-band sp-band--warn">
-            <ul class="sp-list sp-list--band">
-              {% for item in show.restrictions_list %}
-                <li><svg class="v2-i" aria-hidden="true"><use href="#i-info"/></svg><span>{{ item }}</span></li>
-              {% endfor %}
-            </ul>
-          </div>
-        </div>
-      </section>
-    {% endif %}
-
-    {% if show.addons %}
-      {% set sec.n = sec.n + 1 %}
-      <section class="sp-section sp-section--addons" data-reveal>
-        <header class="sp-section__side">
-          <span class="ed-num ed-num--sm" aria-hidden="true">{{ '%02d' % sec.n }}</span>
-          <h2 class="sp-section__title">Можно добавить</h2>
-          <span class="sp-section__rule" aria-hidden="true"></span>
-        </header>
-        <div class="sp-section__body">
-          <div class="sp-addons">
-            {% for addon in show.addons %}
-              <article class="sp-addon">
-                <div class="sp-addon__media">
-                  {{ showui.media_placeholder(addon.has_image) }}
-                  {% if addon.has_image %}
-                    <img alt="{{ addon.name }}" decoding="async" loading="lazy" onerror="this.style.display='none'" src="{{ addon.image_path }}">
-                  {% endif %}
-                </div>
-                <div class="sp-addon__body">
-                  {% if addon.is_recommended %}
-                    <p class="sp-addon__rec">
-                      <svg class="v2-i" aria-hidden="true"><use href="#i-star"/></svg>
-                      Рекомендуем
-                    </p>
-                  {% endif %}
-                  <h3 class="sp-addon__name">{{ addon.name }}</h3>
-                  <p class="sp-addon__summary">{{ addon.summary_text|truncate(140, false, '…') }}</p>
-                  <p class="sp-addon__meta">
-                    <span class="sp-addon__price">{{ addon.price_label }}</span>
-                    {% if addon.duration_label %}<span class="sp-addon__dur">+ {{ addon.duration_label }}</span>{% endif %}
-                  </p>
-                </div>
-              </article>
-            {% endfor %}
-          </div>
-        </div>
-      </section>
-    {% endif %}
-  </div>
-
-  <!-- ============ КАК ЗАКАЗАТЬ ============ -->
-  <section class="sp-steps-section">
-    <div class="v2-container">
-      <header class="sp-bandhead" data-reveal>
-        <p class="ed-eyebrow"><span class="ed-eyebrow__rule" aria-hidden="true"></span>Всё просто</p>
-        <h2 class="sp-bandhead__title">Как заказать за 3 шага</h2>
-      </header>
-      <div class="sp-steps">
-        <article class="sp-step" data-reveal>
-          <span class="ed-num" aria-hidden="true">01</span>
-          <h3 class="sp-step__title">Нажмите «Собрать программу»</h3>
-          <p class="sp-step__text">Конструктор сразу подставит это шоу — останется выбрать детали праздника.</p>
-        </article>
-        <article class="sp-step" data-reveal data-reveal-delay="120">
-          <span class="ed-num" aria-hidden="true">02</span>
-          <h3 class="sp-step__title">Укажите дату и адрес</h3>
-          <p class="sp-step__text">Заполните короткую форму: дата, время, место и пожелания к программе.</p>
-        </article>
-        <article class="sp-step" data-reveal data-reveal-delay="240">
-          <span class="ed-num" aria-hidden="true">03</span>
-          <h3 class="sp-step__title">Мы подтверждаем заказ</h3>
-          <p class="sp-step__text">Менеджер свяжется с вами, подтвердит детали — и мы приедем с реквизитом заранее.</p>
-        </article>
+        <p class="sd-buy__trust">{{ icon('shield') }}<span>Без предоплаты — оплата после праздника</span></p>
       </div>
     </div>
   </section>
+  <div data-sd-sentinel aria-hidden="true"></div>
 
-  <!-- ============ ПОХОЖИЕ ШОУ ============ -->
-  {% if related_shows %}
-    <section class="sp-related">
-      <div class="v2-container">
-        <header class="sp-bandhead sp-bandhead--row" data-reveal>
-          <div>
-            <h2 class="sp-bandhead__title">Похожие шоу-программы</h2>
-          </div>
-          <a class="sf-more sp-bandhead__link" href="/show-programs/">
-            <span>Все шоу</span>
-            <svg class="v2-i" aria-hidden="true"><use href="#i-arrow-right"/></svg>
-          </a>
-        </header>
-        <ul class="sp-related__grid">
-          {% for item in related_shows %}
-            {{ showui.related_card(item) }}
+  <!-- ============ ЧТО ВХОДИТ ============ -->
+  {% if features or gift_label %}
+    <section class="sd-wrap sd-section" aria-labelledby="sd-included">
+      <header class="sd-head">
+        <p class="sd-eyebrow">Всё включено</p>
+        <h2 class="sd-h2" id="sd-included">Что входит в программу</h2>
+        {% if show.description %}<p class="sd-sub">{{ show.description }}</p>{% endif %}
+      </header>
+      <ul class="sd-features">
+        {% for feature in features %}
+          <li class="sd-feature">
+            <span class="sd-feature__icon">{{ art(feature.icon) }}</span>
+            <span class="sd-feature__text">{{ feature.text }}</span>
+          </li>
+        {% endfor %}
+        {% if gift_label %}
+          <li class="sd-feature sd-feature--gift">
+            <span class="sd-feature__icon">{{ art('gift') }}</span>
+            <span class="sd-feature__text"><small>Подарок на выбор</small>{{ gift_label }}</span>
+          </li>
+        {% endif %}
+      </ul>
+    </section>
+  {% endif %}
+
+  <!-- ============ СРАВНЕНИЕ ФОРМАТОВ ============ -->
+  {% if variants %}
+    <section class="sd-wrap sd-section" aria-labelledby="sd-compare">
+      <header class="sd-head">
+        <p class="sd-eyebrow">{{ show.variant_group_name or 'Форматы' }}</p>
+        <h2 class="sd-h2" id="sd-compare">Сравните форматы</h2>
+        <p class="sd-sub">{{ variants_note }}</p>
+      </header>
+      <div class="sd-compare" style="--cols: {{ variants|length }}">
+        {% for variant in variants %}
+          <article class="sd-plan{% if variant.is_current %} is-current{% endif %}">
+            {% if variant.is_current %}<p class="sd-plan__flag">Вы смотрите</p>{% endif %}
+            <h3 class="sd-plan__name">{{ variant.label }}</h3>
+            <p class="sd-plan__price"><strong>{{ variant.price_label }}</strong><span>{{ variant.duration_label }}</span></p>
+            {% if variant.summary %}<p class="sd-plan__text">{{ variant.summary }}</p>{% endif %}
+            <ul class="sd-plan__list">
+              {% for feature in variant.features %}
+                <li>{{ icon('check') }}<span>{{ feature.text }}</span></li>
+              {% endfor %}
+            </ul>
+            {% if variant.is_current %}
+              <a class="sd-btn sd-btn--primary sd-btn--block" href="{{ builder_href }}">{{ icon('party-hat') }}<span>Выбрать {{ variant.label }}</span></a>
+            {% else %}
+              <a class="sd-btn sd-btn--soft sd-btn--block" href="{{ variant.route }}"><span>Смотреть {{ variant.label }}</span>{{ icon('arrow-right') }}</a>
+            {% endif %}
+          </article>
+        {% endfor %}
+      </div>
+    </section>
+  {% endif %}
+
+  <!-- ============ ГЕРОИ ============ -->
+  {% if cast.kind == 'choice' and featured_characters %}
+    <section class="sd-wrap sd-section" aria-labelledby="sd-heroes">
+      <header class="sd-head sd-head--row">
+        <div>
+          <p class="sd-eyebrow">Герои праздника</p>
+          <h2 class="sd-h2" id="sd-heroes">Выберите любимых героев</h2>
+          <p class="sd-sub">{{ cast.note }}</p>
+        </div>
+        <a class="sd-more" href="/catalog/">{{ characters_label }}{{ icon('arrow-right') }}</a>
+      </header>
+      <ul class="sd-heroes" data-sd-rail>
+        {% for character in featured_characters %}
+          <li>
+            <a class="sd-hero-card" href="{{ character.href }}">
+              <span class="sd-hero-card__media">
+                {{ picture(character.image, character.name, '(min-width: 1100px) 150px, 40vw', 'lazy', 'object-position: ' ~ character.position) }}
+              </span>
+              <span class="sd-hero-card__name">{{ character.name }}</span>
+              <span class="sd-hero-card__add">{{ icon('plus') }}В праздник</span>
+            </a>
+          </li>
+        {% endfor %}
+      </ul>
+    </section>
+  {% elif cast.kind == 'fixed' %}
+    <section class="sd-wrap sd-section" aria-labelledby="sd-cast">
+      <div class="sd-cast">
+        <div class="sd-cast__intro">
+          <p class="sd-eyebrow">Состав</p>
+          <h2 class="sd-h2" id="sd-cast">Кто проведёт праздник</h2>
+          <p class="sd-sub">Состав программы фиксированный: артисты уже подобраны под сюжет, выбирать героев не нужно.</p>
+        </div>
+        <ul class="sd-cast__list">
+          {% for member in cast.members %}
+            <li><span class="sd-cast__avatar">{{ art('users') }}</span><span>{{ member }}</span></li>
           {% endfor %}
+          {% if cast.with_dj %}
+            <li><span class="sd-cast__avatar">{{ art('note') }}</span><span>Диджей</span></li>
+          {% endif %}
         </ul>
       </div>
+    </section>
+  {% endif %}
+
+  <!-- ============ ДОПОЛНИТЕЛЬНО ============ -->
+  {% if show.addons %}
+    <section class="sd-wrap sd-section" aria-labelledby="sd-addons">
+      <header class="sd-head">
+        <p class="sd-eyebrow">По желанию</p>
+        <h2 class="sd-h2" id="sd-addons">Можно добавить</h2>
+      </header>
+      <ul class="sd-addons">
+        {% for addon in show.addons %}
+          <li class="sd-addon">
+            <span class="sd-addon__icon">{{ art('note' if 'диджей' in addon.name|lower else 'party-hat') }}</span>
+            <span class="sd-addon__body">
+              <strong>{{ addon.name }}</strong>
+              <span>{{ addon.summary_text|truncate(140, false, '…') }}</span>
+            </span>
+            <span class="sd-addon__price">+ {{ addon.price_label|replace('от ', '') }}{% if addon.duration_label %}<small>+ {{ addon.duration_label }}</small>{% endif %}</span>
+          </li>
+        {% endfor %}
+      </ul>
+    </section>
+  {% endif %}
+
+  <!-- ============ ВАЖНО ЗНАТЬ + FAQ ============ -->
+  <section class="sd-wrap sd-section" aria-labelledby="sd-know">
+    <header class="sd-head">
+      <p class="sd-eyebrow">Перед заказом</p>
+      <h2 class="sd-h2" id="sd-know">Важно знать</h2>
+    </header>
+    <div class="sd-know">
+      <ul class="sd-notes">
+        {% for item in restrictions %}
+          <li class="sd-note sd-note--accent"><span class="sd-note__icon">{{ art('info') }}</span><span>{{ item }}</span></li>
+        {% endfor %}
+        <li class="sd-note"><span class="sd-note__icon">{{ art('calendar') }}</span><span>Онлайн-бронирование — минимум за 24 часа. На сегодня — только по телефону.</span></li>
+        <li class="sd-note"><span class="sd-note__icon">{{ art('map-pin') }}</span><span>Выезжаем по Ташкенту и Ташкентской области.</span></li>
+        <li class="sd-note"><span class="sd-note__icon">{{ art('cash') }}</span><span>Оплата после праздника — наличными или переводом на карту.</span></li>
+        <li class="sd-note"><span class="sd-note__icon">{{ art('clock') }}</span><span>Принимаем заказы ежедневно с 9:00 до 21:00.</span></li>
+      </ul>
+      <div class="sd-faq">
+        {% for item in faq %}
+          <details class="sd-faq__item"{% if loop.first %} open{% endif %}>
+            <summary>{{ item.question }}<span class="sd-faq__chev">{{ icon('chevron-down') }}</span></summary>
+            <p>{{ item.answer }}</p>
+          </details>
+        {% endfor %}
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ КАК ЗАКАЗАТЬ ============ -->
+  <section class="sd-wrap sd-section" aria-labelledby="sd-steps">
+    <div class="sd-order">
+      <header class="sd-head sd-head--center">
+        <p class="sd-eyebrow">Всё просто</p>
+        <h2 class="sd-h2" id="sd-steps">Как заказать за 3 шага</h2>
+      </header>
+      <ol class="sd-steps">
+        <li class="sd-step">
+          <span class="sd-step__num">1</span>
+          <h3>Соберите праздник</h3>
+          <p>Конструктор сразу подставит «{{ show.name }}» — останется выбрать детали.</p>
+        </li>
+        <li class="sd-step">
+          <span class="sd-step__num">2</span>
+          <h3>Укажите дату и адрес</h3>
+          <p>Дата, время, место и пожелания — короткая форма без лишних вопросов.</p>
+        </li>
+        <li class="sd-step">
+          <span class="sd-step__num">3</span>
+          <h3>Менеджер подтвердит</h3>
+          <p>Свяжемся, уточним детали и приедем вовремя. Оплата — после праздника.</p>
+        </li>
+      </ol>
+      <div class="sd-order__cta">
+        <a class="sd-btn sd-btn--primary sd-btn--lg" href="{{ builder_href }}">{{ icon('party-hat') }}<span>Собрать праздник</span></a>
+        <a class="sd-order__phone" href="{{ phone_tel }}">{{ icon('phone') }}<span>{{ phone_display }}</span></a>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ ДРУГИЕ ШОУ ============ -->
+  {% if related_shows %}
+    <section class="sd-wrap sd-section" aria-labelledby="sd-related">
+      <header class="sd-head sd-head--row">
+        <div>
+          <p class="sd-eyebrow">Ещё идеи</p>
+          <h2 class="sd-h2" id="sd-related">Другие шоу-программы</h2>
+        </div>
+        <a class="sd-more" href="/show-programs/">Все шоу{{ icon('arrow-right') }}</a>
+      </header>
+      <ul class="sd-related">
+        {% for item in related_shows %}
+          <li>
+            <a class="sd-card" href="{{ item.route }}">
+              <span class="sd-card__media">
+                {% if item.image %}
+                  {{ picture(item.image, item.name, '(min-width: 1100px) 400px, (min-width: 700px) 45vw, 85vw', 'lazy', item.image_style) }}
+                {% endif %}
+                <span class="sd-card__time">{{ icon('clock') }}{{ item.duration_label }}</span>
+              </span>
+              <span class="sd-card__body">
+                <strong class="sd-card__name">{{ item.name }}</strong>
+                <span class="sd-card__text">{{ item.summary_text|truncate(110, false, '…') }}</span>
+                <span class="sd-card__foot">
+                  <span class="sd-card__price">{{ item.price_label }}</span>
+                  <span class="sd-card__more">Подробнее{{ icon('arrow-right') }}</span>
+                </span>
+              </span>
+            </a>
+          </li>
+        {% endfor %}
+      </ul>
     </section>
   {% endif %}
 </main>
 
 <!-- ============ STICKY CTA ============ -->
-<div class="v2-sticky-cta sp-cta" data-sticky-cta aria-hidden="true" inert>
-  <div class="v2-sticky-cta__inner sp-cta__inner">
-    <div class="v2-sticky-cta__info sp-cta__info">
-      <span class="v2-sticky-cta__name sp-cta__name">{{ show.name }}</span>
-      <span class="v2-sticky-cta__price sp-cta__price">{{ show.price_label }}{% if show.duration_label %} · {{ show.duration_label }}{% endif %}</span>
-    </div>
-    <a class="v2-btn v2-btn--primary v2-btn--md" href="/party-builder/?program={{ show.slug }}">
-      <svg class="v2-i" aria-hidden="true"><use href="#i-party-hat"/></svg>
-      <span>Собрать</span>
-    </a>
+<div class="sd-sticky" data-sd-sticky aria-hidden="true" inert>
+  <div class="sd-sticky__inner">
+    <span class="sd-sticky__info">
+      <strong>{{ show.name }}</strong>
+      <span>{{ show.price_label }} · {{ show.duration_label }}</span>
+    </span>
+    <a class="sd-btn sd-btn--primary" href="{{ builder_href }}">{{ icon('party-hat') }}<span>Собрать</span></a>
   </div>
 </div>
 
 {% if show.video_url %}
-  <!-- ============ ВИДЕО-МОДАЛ ============ -->
-  <div class="v2-lightbox v2-video-modal" data-video-modal aria-hidden="true" role="dialog" aria-modal="true" aria-label="Видео: {{ show.name }}" tabindex="-1" inert>
-    <div class="v2-lightbox__backdrop" data-video-close></div>
-    <div class="v2-video-modal__stage" data-video-stage></div>
-    <button class="v2-lightbox__close" type="button" data-video-close aria-label="Закрыть видео">
-      <svg class="v2-i" aria-hidden="true"><use href="#i-close"/></svg>
-    </button>
+  <div class="sd-modal" data-video-modal aria-hidden="true" role="dialog" aria-modal="true" aria-label="Видео: {{ show.name }}" tabindex="-1" inert>
+    <div class="sd-modal__backdrop" data-video-close></div>
+    <div class="sd-modal__stage" data-video-stage></div>
+    <button class="sd-modal__close" type="button" data-video-close aria-label="Закрыть видео">{{ icon('close') }}</button>
   </div>
 {% endif %}
 </div>
@@ -291,97 +389,119 @@
 (function () {
   "use strict";
 
-  function ready(fn) {
-    if (document.readyState === "loading") {
-      document.addEventListener("DOMContentLoaded", fn);
-    } else {
-      fn();
-    }
+  var siteHeader = document.querySelector(".header");
+  if (siteHeader) {
+    var syncHeader = function () {
+      document.documentElement.style.setProperty("--sd-header", Math.ceil(siteHeader.getBoundingClientRect().height) + "px");
+    };
+    syncHeader();
+    if ("ResizeObserver" in window) new ResizeObserver(syncHeader).observe(siteHeader);
+    else window.addEventListener("resize", syncHeader, { passive: true });
   }
 
-  /* ---------- Кнопка «Назад» ---------- */
-  document.querySelectorAll("[data-v2-back]").forEach(function (button) {
+  document.querySelectorAll("[data-sd-back]").forEach(function (button) {
     button.addEventListener("click", function () {
-      var fallback = button.getAttribute("data-fallback") || "/show-programs/";
-      var ref = document.referrer || "";
-      var sameSite = ref.indexOf(window.location.origin) === 0;
-      if (sameSite && window.history.length > 1) {
-        window.history.back();
-      } else {
-        window.location.assign(fallback);
-      }
+      var sameSite = (document.referrer || "").indexOf(window.location.origin) === 0;
+      if (sameSite && window.history.length > 1) window.history.back();
+      else window.location.assign(button.getAttribute("data-fallback") || "/show-programs/");
     });
   });
 
-  ready(function () {
+  /* Битое фото убираем, а если не осталось ни одного — показываем заглушку. */
+  var gallery = document.querySelector("[data-sd-gallery]");
+  document.querySelectorAll("[data-sd-img]").forEach(function (img) {
+    var fail = function () {
+      var slide = img.closest("[data-sd-slide]");
+      var thumb = img.closest("[data-sd-thumb]");
+      var tile = img.closest("li");
+      if (slide) slide.classList.add("is-broken");
+      else if (thumb) thumb.hidden = true;
+      else if (tile && tile.closest("[data-sd-rail]")) tile.hidden = true;
+      else img.hidden = true;
+      if (gallery && !gallery.querySelector("[data-sd-slide]:not(.is-broken)")) gallery.classList.add("is-empty");
+    };
+    if (img.complete && img.naturalWidth === 0 && img.currentSrc) fail();
+    else img.addEventListener("error", fail);
+  });
+  if (gallery && !gallery.querySelector("[data-sd-slide]")) gallery.classList.add("is-empty");
 
-  /* ---------- Sticky CTA: после hero, не перекрывает футер ---------- */
-  var sticky = document.querySelector("[data-sticky-cta]");
-  var sentinel = document.querySelector("[data-sticky-sentinel]");
-  var stickyBoundary = document.querySelector(".sp-hero") || sentinel;
+  /* Галерея: свайп по треку, миниатюры листают к нужному кадру. */
+  var track = gallery && gallery.querySelector("[data-sd-track]");
+  var thumbs = gallery ? Array.prototype.slice.call(gallery.querySelectorAll("[data-sd-thumb]")) : [];
+  var counter = gallery && gallery.querySelector("[data-sd-current]");
+  if (track && thumbs.length) {
+    var setActive = function (index) {
+      thumbs.forEach(function (thumb, i) {
+        thumb.classList.toggle("is-active", i === index);
+        if (i === index) thumb.setAttribute("aria-current", "true");
+        else thumb.removeAttribute("aria-current");
+      });
+      if (counter) counter.textContent = String(index + 1);
+    };
+    thumbs.forEach(function (thumb) {
+      thumb.addEventListener("click", function () {
+        var index = Number(thumb.getAttribute("data-sd-thumb"));
+        track.scrollTo({ left: track.clientWidth * index, behavior: "smooth" });
+        setActive(index);
+      });
+    });
+    var ticking = false;
+    track.addEventListener("scroll", function () {
+      if (ticking) return;
+      ticking = true;
+      window.requestAnimationFrame(function () {
+        setActive(Math.round(track.scrollLeft / Math.max(1, track.clientWidth)));
+        ticking = false;
+      });
+    }, { passive: true });
+    track.addEventListener("keydown", function (event) {
+      if (event.key !== "ArrowRight" && event.key !== "ArrowLeft") return;
+      event.preventDefault();
+      track.scrollBy({ left: (event.key === "ArrowRight" ? 1 : -1) * track.clientWidth, behavior: "smooth" });
+    });
+  }
+
+  /* Тариф по числу героев. */
+  document.querySelectorAll("[data-sd-tier]").forEach(function (input) {
+    input.addEventListener("change", function () {
+      document.querySelectorAll("[data-tier-price]").forEach(function (row) {
+        row.hidden = row.getAttribute("data-tier-price") !== input.value;
+      });
+    });
+  });
+
+  /* Плавающая кнопка: после блока покупки и не поверх футера. */
+  var sticky = document.querySelector("[data-sd-sticky]");
+  var buy = document.querySelector("[data-sd-buy]");
   var footer = document.querySelector(".surpriz-site-footer");
-  if (sticky && stickyBoundary) {
-    var pastHero = false;
+  if (sticky && buy && "IntersectionObserver" in window) {
+    var pastBuy = false;
     var footerVisible = false;
-    var update = function () {
-      var visible = pastHero && !footerVisible;
+    var sync = function () {
+      var visible = pastBuy && !footerVisible;
       sticky.classList.toggle("is-visible", visible);
       sticky.setAttribute("aria-hidden", visible ? "false" : "true");
       if (visible) sticky.removeAttribute("inert");
       else sticky.setAttribute("inert", "");
     };
-    if ("IntersectionObserver" in window) {
+    new IntersectionObserver(function (entries) {
+      pastBuy = !entries[0].isIntersecting && entries[0].boundingClientRect.bottom < 0;
+      sync();
+    }).observe(buy);
+    if (footer) {
       new IntersectionObserver(function (entries) {
-        pastHero = !entries[0].isIntersecting && entries[0].boundingClientRect.bottom <= 0;
-        update();
-      }, { threshold: 0 }).observe(stickyBoundary);
-      if (footer) {
-        new IntersectionObserver(function (entries) {
-          footerVisible = entries[0].isIntersecting;
-          update();
-        }, { threshold: 0 }).observe(footer);
-      }
-    } else {
-      var syncStickyPosition = function () {
-        pastHero = stickyBoundary.getBoundingClientRect().bottom <= 0;
-        footerVisible = footer ? footer.getBoundingClientRect().top < window.innerHeight : false;
-        update();
-      };
-      window.addEventListener("scroll", syncStickyPosition, { passive: true });
-      window.addEventListener("resize", syncStickyPosition, { passive: true });
-      syncStickyPosition();
+        footerVisible = entries[0].isIntersecting;
+        sync();
+      }).observe(footer);
     }
   }
 
-  /* ---------- Видео-модал ---------- */
+  /* Видео. */
   var openBtn = document.querySelector("[data-video-open]");
   var modal = document.querySelector("[data-video-modal]");
   if (openBtn && modal) {
     var stage = modal.querySelector("[data-video-stage]");
     var lastFocus = null;
-    var modalScope = modal.parentElement;
-    var backgroundTargets = modalScope
-      ? Array.prototype.slice.call(modalScope.children).filter(function (element) { return element !== modal; })
-      : [];
-    [document.querySelector(".v2-header"), document.querySelector(".v2-mbar"), document.querySelector(".surpriz-site-footer")]
-      .forEach(function (element) {
-        if (element && backgroundTargets.indexOf(element) === -1) backgroundTargets.push(element);
-      });
-
-    var setBackgroundInert = function (inert) {
-      backgroundTargets.forEach(function (element) {
-        if (inert) {
-          if (!element.hasAttribute("inert")) {
-            element.setAttribute("inert", "");
-            element.setAttribute("data-video-inerted", "");
-          }
-        } else if (element.hasAttribute("data-video-inerted")) {
-          element.removeAttribute("inert");
-          element.removeAttribute("data-video-inerted");
-        }
-      });
-    };
-
     var embedUrl = function (url) {
       var match = url.match(/(?:youtube\.com\/(?:watch\?.*v=|embed\/|shorts\/)|youtu\.be\/)([\w-]{6,})/);
       if (match) return "https://www.youtube.com/embed/" + match[1] + "?autoplay=1&rel=0";
@@ -389,73 +509,36 @@
       if (match) return "https://player.vimeo.com/video/" + match[1] + "?autoplay=1";
       return "";
     };
-
-    var closeModal = function () {
+    var close = function () {
       modal.classList.remove("is-open");
       modal.setAttribute("aria-hidden", "true");
       modal.setAttribute("inert", "");
-      setBackgroundInert(false);
       document.body.style.overflow = "";
-      if (stage) stage.innerHTML = "";
-      if (lastFocus && lastFocus.focus) lastFocus.focus();
+      stage.innerHTML = "";
+      if (lastFocus) lastFocus.focus();
     };
-
     openBtn.addEventListener("click", function () {
       var url = openBtn.getAttribute("data-video-url") || "";
       var embed = embedUrl(url);
-      var isFile = /\.(mp4|webm|mov)(\?|$)/i.test(url);
-      if (!embed && !isFile) {
+      if (!embed && !/\.(mp4|webm|mov)(\?|$)/i.test(url)) {
         window.open(url, "_blank", "noopener");
         return;
       }
       lastFocus = document.activeElement;
-      if (stage) {
-        stage.innerHTML = embed
-          ? '<iframe class="v2-video-modal__frame" allowfullscreen allow="autoplay; fullscreen; picture-in-picture" src="' + embed + '" title="Видео"></iframe>'
-          : '<video class="v2-video-modal__video" controls autoplay playsinline src="' + url + '"></video>';
-      }
+      stage.innerHTML = embed
+        ? '<iframe allowfullscreen allow="autoplay; fullscreen; picture-in-picture" src="' + embed + '" title="Видео"></iframe>'
+        : '<video controls autoplay playsinline src="' + url.replace(/"/g, "&quot;") + '"></video>';
       modal.classList.add("is-open");
       modal.setAttribute("aria-hidden", "false");
       modal.removeAttribute("inert");
-      setBackgroundInert(true);
       document.body.style.overflow = "hidden";
-      var closeBtn = modal.querySelector("[data-video-close]");
-      if (closeBtn) closeBtn.focus();
+      modal.querySelector(".sd-modal__close").focus();
     });
-
-    modal.querySelectorAll("[data-video-close]").forEach(function (el) {
-      el.addEventListener("click", closeModal);
-    });
+    modal.querySelectorAll("[data-video-close]").forEach(function (el) { el.addEventListener("click", close); });
     document.addEventListener("keydown", function (event) {
-      if (!modal.classList.contains("is-open")) return;
-      if (event.key === "Escape") {
-        closeModal();
-        return;
-      }
-      if (event.key !== "Tab") return;
-      var focusable = Array.prototype.slice.call(modal.querySelectorAll(
-        'a[href], button:not([disabled]), iframe, video, [tabindex]:not([tabindex="-1"])'
-      )).filter(function (element) {
-        return !element.hasAttribute("hidden") && element.getAttribute("aria-hidden") !== "true";
-      });
-      if (!focusable.length) {
-        event.preventDefault();
-        modal.focus();
-        return;
-      }
-      var first = focusable[0];
-      var last = focusable[focusable.length - 1];
-      if (event.shiftKey && document.activeElement === first) {
-        event.preventDefault();
-        last.focus();
-      } else if (!event.shiftKey && document.activeElement === last) {
-        event.preventDefault();
-        first.focus();
-      }
+      if (event.key === "Escape" && modal.classList.contains("is-open")) close();
     });
   }
-
-  });
 })();
 </script>
 
