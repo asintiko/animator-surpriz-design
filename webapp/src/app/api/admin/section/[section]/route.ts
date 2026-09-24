@@ -14,6 +14,7 @@ const allowedSections = new Set([
   "customers",
   "analytics",
   "notifications",
+  "calendar",
   "settings",
 ]);
 

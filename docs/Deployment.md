@@ -39,6 +39,10 @@
 
 Перед переключением все четыре unit-файла обязаны указывать на один прежний каталог, а новый каталог обязан содержать `app.py`, `.env`, ссылку `.venv` на `/opt/surpriz/.venv`, `content` на `/opt/surpriz/content`, готовую сборку `webapp/.next` и `static/admin-media` на общий медиа-каталог.
 
+## Google Календарь
+
+Отдельного сервиса нет: синхронизация идёт потоком в `surpriz-bot.service`, и только если в юните есть `Environment=GOOGLE_CALENDAR_WORKER=1`. В `.env` релиза нужен `GOOGLE_CALENDAR_TOKEN_KEY` (ключ Fernet, генерируется один раз на сервере и переносится между релизами вместе с `.env`; в чат и репозиторий не попадает). В общем venv должен быть пакет `cryptography` из `requirements.txt`. Для OAuth нужен `ADMIN_PORTAL_BASE` (или `GOOGLE_OAUTH_REDIRECT_URI`) в `.env`; Client ID/Secret задаются в `/admin/calendar` или через `GOOGLE_OAUTH_CLIENT_ID` / `GOOGLE_OAUTH_CLIENT_SECRET`. Nginx менять не нужно: `/api/admin/google-calendar/callback` уже проксируется в Next. Подробно — [[Google-Calendar]].
+
 ## Админка и откат
 
 - Рабочий адрес админки: `/admin/`.

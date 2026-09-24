@@ -2,6 +2,7 @@ import {
   BarChart3,
   BellRing,
   Boxes,
+  CalendarDays,
   ExternalLink,
   Gift,
   Handshake,
@@ -24,6 +25,7 @@ import { AdminLogout } from "@/components/admin/admin-logout";
 const navigation = [
   { href: "/admin", label: "Обзор", icon: LayoutDashboard },
   { href: "/admin/orders", label: "Заказы", icon: ListChecks },
+  { href: "/admin/calendar", label: "Календарь", icon: CalendarDays },
   { href: "/admin/visitors", label: "Посетители", icon: UsersRound },
   { href: "/admin/catalog/characters", label: "Персонажи", icon: Boxes },
   { href: "/admin/show-programs", label: "Шоу-программы", icon: PartyPopper },

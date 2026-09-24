@@ -1,6 +1,6 @@
 "use client";
 
-import { BellRing, MapPin, Phone, RefreshCw, Search, Send } from "lucide-react";
+import { BellRing, CalendarCheck2, MapPin, Phone, RefreshCw, Search, Send } from "lucide-react";
 import { type FormEvent, useEffect, useMemo, useState } from "react";
 
 import {
@@ -44,6 +44,7 @@ type Order = {
   total_price_label?: string;
   created_at?: string;
   created_at_label?: string;
+  calendar_event_link?: string;
 };
 
 type OrdersPayload = SectionEnvelope & {
@@ -131,7 +132,7 @@ export function AdminOrdersSection({ initialCustomerId = "", initialSearch = "" 
                       <td><strong>{order.customer_name || "Без имени"}</strong><small>{order.customer_phone || "—"}</small>{order.celebrant_name ? <small>Именинник: {order.celebrant_name}{order.celebrant_age ? `, ${order.celebrant_age} лет` : ""}</small> : null}{order.children_count != null ? <small>Гостей: {order.children_count}</small> : null}</td>
                       <td><strong>{order.program_name || "Без шоу-программы"}</strong><small>{order.celebration_date_label || order.celebration_date} · {order.time_from}–{order.time_to}{order.duration_minutes ? ` · ${order.duration_minutes} мин` : ""}</small>{order.character_names?.length ? <small>{order.character_names.join(", ")}</small> : null}{order.addons?.length ? <small>Доп. услуги: {order.addons.map((addon) => `${addon.name} (+${addon.price_label})`).join(", ")}</small> : null}</td>
                       <td><span>{order.address_text || "—"}</span>{order.location_label && order.location_label !== order.address_text ? <small>{order.location_label}</small> : null}<small>{order.payment_method_label || ""}</small>{order.notes ? <details><summary>Комментарий</summary><p>{order.notes}</p></details> : null}</td>
-                      <td><div className="admin-row-actions">{cleanPhone ? <a aria-label="Позвонить" href={`tel:${cleanPhone}`}><Phone size={17} /></a> : null}{cleanPhone ? <a aria-label="Открыть Telegram" href={`https://t.me/+${cleanPhone.replace("+", "")}`} rel="noreferrer" target="_blank"><Send size={17} /></a> : null}{order.yandex_map_url ? <a aria-label="Открыть карту" href={order.yandex_map_url} rel="noreferrer" target="_blank"><MapPin size={17} /></a> : null}<button aria-label="Повторить уведомление" disabled={mutation.pendingKey === `notify-${order.id}`} onClick={() => void mutation.run(`notify-${order.id}`, { action: "notify", order_id: order.id }, "Уведомление отправлено") } type="button"><BellRing size={17} /></button></div></td>
+                      <td><div className="admin-row-actions">{cleanPhone ? <a aria-label="Позвонить" href={`tel:${cleanPhone}`}><Phone size={17} /></a> : null}{cleanPhone ? <a aria-label="Открыть Telegram" href={`https://t.me/+${cleanPhone.replace("+", "")}`} rel="noreferrer" target="_blank"><Send size={17} /></a> : null}{order.yandex_map_url ? <a aria-label="Открыть карту" href={order.yandex_map_url} rel="noreferrer" target="_blank"><MapPin size={17} /></a> : null}{order.calendar_event_link ? <a aria-label="Открыть в Google Календаре" href={order.calendar_event_link} rel="noreferrer" target="_blank" title="Заказ в Google Календаре"><CalendarCheck2 size={17} /></a> : null}<button aria-label="Повторить уведомление" disabled={mutation.pendingKey === `notify-${order.id}`} onClick={() => void mutation.run(`notify-${order.id}`, { action: "notify", order_id: order.id }, "Уведомление отправлено") } type="button"><BellRing size={17} /></button></div></td>
                       <td><div className="admin-status-control"><span className={`order-status status-${displayStatus}`}>{confirmationLabel}</span><select aria-label={`Статус ${order.public_id}`} disabled={confirmationLocked || mutation.pendingKey === `confirmation-${order.id}`} value={displayStatus} onChange={(event) => { const next = event.target.value; if (next !== "cancelled" || window.confirm(`Отменить заказ ${order.public_id}? Время и костюмы снова станут доступны.`)) void mutation.run(`confirmation-${order.id}`, { action: "update_status", order_id: order.id, status: next }, "Статус обновлён"); }}>{Object.entries(statuses).map(([key, label]) => <option value={key} key={key}>{label}</option>)}</select>{confirmationLocked ? <small>Заказ завершён или отменён</small> : null}</div></td>
                     </tr>
                   );
