@@ -46,6 +46,11 @@ export type Promotion = {
   sort_order: number;
 };
 
+export type ProgramFeature = {
+  icon: string;
+  text: string;
+};
+
 export type CatalogEntity = {
   id: number;
   name: string;
@@ -92,6 +97,9 @@ export type CatalogEntity = {
   ensemble_members: string[];
   ensemble_included_count: number;
   ensemble_extra_member_price: number;
+  program_features?: ProgramFeature[];
+  program_features_source?: "stored" | "text";
+  program_cast?: string[];
   media: MediaItem[];
   categories: string[];
   tags: string[];

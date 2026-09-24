@@ -3372,6 +3372,169 @@ input[type="radio"] {
   color: #897c84;
 }
 
+.program-content-note {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 13px;
+  padding: 10px 13px;
+  border: 1px solid #f0d9a8;
+  border-radius: var(--radius-xs);
+  color: #7a5a14;
+  background: #fff8e8;
+  font-size: 0.8rem;
+  font-weight: 650;
+}
+
+.program-feature-list {
+  display: grid;
+  gap: 9px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.program-feature {
+  display: grid;
+  grid-template-columns: 58px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px;
+  padding: 7px 9px 7px 7px;
+  border: 1px solid #e6ddd6;
+  border-radius: var(--radius-sm);
+  background: #fbfaf9;
+}
+
+.program-feature-icon {
+  position: relative;
+}
+
+.program-feature-icon > button {
+  display: grid;
+  place-items: center;
+  width: 58px;
+  height: 58px;
+  padding: 4px;
+  border: 1px solid #e3d8f5;
+  border-radius: 14px;
+  background: linear-gradient(160deg, #fff 0%, #f6f1ff 100%);
+  cursor: pointer;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.program-feature-icon > button:hover,
+.program-feature-icon > button[aria-expanded="true"] {
+  border-color: var(--violet);
+  box-shadow: 0 0 0 3px var(--violet-soft);
+}
+
+.program-feature > input {
+  min-width: 0;
+  border-color: #dcd2cb;
+  background: #fff;
+}
+
+.program-feature-actions {
+  display: flex;
+  gap: 5px;
+}
+
+.program-feature-actions button {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border: 1px solid #dcd2cb;
+  border-radius: var(--radius-xs);
+  color: var(--ink-soft);
+  background: #fff;
+  cursor: pointer;
+}
+
+.program-feature-actions button:hover:not(:disabled) {
+  border-color: var(--violet);
+  color: var(--violet);
+}
+
+.program-feature-actions button:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
+.program-feature-actions button.is-danger {
+  border-color: #ead7d4;
+  color: #9e433c;
+  background: #fff8f6;
+}
+
+.program-feature-actions button.is-danger:hover {
+  color: #792f2a;
+  background: #fcebe7;
+}
+
+.program-icon-picker {
+  position: absolute;
+  z-index: 30;
+  top: calc(100% + 8px);
+  left: 0;
+  display: grid;
+  grid-template-columns: repeat(4, 96px);
+  gap: 6px;
+  padding: 10px;
+  border: 1px solid #e3d8f5;
+  border-radius: 18px;
+  background: #fff;
+  box-shadow: var(--shadow);
+}
+
+.program-icon-picker button {
+  display: grid;
+  justify-items: center;
+  gap: 4px;
+  padding: 8px 4px 7px;
+  border: 1px solid transparent;
+  border-radius: 12px;
+  color: var(--ink-soft);
+  background: transparent;
+  font-size: 0.68rem;
+  font-weight: 700;
+  line-height: 1.15;
+  text-align: center;
+  cursor: pointer;
+}
+
+.program-icon-picker button:hover {
+  background: #f6f1ff;
+}
+
+.program-icon-picker button[aria-pressed="true"] {
+  border-color: var(--violet);
+  background: var(--violet-soft);
+  color: var(--violet-dark);
+}
+
+.program-content-count {
+  margin: 9px 0 0;
+  color: #897c84;
+  font-size: 0.74rem;
+  text-align: right;
+}
+
+@media (max-width: 720px) {
+  .program-feature {
+    grid-template-columns: 58px minmax(0, 1fr);
+  }
+
+  .program-feature-actions {
+    grid-column: 1 / -1;
+    justify-content: flex-end;
+  }
+
+  .program-icon-picker {
+    grid-template-columns: repeat(3, 88px);
+  }
+}
+
 .ensemble-settings {
   display: grid;
   grid-template-columns: minmax(150px, 0.55fr) minmax(210px, 0.75fr) minmax(270px, 1fr);

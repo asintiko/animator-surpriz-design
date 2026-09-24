@@ -60,6 +60,7 @@ from core.admin_store import (  # noqa: E402
 from core.catalog_store import (  # noqa: E402
     ENTITY_TYPE_CHARACTER,
     ENTITY_TYPE_SHOW_PROGRAM,
+    FIXED_CAST_PROGRAM_DETAILS,
     create_category,
     create_character,
     create_tag,
@@ -71,6 +72,7 @@ from core.catalog_store import (  # noqa: E402
     list_characters,
     list_tags,
     parse_ensemble_members,
+    show_features_from_text,
     update_category,
     update_character,
     delete_character,
@@ -256,6 +258,7 @@ CROP_FIELDS = (
 def _entity_payload(payload: dict[str, Any]) -> dict[str, Any]:
     data = dict(payload)
     data.pop("addons", None)
+    data.pop("program_features_source", None)
     for key in CROP_FIELDS:
         data.pop(key, None)
     members = parse_ensemble_members(data.get("ensemble_members"))
@@ -292,6 +295,15 @@ def _admin_entity_json(entity: dict[str, Any], *, include_relations: bool = True
         ]
     data.setdefault("media", [])
     data.setdefault("linked_character_slugs", [])
+    if data.get("entity_type") == "show_program":
+        data["program_cast"] = list(
+            data.get("program_cast") or FIXED_CAST_PROGRAM_DETAILS.get(str(data.get("slug") or ""), ())
+        )
+        # Programs saved before the structured editor existed start from their
+        # legacy text, so the admin sees the same items the site shows.
+        data["program_features_source"] = "stored" if data.get("program_features") else "text"
+        if not data.get("program_features"):
+            data["program_features"] = show_features_from_text(data.get("included_items"))
     if include_relations and data.get("entity_type") == "show_program":
         settings = get_program_addon_settings(int(data.get("id") or 0))
         data["addons"] = [

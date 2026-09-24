@@ -94,3 +94,49 @@ describe("createEntityMutationPayload", () => {
     )).toThrow("минимум два персонажа");
   });
 });
+
+describe("show program content", () => {
+  const base = { ensemble_members: [], ensemble_included_count: 2, ensemble_extra_member_price: 0 };
+
+  it("trims items, drops blanks and keeps the legacy text in sync", () => {
+    const payload = createEntityMutationPayload(
+      {
+        ...base,
+        included_items: "старый текст",
+        program_features: [
+          { icon: "note", text: "  1   диджей " },
+          { icon: "gift", text: "   " },
+          { icon: "star", text: "4 прожектора" },
+        ],
+        program_cast: [" Ведущий ", "", "Охранник"],
+        program_features_source: "text",
+      },
+      "show_program",
+    );
+
+    expect(payload.program_features).toEqual([
+      { icon: "note", text: "1 диджей" },
+      { icon: "star", text: "4 прожектора" },
+    ]);
+    expect(payload.program_cast).toEqual(["Ведущий", "Охранник"]);
+    expect(payload.included_items).toBe("1 диджей; 4 прожектора");
+    expect(payload).not.toHaveProperty("program_features_source");
+  });
+
+  it("clears the legacy text when every item was removed", () => {
+    const payload = createEntityMutationPayload(
+      { ...base, included_items: "1 диджей", program_features: [], program_cast: [] },
+      "show_program",
+    );
+    expect(payload.included_items).toBe("");
+  });
+
+  it("never sends show content for characters", () => {
+    const payload = createEntityMutationPayload(
+      { ...base, program_features: [{ icon: "note", text: "x" }], program_cast: ["y"] },
+      "character",
+    );
+    expect(payload).not.toHaveProperty("program_features");
+    expect(payload).not.toHaveProperty("program_cast");
+  });
+});

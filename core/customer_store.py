@@ -1408,7 +1408,9 @@ def list_show_programs_for_public() -> list[dict[str, Any]]:
     for item in list_characters(status="active", entity_type=ENTITY_TYPE_SHOW_PROGRAM):
         item["is_show_program"] = True
         item["is_thematic"] = item["slug"] in THEMATIC_PROGRAM_SLUGS
-        item["fixed_cast_members"] = list(FIXED_CAST_PROGRAM_DETAILS.get(str(item.get("slug") or ""), ()))
+        item["fixed_cast_members"] = list(
+            item.get("program_cast") or FIXED_CAST_PROGRAM_DETAILS.get(str(item.get("slug") or ""), ())
+        )
         item["price_label"] = format_money(item.get("base_price"))
         item["duration_label"] = f"{int(item.get('default_duration_minutes') or DEFAULT_SHOW_PROGRAM_DURATION_MINUTES)} мин"
         item["summary_text"] = (

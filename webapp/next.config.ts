@@ -42,13 +42,16 @@ const nextConfig: NextConfig = {
       { pathname: "/admin-media/**" },
       { pathname: "/brand/**" },
       { pathname: "/media/**" },
-      { pathname: "/surpriz/**" }
+      { pathname: "/surpriz/**" },
+      { pathname: "/v2/show-detail/**" }
     ]
   },
   async rewrites() {
     return {
       afterFiles: [
         { source: "/api/legacy/:path*", destination: `${backendOrigin}/api/:path*` },
+        // Show page icons are served by Flask; nginx routes them there in production.
+        { source: "/v2/show-detail/:path*", destination: `${backendOrigin}/v2/show-detail/:path*` },
         ...(publicAssetOrigin
           ? [{ source: "/surpriz/:path*", destination: `${publicAssetOrigin}/surpriz/:path*` }]
           : []),

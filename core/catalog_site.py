@@ -17,6 +17,7 @@ from .catalog_store import (
     list_characters,
     list_characters_for_public,
     list_tags,
+    show_features_from_text,
 )
 from .config import STATIC_ROOT
 from .customer_store import (
@@ -87,20 +88,6 @@ _SHOW_CARD_MEDIA_RE = re.compile(
     r"^(?P<base>/surpriz/assets/img/show-programs/cards/.+?)-1200\.webp(?:[?#].*)?$"
 )
 SHOW_DETAIL_FEATURED_CHARACTERS = 8
-# First match wins, so the narrow phrases go before the broad ones
-# («аквагример работает 1 час до…» is a schedule note, not the service itself).
-_SHOW_FEATURE_ICON_RULES: tuple[tuple[tuple[str, ...], str], ...] = (
-    (("час до",), "clock"),
-    (("аквагрим", "рисун"), "wand"),
-    (("диджей",), "note"),
-    (("прожектор",), "star"),
-    (("лент", "серпантин"), "confetti"),
-    (("пузыр", "дым"), "sparkles"),
-    (("браслет", "попкорн"), "gift"),
-    (("реквизит",), "box"),
-    (("маски", "шары"), "mask"),
-    (("ведущ", "персонаж", "артист", "химик", "охранник"), "users"),
-)
 
 
 def _build_page_bundle(
@@ -621,26 +608,17 @@ def _show_detail_assets() -> dict[str, object]:
     return {"icons": icons, "backgrounds": backgrounds}
 
 
-def _show_feature_icon(text: str) -> str:
-    lowered = text.casefold()
-    for needles, icon in _SHOW_FEATURE_ICON_RULES:
-        if any(needle in lowered for needle in needles):
-            return icon
-    return "check"
-
-
-def _show_features(value: object, *, skip_gift_choice: bool) -> list[dict[str, str]]:
-    """Split the admin «Что входит» text into icon tiles (commas separate items too)."""
-    features: list[dict[str, str]] = []
-    for chunk in re.split(r"[\n;,]+", str(value or "")):
-        text = chunk.strip(" -•\t.")
-        if not text:
-            continue
-        if skip_gift_choice and "маски или шары" in text.casefold():
-            continue
-        text = text[0].upper() + text[1:]
-        features.append({"icon": _show_feature_icon(text), "text": text})
+def _show_program_features(show: dict[str, object], *, skip_gift_choice: bool) -> list[dict[str, str]]:
+    """Admin-edited items when present, otherwise the legacy «Что входит» text."""
+    features = list(show.get("program_features") or []) or show_features_from_text(show.get("included_items"))
+    if skip_gift_choice:
+        # The gift has its own tile, so a «маски или шары» line would repeat it.
+        features = [item for item in features if "маски или шары" not in item["text"].casefold()]
     return features
+
+
+def _show_cast_members(show: dict[str, object]) -> list[str]:
+    return list(show.get("program_cast") or FIXED_CAST_PROGRAM_DETAILS.get(str(show.get("slug") or ""), ()))
 
 
 def _show_gift_label(show: dict[str, object]) -> str:
@@ -656,9 +634,8 @@ def _show_gift_label(show: dict[str, object]) -> str:
 
 def _show_price_tiers(show: dict[str, object]) -> list[dict[str, object]]:
     """Price by hero count, priced exactly like the builder does it."""
-    slug = str(show.get("slug") or "")
     included = int(show.get("included_characters_count") or 0)
-    if slug in FIXED_CAST_PROGRAM_DETAILS or included <= 0 or int(show.get("extra_character_price_3") or 0) <= 0:
+    if _show_cast_members(show) or included <= 0 or int(show.get("extra_character_price_3") or 0) <= 0:
         return []
     base_price = int(show.get("base_price") or 0)
     tiers: list[dict[str, object]] = []
@@ -715,15 +692,14 @@ def _show_variants(show: dict[str, object], candidates: list[dict[str, object]])
                 "price_label": _format_money(int(item.get("base_price") or 0)),
                 "duration_label": _format_duration(int(item.get("default_duration_minutes") or 0)),
                 "summary": str(item.get("short_description") or "").strip(),
-                "features": _show_features(item.get("included_items"), skip_gift_choice=True),
+                "features": _show_program_features(item, skip_gift_choice=True),
             }
         )
     return variants
 
 
 def _show_cast(show: dict[str, object]) -> dict[str, object]:
-    slug = str(show.get("slug") or "")
-    fixed = FIXED_CAST_PROGRAM_DETAILS.get(slug)
+    fixed = _show_cast_members(show)
     if fixed:
         count = len(fixed)
         items = [item.casefold() for item in _split_show_text(str(show.get("included_items") or "").replace(",", ";"))]
@@ -1093,7 +1069,7 @@ def build_show_program_page(slug: str) -> PageBundle | None:
         gallery=_show_gallery(show),
         variants=variants,
         variants_note=_show_variants_note(variants) if variants else "",
-        features=_show_features(show.get("included_items"), skip_gift_choice=bool(gift_label)),
+        features=_show_program_features(show, skip_gift_choice=bool(gift_label)),
         gift_label=gift_label,
         facts=facts[:4],
         cast=cast,
