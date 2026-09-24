@@ -1,3 +1,0 @@
-module.exports=[36102,a=>{"use strict";var b=a.i(78516);a.s(["default",0,function({children:a}){return(0,b.jsx)("div",{className:"admin-app",children:a})},"dynamic",0,"force-dynamic","fetchCache",0,"force-no-store","metadata",0,{title:{default:"Админка",template:"%s | Surpriz Admin"},robots:{index:!1,follow:!1}},"revalidate",0,0])},44067,a=>{a.n(a.i(36102))}];
-
-//# sourceMappingURL=src_app_admin_layout_tsx_0iwqz1d._.js.map

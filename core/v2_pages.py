@@ -1,16 +1,15 @@
-"""Surpriz v2 landing pages: home, prices, contacts, about.
+"""Surpriz v2 landing home page.
 
-All pages are assembled on the clean v2 chrome via :func:`core.v2_theme.render_v2_page`
-and rendered through ``templates/site/v2_*_content.html``. Data comes from the live
-stores (catalog / shows / promotions / addons / site settings) — nothing is frozen.
+The page is assembled on the clean v2 chrome via :func:`core.v2_theme.render_v2_page`
+and rendered through ``templates/site/v2_home_content.html``. Data comes from the live
+stores (catalog / shows / promotions / site settings) — nothing is frozen.
 """
 
 from __future__ import annotations
 
 from flask import render_template
 
-from .addon_store import list_active_addons
-from .catalog_site import _format_money, _show_program_summary
+from .catalog_site import _show_program_summary
 from .catalog_store import (
     ENTITY_TYPE_CHARACTER,
     ENTITY_TYPE_SHOW_PROGRAM,
@@ -18,14 +17,12 @@ from .catalog_store import (
     list_characters_for_public,
 )
 from .loader import PageBundle
-from .promotion_store import list_promotions
 from .v2_theme import DEFAULT_OG_IMAGE, render_v2_page
 
 HOME_FEATURED_CHARACTERS = 12
 HOME_MARQUEE_CHARACTERS = 20
 HOME_GALLERY_PHOTOS = 10
 HOME_COLLAGE_CHARACTERS = 4
-ABOUT_PHOTOS = 3
 
 
 def _public_shows() -> list[dict]:
@@ -105,23 +102,6 @@ def _active_promotions() -> list[dict]:
         return []
 
 
-def _characters_price_facts(shows: list[dict]) -> dict:
-    """Facts about included/extra characters, derived from real program data."""
-    included_counts = {int(s.get("included_characters_count") or 0) for s in shows if int(s.get("included_characters_count") or 0) > 0}
-    extra_prices = sorted({int(s.get("extra_character_price_3") or 0) for s in shows if int(s.get("extra_character_price_3") or 0) > 0})
-    included_label = ""
-    if included_counts:
-        value = min(included_counts)
-        included_label = f"{value} персонажа" if value in {2, 3, 4} else f"{value} персонажей"
-    extra_label = ""
-    if extra_prices:
-        extra_label = f"от {_format_money(extra_prices[0])}"
-    return {
-        "included_label": included_label,
-        "extra_label": extra_label,
-    }
-
-
 def build_home_page() -> PageBundle | None:
     shows = _public_shows()
     characters = _public_characters()
@@ -167,101 +147,4 @@ def build_home_page() -> PageBundle | None:
         canonical_path="/",
         og_image=og_image,
         active="home",
-    )
-
-
-def build_prices_page() -> PageBundle | None:
-    shows = _public_shows()
-    if not shows:
-        return None
-
-    for show in shows:
-        base_price = int(show.get("base_price") or 0)
-        show["price_exact"] = _format_money(base_price) if base_price > 0 else "уточняйте"
-
-    facts = _characters_price_facts(shows)
-    characters_total = len(_public_characters())
-
-    addons = []
-    try:
-        for addon in list_active_addons():
-            price = int(addon.get("price") or 0)
-            addons.append(
-                {
-                    "name": str(addon.get("name") or "").strip(),
-                    "summary": str(addon.get("short_description") or addon.get("description") or "").strip(),
-                    "price_label": _format_money(price) if price > 0 else "уточняйте",
-                }
-            )
-    except Exception:
-        addons = []
-
-    og_image = DEFAULT_OG_IMAGE
-    for show in shows:
-        path = str(show.get("hero_file_path") or "").strip()
-        if path:
-            og_image = path
-            break
-
-    content_html = render_template(
-        "site/v2_prices_content.html",
-        shows=shows,
-        facts=facts,
-        addons=addons,
-        characters_total=characters_total,
-    )
-    return render_v2_page(
-        content_html,
-        title="Цены на детские праздники в Ташкенте | Surpriz",
-        description=(
-            "Актуальные цены студии Surpriz: шоу-программы, персонажи и дополнительные услуги. "
-            "Оплата после мероприятия."
-        ),
-        canonical_path="/prices/",
-        og_image=og_image,
-        active="prices",
-    )
-
-
-def build_contacts_page() -> PageBundle | None:
-    content_html = render_template("site/v2_contacts_content.html")
-    return render_v2_page(
-        content_html,
-        title="Контакты студии детских праздников Surpriz — Ташкент",
-        description=(
-            "Свяжитесь со студией Surpriz: телефон +998 99 892-65-65, Telegram @Animator_Surpriz. "
-            "Работаем ежедневно с 9:00 до 21:00, выезд по Ташкенту и области."
-        ),
-        canonical_path="/contacts/",
-        og_image=DEFAULT_OG_IMAGE,
-        active="contacts",
-    )
-
-
-def build_about_page() -> PageBundle | None:
-    characters = _public_characters()
-    shows = _public_shows()
-    with_photos = [c for c in characters if str(c.get("hero_file_path") or "").strip()]
-    photos = with_photos[:ABOUT_PHOTOS]
-
-    og_image = DEFAULT_OG_IMAGE
-    if with_photos:
-        og_image = str(with_photos[0].get("hero_file_path") or DEFAULT_OG_IMAGE)
-
-    content_html = render_template(
-        "site/v2_about_content.html",
-        photos=photos,
-        characters_total=len(characters),
-        shows_total=len(shows),
-    )
-    return render_v2_page(
-        content_html,
-        title="О студии Surpriz — детские праздники в Ташкенте",
-        description=(
-            "Surpriz — студия детских праздников в Ташкенте. Свои костюмы и реквизит, "
-            "артисты с опытом 5+ лет, сотни счастливых семей."
-        ),
-        canonical_path="/o-nas/",
-        og_image=og_image,
-        active="about",
     )

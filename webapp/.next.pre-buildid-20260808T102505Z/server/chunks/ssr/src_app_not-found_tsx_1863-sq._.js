@@ -1,3 +1,0 @@
-module.exports=[3363,a=>{"use strict";var b=a.i(78516),c=a.i(56906);a.s(["default",0,function(){return(0,b.jsxs)("section",{className:"empty-page container",children:[(0,b.jsx)("p",{className:"eyebrow",children:"404"}),(0,b.jsx)("h1",{children:"Такой страницы пока нет"}),(0,b.jsx)("p",{children:"Вернитесь в каталог или соберите праздник по шагам."}),(0,b.jsxs)("div",{className:"hero-actions",children:[(0,b.jsx)(c.default,{className:"button button-primary",href:"/catalog",children:"Каталог персонажей"}),(0,b.jsx)(c.default,{className:"button button-secondary",href:"/party-builder",children:"Собрать праздник"})]})]})}])},17537,a=>{a.n(a.i(3363))}];
-
-//# sourceMappingURL=src_app_not-found_tsx_1863-sq._.js.map

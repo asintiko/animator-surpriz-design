@@ -7,6 +7,12 @@ from .config import ROUTES_ROOT
 
 EXPLICIT_REDIRECTS = {
     "author/admin": "/",
+    "prices": "/show-programs/",
+    "contacts": "/",
+    "o-nas": "/",
+    "v3": "/",
+    "v4": "/",
+    "v5": "/",
 }
 PROMOTION_PATHS = {
     "promotions",
@@ -37,7 +43,7 @@ def resolve_route_redirect(requested_path: str) -> str | None:
     if cleaned in EXPLICIT_REDIRECTS:
         return EXPLICIT_REDIRECTS[cleaned]
 
-    if cleaned in PROMOTION_PATHS and not get_public_settings()["show_promotions"]:
+    if cleaned in PROMOTION_PATHS and not get_public_settings().get("show_promotions"):
         return "/"
 
     parts = PurePosixPath(cleaned).parts

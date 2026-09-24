@@ -56,8 +56,6 @@ INSTAGRAM_URL = "https://www.instagram.com/animator.surpriz/"
 NAV_ITEMS: tuple[tuple[str, str, str], ...] = (
     ("shows", "/show-programs/", "Шоу-программы"),
     ("catalog", "/catalog/", "Персонажи"),
-    ("prices", "/prices/", "Цены"),
-    ("contacts", "/contacts/", "Контакты"),
 )
 
 CHARACTER_NAV_ITEMS: tuple[tuple[str, str, str, str], ...] = (

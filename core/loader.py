@@ -4272,7 +4272,16 @@ def replace_show_program_navigation_links(html: str) -> str:
 
 
 def rewrite_legacy_public_urls(text: str) -> str:
-    for old_value, new_value in LEGACY_PUBLIC_URL_REPLACEMENTS:
+    replacements = (
+        *LEGACY_PUBLIC_URL_REPLACEMENTS,
+        ('href="/prices/"', 'href="/show-programs/"'),
+        ('href="/prices"', 'href="/show-programs/"'),
+        ('href="/contacts/"', 'href="/#contacts-strip"'),
+        ('href="/contacts"', 'href="/#contacts-strip"'),
+        ('href="/o-nas/"', 'href="/#contacts-strip"'),
+        ('href="/o-nas"', 'href="/#contacts-strip"'),
+    )
+    for old_value, new_value in replacements:
         text = text.replace(old_value, new_value)
     text = text.replace('<a href="">', '<a href="/">')
     return text
@@ -5069,8 +5078,8 @@ def build_site_footer_html() -> str:
             <li><a href="/">Главная</a></li>
             <li><a href="/show-programs/">Шоу-программы</a></li>
             <li><a href="/catalog/">Каталог персонажей</a></li>
-            <li><a href="/o-nas/">О Нас</a></li>
-            <li><a href="/contacts/">Контакты</a></li>
+      <li><a href="/#contacts-strip">О Нас</a></li>
+      <li><a href="/#contacts-strip">Контакты</a></li>
           </ul>
         </nav>
 
