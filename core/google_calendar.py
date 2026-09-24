@@ -23,6 +23,7 @@ import os
 import re
 import secrets
 import socket
+import sqlite3
 import threading
 import time as time_module
 from collections import Counter
@@ -43,7 +44,10 @@ from .catalog_store import (
     normalize_search_text,
 )
 from .customer_store import (
+    AVAILABILITY_BLOCKING_STATUSES,
     BOOKING_LOCAL_TIMEZONE,
+    CHARACTER_BOOKING_BUFFER_AFTER_MINUTES,
+    CHARACTER_BOOKING_BUFFER_BEFORE_MINUTES,
     format_datetime_ru,
     format_money,
     get_order_by_id,
@@ -56,7 +60,7 @@ GOOGLE_TOKEN_URL = "https://oauth2.googleapis.com/token"
 GOOGLE_REVOKE_URL = "https://oauth2.googleapis.com/revoke"
 CALENDAR_API_BASE = "https://www.googleapis.com/calendar/v3"
 OAUTH_SCOPES = (
-    "https://www.googleapis.com/auth/calendar.readonly",
+    "https://www.googleapis.com/auth/calendar.calendarlist.readonly",
     "https://www.googleapis.com/auth/calendar.events",
 )
 OAUTH_CALLBACK_PATH = "/api/admin/google-calendar/callback"
@@ -81,6 +85,11 @@ SYNC_LEASE_NAME = "sync-worker"
 SYNC_LEASE_SECONDS = 90
 SYNC_LEASE_RENEW_SECONDS = 20
 MANUAL_SYNC_WAIT_SECONDS = 5.0
+IMPORT_FAILURE_ALERT_AFTER = timedelta(minutes=30)
+ALERT_LIST_LIMIT = 8
+BUFFER_BEFORE = timedelta(minutes=CHARACTER_BOOKING_BUFFER_BEFORE_MINUTES)
+BUFFER_AFTER = timedelta(minutes=CHARACTER_BOOKING_BUFFER_AFTER_MINUTES)
+TEXT_TIME_MIN_HOUR = 7
 EVENT_ID_ALPHABET = "0123456789abcdefghijklmnopqrstuv"
 
 EVENT_COLORS: tuple[dict[str, str], ...] = (
@@ -115,8 +124,12 @@ MATCH_STATUS_LABELS = {
     "unmatched": "Не распознано",
     "free": "Помечено «свободен»",
     "own": "Заказ с сайта",
+    "own_moved": "Заказ перенесён в календаре",
     "ignored": "Не учитывается",
 }
+TOKEN_KEY_MISSING_MESSAGE = (
+    "На сервере не задан ключ шифрования GOOGLE_CALENDAR_TOKEN_KEY — подключение календаря недоступно."
+)
 
 SETTING_DEFAULTS = {
     "import_enabled": "1",
@@ -215,6 +228,42 @@ def _utcnow() -> datetime:
     return datetime.now(timezone.utc).replace(microsecond=0)
 
 
+# --- manager alerts (Telegram) ------------------------------------------------------
+
+
+def _admin_calendar_url() -> str:
+    base = os.environ.get("ADMIN_PORTAL_BASE", "").strip().rstrip("/") or "https://animator-surpriz.uz"
+    return f"{base}/admin/calendar"
+
+
+def _send_alert(text: str) -> None:
+    try:
+        from .admin_notifications import send_admin_alert
+
+        send_admin_alert(text)
+    except Exception:  # noqa: BLE001 - an alert must never break the sync
+        LOGGER.exception("google_calendar_alert_failed")
+
+
+def _alert_once(key: str, text: str) -> None:
+    if store.claim_alert(key):
+        _send_alert(text)
+
+
+def _set_auth_error(message: str, **extra: str) -> None:
+    """Mark the connection broken and tell the managers once, not on every retry."""
+    previous = store.get_setting("auth_error")
+    store.set_settings({"auth_error": message, **extra})
+    if not previous:
+        _send_alert(
+            "⚠️ <b>Google Календарь отключился</b>\n"
+            f"{html.escape(message)}\n"
+            "Пока он не подключён заново, брони из календаря не закрывают время на сайте, "
+            "а подтверждённые заказы не попадают в календарь.\n"
+            f"Переподключить: {_admin_calendar_url()}"
+        )
+
+
 # --- HTTP ------------------------------------------------------------------------
 
 
@@ -273,7 +322,7 @@ def _access_token(*, force_refresh: bool = False) -> str:
             error = str(payload.get("error") or "")
             if error in {"invalid_grant", "unauthorized_client", "invalid_client"}:
                 message = "Google отозвал доступ к календарю. Подключите календарь заново."
-                store.set_settings({"auth_error": message, "access_token": ""})
+                _set_auth_error(message, access_token="")
                 raise GoogleCalendarAuthError(message, status=response.status_code, reason=error)
             raise GoogleCalendarError(
                 f"Не удалось обновить доступ Google ({response.status_code}).",
@@ -334,7 +383,7 @@ def _api(
         return response.status_code, payload
     if response.status_code == 401:
         message = "Google не принял доступ к календарю. Подключите календарь заново."
-        store.set_settings({"auth_error": message})
+        _set_auth_error(message)
         raise GoogleCalendarAuthError(message, status=401)
     raise _api_error(response.status_code, payload)
 
@@ -354,10 +403,15 @@ def save_client_credentials(client_id: str, client_secret: str) -> None:
         raise GoogleCalendarError("Укажите Client ID и Client Secret.")
     if not client_id.endswith(".apps.googleusercontent.com"):
         raise GoogleCalendarError("Client ID должен заканчиваться на .apps.googleusercontent.com.")
-    store.set_settings({"client_id": client_id, "client_secret": client_secret})
+    try:
+        store.set_settings({"client_id": client_id, "client_secret": client_secret})
+    except store.TokenKeyMissing:
+        raise GoogleCalendarNotConfigured(TOKEN_KEY_MISSING_MESSAGE) from None
 
 
 def build_authorization_url(redirect_uri: str) -> str:
+    if not store.token_key_configured():
+        raise GoogleCalendarNotConfigured(TOKEN_KEY_MISSING_MESSAGE)
     client_id, _, _ = _client_credentials()
     if not client_id:
         raise GoogleCalendarNotConfigured("Сначала сохраните Client ID и Client Secret приложения Google.")
@@ -426,16 +480,20 @@ def complete_authorization(code: str, state: str) -> dict[str, Any]:
             "и подключите календарь снова."
         )
     expires_in = int(payload.get("expires_in") or 3600)
-    store.set_settings(
-        {
-            "refresh_token": refresh_token,
-            "access_token": str(payload["access_token"]),
-            "access_token_expires_at": (_utcnow() + timedelta(seconds=expires_in)).isoformat(),
-            "connected_at": _utcnow().isoformat(),
-            "auth_error": "",
-            "last_import_attempt_at": "",
-        }
-    )
+    try:
+        store.set_settings(
+            {
+                "refresh_token": refresh_token,
+                "access_token": str(payload["access_token"]),
+                "access_token_expires_at": (_utcnow() + timedelta(seconds=expires_in)).isoformat(),
+                "connected_at": _utcnow().isoformat(),
+                "auth_error": "",
+                "last_import_attempt_at": "",
+                "import_failing_since": "",
+            }
+        )
+    except store.TokenKeyMissing:
+        raise GoogleCalendarNotConfigured(TOKEN_KEY_MISSING_MESSAGE) from None
 
     account_email = ""
     try:
@@ -460,7 +518,8 @@ def disconnect() -> None:
     refresh_token = store.get_setting("refresh_token")
     if refresh_token:
         try:
-            _http_request("POST", GOOGLE_REVOKE_URL, params={"token": refresh_token})
+            # The token goes in the form body, never in a URL that ends up in logs.
+            _http_request("POST", GOOGLE_REVOKE_URL, data={"token": refresh_token})
         except requests.RequestException:
             pass
     store.set_settings(
@@ -471,10 +530,14 @@ def disconnect() -> None:
             "account_email": "",
             "connected_at": "",
             "auth_error": "",
+            # Another account may not see this calendar: the admin picks it again.
+            "calendar_id": "",
+            "calendar_summary": "",
             "last_import_at": "",
             "last_import_attempt_at": "",
             "last_import_error": "",
             "last_import_stats": "",
+            "import_failing_since": "",
         }
     )
     store.clear_imported_events()
@@ -651,9 +714,10 @@ class CalendarMatcher:
 
     @classmethod
     def from_catalog(cls) -> "CalendarMatcher":
+        # Hidden costumes keep their names; matching them would close nothing.
         entities = [
-            *list_characters(entity_type=ENTITY_TYPE_SHOW_PROGRAM),
-            *list_characters(entity_type=ENTITY_TYPE_CHARACTER),
+            *list_characters(status="active", entity_type=ENTITY_TYPE_SHOW_PROGRAM),
+            *list_characters(status="active", entity_type=ENTITY_TYPE_CHARACTER),
         ]
         return cls(entities, store.list_aliases())
 
@@ -861,19 +925,108 @@ def _declined_by_owner(event: dict[str, Any]) -> bool:
     )
 
 
+_CLOCK_RE = re.compile(r"(?<![\d.:])([01]?\d|2[0-3])\s*([:.])\s*([0-5]\d)(?![\d:]|\.\d)")
+_RANGE_TAIL_RE = re.compile(r"\s*(?:-|–|—|до)\s*")
+_FROM_TO_RE = re.compile(
+    r"(?<!\w)с\s*([01]?\d|2[0-3])(?:\s*[:.]\s*([0-5]\d))?\s*до\s*([01]?\d|2[0-3])(?:\s*[:.]\s*([0-5]\d))?(?!\w)",
+    re.IGNORECASE,
+)
+
+
+def _clock_minutes(hour: str, minute: str, separator: str = ":") -> int | None:
+    hour_value, minute_value = int(hour), int(minute or 0)
+    if hour_value < TEXT_TIME_MIN_HOUR:
+        return None
+    # «05.10» is a date; a dotted value is a time only when it cannot be a month.
+    if separator == "." and 1 <= minute_value <= 12:
+        return None
+    return hour_value * 60 + minute_value
+
+
+def parse_text_time(text: str) -> tuple[int, int | None] | None:
+    """Start and optional end (minutes) written in free text: «15:00», «15:00–17:00», «с 15 до 17»."""
+    text = str(text or "")
+    match = _FROM_TO_RE.search(text)
+    if match:
+        start = _clock_minutes(match.group(1), match.group(2) or "0")
+        end = _clock_minutes(match.group(3), match.group(4) or "0")
+        if start is not None and end is not None and end > start:
+            return start, end
+    for match in _CLOCK_RE.finditer(text):
+        start = _clock_minutes(match.group(1), match.group(3), match.group(2))
+        if start is None:
+            continue
+        end: int | None = None
+        tail = _RANGE_TAIL_RE.match(text, match.end())
+        if tail:
+            end_match = _CLOCK_RE.match(text, tail.end())
+            if end_match:
+                end = _clock_minutes(end_match.group(1), end_match.group(3), end_match.group(2))
+                if end is not None and end <= start:
+                    end = None
+        return start, end
+    return None
+
+
+def _overlaps(start_at: datetime, end_at: datetime, busy_start: datetime, busy_end: datetime) -> bool:
+    """Same ±1 h travel buffer the site applies between two bookings of one costume."""
+    return busy_start - BUFFER_BEFORE < end_at and busy_end + BUFFER_AFTER > start_at
+
+
 def _allocate(
     item: RecognizedItem,
     start_at: datetime,
     end_at: datetime,
     allocations: list[tuple[datetime, datetime, str]],
 ) -> list[str]:
-    """Pick concrete costumes for an ambiguous mention (e.g. two «Человек-паук»)."""
+    """Pick concrete costumes for an ambiguous mention (e.g. two «Человек-паук»).
+
+    ``allocations`` holds both earlier calendar events and site orders, so a
+    generic mention never lands on a costume the site has already sold.
+    """
     alternatives = item.alternatives or [item.slug]
     if len(alternatives) == 1:
         return alternatives[:1]
-    busy = {slug for busy_start, busy_end, slug in allocations if busy_start < end_at and busy_end > start_at}
+    busy = {slug for busy_start, busy_end, slug in allocations if _overlaps(start_at, end_at, busy_start, busy_end)}
     ordered = [slug for slug in alternatives if slug not in busy] + [slug for slug in alternatives if slug in busy]
     return ordered[: max(1, min(item.quantity, len(ordered)))]
+
+
+def _order_bounds(order: dict[str, Any]) -> tuple[datetime, datetime] | None:
+    try:
+        day = date.fromisoformat(str(order.get("celebration_date") or ""))
+        start = datetime.combine(day, datetime.strptime(str(order.get("time_from") or ""), "%H:%M").time())
+        end = datetime.combine(day, datetime.strptime(str(order.get("time_to") or ""), "%H:%M").time())
+    except ValueError:
+        return None
+    return (start, end) if end > start else None
+
+
+def _time_label(start_at: datetime, end_at: datetime) -> str:
+    return f"{_WEEKDAYS[start_at.weekday()]}, {start_at:%d.%m} {start_at:%H:%M}–{end_at:%H:%M}"
+
+
+def _site_conflicts(
+    row: dict[str, Any],
+    start_at: datetime,
+    end_at: datetime,
+    site_orders: list[dict[str, Any]],
+    *,
+    skip_order_id: int | None = None,
+) -> list[dict[str, Any]]:
+    conflicts: list[dict[str, Any]] = []
+    for order in site_orders:
+        if skip_order_id is not None and int(order["id"]) == int(skip_order_id):
+            continue
+        bounds = _order_bounds(order)
+        if bounds is None or not _overlaps(start_at, end_at, *bounds):
+            continue
+        shared = [slug for slug in row["character_slugs"] if slug in order["character_slugs"]]
+        if order.get("program_slug") and order["program_slug"] in row["program_slugs"]:
+            shared.insert(0, order["program_slug"])
+        if shared:
+            conflicts.append({"order": order, "slugs": shared, "bounds": bounds})
+    return conflicts
 
 
 def build_imported_rows(
@@ -884,9 +1037,23 @@ def build_imported_rows(
     own_event_ids: set[str] | None = None,
     ignored_keys: set[str] | None = None,
     block_unmatched: bool = False,
+    own_event_orders: dict[str, int] | None = None,
+    site_orders: list[dict[str, Any]] | None = None,
 ) -> list[dict[str, Any]]:
-    own_event_ids = own_event_ids or set()
+    """Turn Google events into busy blocks.
+
+    ``site_orders`` are the site bookings in the same window (``id``,
+    ``public_id``, date/times, ``program_slug``, ``character_slugs``, ``status``):
+    they steer costume allocation, flag double bookings and let an event that
+    the site created be recognised as moved.
+    """
+    own_event_ids = set(own_event_ids or set()) | set((own_event_orders or {}).keys())
+    own_event_orders = own_event_orders or {}
     ignored_keys = ignored_keys or set()
+    site_orders = site_orders or []
+    orders_by_id = {int(order["id"]): order for order in site_orders}
+    orders_by_public_id = {str(order.get("public_id") or ""): order for order in site_orders if order.get("public_id")}
+
     prepared: list[tuple[datetime, datetime, bool, dict[str, Any]]] = []
     for event in events:
         if not isinstance(event, dict) or event.get("status") == "cancelled" or not event.get("id"):
@@ -898,12 +1065,18 @@ def build_imported_rows(
     prepared.sort(key=lambda entry: (entry[0], entry[1], str(entry[3].get("id"))))
 
     allocations: list[tuple[datetime, datetime, str]] = []
+    for order in site_orders:
+        bounds = _order_bounds(order)
+        if bounds:
+            allocations.extend((*bounds, slug) for slug in order["character_slugs"])
+
     rows: list[dict[str, Any]] = []
     for start_at, end_at, all_day, event in prepared:
         event_id = str(event["id"])
         event_key = f"{calendar_id}|{event_id}"
         private = ((event.get("extendedProperties") or {}).get("private") or {})
         summary = " ".join(str(event.get("summary") or "").split())
+        description = _html_to_text(event.get("description") or "")
         row: dict[str, Any] = {
             "event_key": event_key,
             "calendar_id": calendar_id,
@@ -921,23 +1094,56 @@ def build_imported_rows(
             "order_public_id": "",
             "blocks_time": False,
             "blocks_all": False,
+            "note": "",
             "google_updated": str(event.get("updated") or ""),
+            "conflicts": [],
         }
-        if private.get("surprizOrderId") or event_id in own_event_ids:
-            # Orders pushed by the site already block time through party_orders.
-            row["match_status"] = "own"
-            row["order_public_id"] = str(private.get("surprizOrderId") or "")
-            rows.append(row)
-            continue
+
+        own_public_id = str(private.get("surprizOrderId") or "")
+        own_order = None
+        if own_public_id or event_id in own_event_ids:
+            own_order = orders_by_public_id.get(own_public_id) or orders_by_id.get(own_event_orders.get(event_id, -1))
+            if own_order is not None and _order_bounds(own_order) == (start_at, end_at):
+                # Orders pushed by the site already block time through party_orders.
+                row["match_status"] = "own"
+                row["order_public_id"] = str(own_order.get("public_id") or own_public_id)
+                rows.append(row)
+                continue
+            # Otherwise the event was moved in Google (or its order is gone):
+            # it is read like a manual booking below so its new time is closed.
 
         duration = int((end_at - start_at).total_seconds() // 60)
-        text = f"{summary}\n{_html_to_text(event.get('description') or '')}"
-        recognition = matcher.recognize(text, duration_minutes=None if all_day else duration)
+        recognition = matcher.recognize(f"{summary}\n{description}", duration_minutes=None if all_day else duration)
+        was_all_day = all_day
+        if all_day and end_at - start_at <= timedelta(days=1):
+            written = parse_text_time(summary) or parse_text_time(description)
+            if written:
+                start_minutes, end_minutes = written
+                program_durations = [
+                    matcher.entity(item.slug).duration
+                    for item in recognition.programs
+                    if matcher.entity(item.slug) and matcher.entity(item.slug).duration
+                ]
+                length = (end_minutes - start_minutes) if end_minutes else (max(program_durations) if program_durations else DEFAULT_EVENT_DURATION_MINUTES)
+                start_at = datetime.combine(start_at.date(), time()) + timedelta(minutes=start_minutes)
+                end_at = start_at + timedelta(minutes=length)
+                all_day = False
+                row.update(
+                    start_local=start_at.strftime(store.LOCAL_DATETIME_FORMAT),
+                    end_local=end_at.strftime(store.LOCAL_DATETIME_FORMAT),
+                    all_day=False,
+                    note="Время взято из текста события.",
+                )
+
         program_slugs: list[str] = []
+        character_slugs: list[str] = []
+        if own_order is not None:
+            if own_order.get("program_slug"):
+                program_slugs.append(str(own_order["program_slug"]))
+            character_slugs.extend(slug for slug in own_order["character_slugs"] if slug not in character_slugs)
         for item in recognition.programs:
             if item.slug not in program_slugs:
                 program_slugs.append(item.slug)
-        character_slugs: list[str] = []
         for item in recognition.characters:
             for slug in _allocate(item, start_at, end_at, allocations):
                 if slug not in character_slugs:
@@ -947,17 +1153,37 @@ def build_imported_rows(
         row["character_slugs"] = character_slugs
         row["character_names"] = [matcher.entity(slug).name for slug in character_slugs if matcher.entity(slug)]
 
+        # Google marks all-day events «free» by default, so for them only an
+        # explicit decline counts; for timed events «free» is a deliberate choice.
+        marked_free = event.get("transparency") == "transparent" and not (was_all_day and recognition.matched)
         if event_key in ignored_keys:
             row["match_status"] = "ignored"
-        elif event.get("transparency") == "transparent" or _declined_by_owner(event):
+        elif _declined_by_owner(event) or marked_free:
             row["match_status"] = "free"
+        elif own_order is not None:
+            row["match_status"] = "own_moved"
+            row["order_public_id"] = str(own_order.get("public_id") or own_public_id)
+            row["blocks_time"] = True
+            site_bounds = _order_bounds(own_order)
+            if site_bounds:
+                row["note"] = f"На сайте заказ остался на {_time_label(*site_bounds)}; время в календаре тоже закрыто."
         elif recognition.matched:
             row["match_status"] = "matched"
             row["blocks_time"] = True
-            allocations.extend((start_at, end_at, slug) for slug in character_slugs)
         else:
             row["blocks_time"] = bool(block_unmatched)
             row["blocks_all"] = bool(block_unmatched)
+
+        if row["blocks_time"] and (row["character_slugs"] or row["program_slugs"]):
+            allocations.extend((start_at, end_at, slug) for slug in row["character_slugs"])
+            conflicts = _site_conflicts(
+                row, start_at, end_at, site_orders,
+                skip_order_id=int(own_order["id"]) if own_order is not None else None,
+            )
+            if conflicts:
+                row["conflicts"] = conflicts
+                orders = ", ".join(sorted({str(item["order"].get("public_id") or "") for item in conflicts}))
+                row["note"] = f"Пересекается с заказом сайта {orders} — проверьте, не двойная ли бронь."
         rows.append(row)
     return rows
 
@@ -988,6 +1214,139 @@ def _fetch_calendar_events(calendar_id: str, time_min: datetime, time_max: datet
     return events
 
 
+def _load_site_orders(date_from: date, date_to: date) -> list[dict[str, Any]]:
+    """Site bookings that hold time in ``[date_from, date_to]`` (same statuses as availability)."""
+    placeholders = ", ".join("?" for _ in AVAILABILITY_BLOCKING_STATUSES)
+    try:
+        with store.get_connection() as connection:
+            rows = connection.execute(
+                f"""
+                SELECT o.id, o.public_id, o.status, o.celebration_date, o.time_from, o.time_to,
+                       o.program_slug, oc.slug AS character_slug
+                FROM party_orders o
+                LEFT JOIN party_order_characters oc ON oc.order_id = o.id
+                WHERE o.celebration_date BETWEEN ? AND ? AND o.status IN ({placeholders})
+                ORDER BY o.id ASC, oc.sort_order ASC
+                """,
+                (date_from.isoformat(), date_to.isoformat(), *AVAILABILITY_BLOCKING_STATUSES),
+            ).fetchall()
+    except sqlite3.Error:
+        LOGGER.exception("google_calendar_site_orders_unavailable")
+        return []
+    orders: dict[int, dict[str, Any]] = {}
+    for row in rows:
+        order = orders.setdefault(
+            int(row["id"]),
+            {
+                "id": int(row["id"]),
+                "public_id": str(row["public_id"] or ""),
+                "status": str(row["status"] or ""),
+                "celebration_date": str(row["celebration_date"] or ""),
+                "time_from": str(row["time_from"] or ""),
+                "time_to": str(row["time_to"] or ""),
+                "program_slug": str(row["program_slug"] or ""),
+                "character_slugs": [],
+            },
+        )
+        slug = str(row["character_slug"] or "")
+        if slug and slug not in order["character_slugs"]:
+            order["character_slugs"].append(slug)
+    return list(orders.values())
+
+
+def _row_bounds(row: dict[str, Any]) -> tuple[datetime, datetime] | None:
+    try:
+        return (
+            datetime.strptime(row["start_local"], store.LOCAL_DATETIME_FORMAT),
+            datetime.strptime(row["end_local"], store.LOCAL_DATETIME_FORMAT),
+        )
+    except (KeyError, ValueError):
+        return None
+
+
+def _row_when(row: dict[str, Any]) -> str:
+    bounds = _row_bounds(row)
+    if bounds is None:
+        return ""
+    if row.get("all_day"):
+        return f"{_WEEKDAYS[bounds[0].weekday()]}, {bounds[0]:%d.%m}, весь день"
+    return _time_label(*bounds)
+
+
+def _notify_import_findings(rows: list[dict[str, Any]]) -> None:
+    """Tell managers about bookings the site could not understand or that clash."""
+    now = _local_now()
+    upcoming = [row for row in rows if (_row_bounds(row) or (now, now))[1] > now]
+
+    unmatched = [
+        row
+        for row in upcoming
+        if row["match_status"] == "unmatched"
+        and not row["blocks_time"]
+        and store.claim_alert(f"unmatched:{row['event_key']}")
+    ]
+    if unmatched:
+        lines = [
+            f"• {_row_when(row)} — «{html.escape(row['summary'])}»" for row in unmatched[:ALERT_LIST_LIMIT]
+        ]
+        if len(unmatched) > ALERT_LIST_LIMIT:
+            lines.append(f"…и ещё {len(unmatched) - ALERT_LIST_LIMIT}")
+        _send_alert(
+            f"📅 <b>Календарь: не распознано {len(unmatched)} "
+            f"{_plural(len(unmatched), 'событие', 'события', 'событий')}</b>\n"
+            "Они не закрывают время на сайте:\n"
+            + "\n".join(lines)
+            + f"\n\nДобавьте слово в словарь или отметьте «Не учитывать»: {_admin_calendar_url()}"
+        )
+
+    for row in upcoming:
+        if row["match_status"] == "own_moved":
+            _alert_once(
+                f"moved:{row['event_key']}:{row['start_local']}",
+                f"📅 <b>Заказ {html.escape(row['order_public_id'])} перенесён в календаре</b>\n"
+                f"В календаре: {_row_when(row)}\n"
+                f"{html.escape(row['note'])}\n"
+                "Если праздник действительно перенесли, поменяйте время заказа на сайте.",
+            )
+        for conflict in row.get("conflicts") or []:
+            order = conflict["order"]
+            _alert_once(
+                f"conflict:{row['event_key']}:{row['start_local']}:{order.get('public_id')}",
+                "⚠️ <b>Возможна двойная бронь</b>\n"
+                f"В календаре: «{html.escape(row['summary'])}», {_row_when(row)}\n"
+                f"На сайте: заказ {html.escape(str(order.get('public_id') or ''))}, "
+                f"{_time_label(*conflict['bounds'])}\n"
+                f"Общее: {html.escape(', '.join(_entity_names(conflict['slugs'], row)))}",
+            )
+
+
+def _entity_names(slugs: list[str], row: dict[str, Any]) -> list[str]:
+    names = dict(zip(row["program_slugs"], row["program_names"]))
+    names.update(zip(row["character_slugs"], row["character_names"]))
+    return [names.get(slug, slug) for slug in slugs]
+
+
+def _note_import_failure(message: str) -> None:
+    """Alert once when the calendar has not been readable for a while."""
+    since = store.get_setting("import_failing_since")
+    if not since:
+        store.set_settings({"import_failing_since": _utcnow().isoformat()})
+        return
+    try:
+        failing_for = _utcnow() - datetime.fromisoformat(since)
+    except ValueError:
+        store.set_settings({"import_failing_since": _utcnow().isoformat()})
+        return
+    if failing_for >= IMPORT_FAILURE_ALERT_AFTER:
+        _alert_once(
+            f"import-failing:{since}",
+            "⚠️ <b>Календарь не читается больше 30 минут</b>\n"
+            f"{html.escape(message)}\n"
+            "Новые брони из календаря пока не закрывают время на сайте. "
+            f"Подробности: {_admin_calendar_url()}",
+        )
+
+
 def request_import() -> None:
     store.set_settings({"last_import_attempt_at": ""})
     wake_worker()
@@ -1008,17 +1367,22 @@ def import_calendar_events() -> dict[str, Any]:
             events,
             calendar_id=calendar_id,
             matcher=CalendarMatcher.from_catalog(),
-            own_event_ids=store.list_order_event_ids(calendar_id),
+            own_event_orders=store.list_order_event_map(calendar_id),
             ignored_keys=store.list_ignored_event_keys(),
             block_unmatched=_flag(settings, "block_unmatched"),
+            site_orders=_load_site_orders(time_min.date(), time_max.date()),
         )
     except GoogleCalendarError as exc:
         store.set_settings({"last_import_error": str(exc)})
+        if not isinstance(exc, GoogleCalendarAuthError):
+            _note_import_failure(str(exc))
         raise
     if store.get_setting("calendar_id") != calendar_id or not _import_ready(_settings()):
         # The admin switched calendars or disconnected while we were fetching.
         return {"skipped": True}
     store.replace_imported_events(rows)
+    store.set_settings({"import_failing_since": ""})
+    _notify_import_findings(rows)
     stats = dict(Counter(row["match_status"] for row in rows))
     stats["total"] = len(rows)
     store.set_settings(
@@ -1163,8 +1527,8 @@ def build_order_event_body(order: dict[str, Any], settings: dict[str, str] | Non
 def _install_salt() -> str:
     salt = store.get_setting("event_id_salt")
     if not salt:
-        salt = "".join(secrets.choice(EVENT_ID_ALPHABET) for _ in range(6))
-        store.set_settings({"event_id_salt": salt})
+        # INSERT OR IGNORE: two processes racing here still agree on one salt.
+        salt = store.ensure_setting("event_id_salt", "".join(secrets.choice(EVENT_ID_ALPHABET) for _ in range(6)))
     return salt
 
 
@@ -1179,7 +1543,9 @@ def _delete_event_quietly(calendar_id: str, event_id: str) -> None:
     except GoogleCalendarAuthError:
         raise
     except GoogleCalendarError as exc:
-        if exc.status not in {403, 404, 410}:
+        # 403 (no rights) must stay visible and retried: dropping the link would
+        # leave a cancelled order in the calendar looking like a real booking.
+        if exc.status not in {404, 410}:
             raise
 
 
@@ -1377,7 +1743,9 @@ def wake_worker() -> None:
 def _worker_loop(stop_event: threading.Event) -> None:
     while not stop_event.is_set():
         try:
-            run_sync_cycle()
+            # Without a connection there is nothing to do; skip the lease write.
+            if _is_connected(_settings()):
+                run_sync_cycle()
         except GoogleCalendarSyncBusy:
             pass
         except Exception as exc:  # noqa: BLE001 - the worker must survive any failure
@@ -1387,7 +1755,8 @@ def _worker_loop(stop_event: threading.Event) -> None:
 
 
 def worker_enabled() -> bool:
-    return os.environ.get("GOOGLE_CALENDAR_WORKER", "1").strip().lower() not in {"0", "false", "off", "disabled"}
+    """Off unless explicitly enabled, so a copied database never syncs from a laptop."""
+    return os.environ.get("GOOGLE_CALENDAR_WORKER", "0").strip().lower() in {"1", "true", "on", "yes"}
 
 
 def start_worker_in_background() -> bool:
@@ -1479,6 +1848,7 @@ def get_admin_payload(request_base: str = "") -> dict[str, Any]:
                 "blocks_time": item["blocks_time"],
                 "blocks_all": item["blocks_all"],
                 "order_public_id": item["order_public_id"],
+                "note": item.get("note", ""),
             }
         )
 
@@ -1521,7 +1891,8 @@ def get_admin_payload(request_base: str = "") -> dict[str, Any]:
             "connected": _is_connected(settings),
             "account_email": settings.get("account_email", ""),
             "connected_at_label": _format_iso_label(settings.get("connected_at", "")),
-            "auth_error": settings.get("auth_error", ""),
+            "auth_error": settings.get("auth_error", "")
+            or ("" if store.token_key_configured() else TOKEN_KEY_MISSING_MESSAGE),
             "calendar_id": settings.get("calendar_id", ""),
             "calendar_summary": settings.get("calendar_summary", ""),
             "last_import_at_label": _format_iso_label(settings.get("last_import_at", "")),

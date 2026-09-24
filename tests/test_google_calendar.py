@@ -12,6 +12,8 @@ from typing import Any
 from unittest.mock import patch
 from urllib.parse import parse_qs, urlparse
 
+from cryptography.fernet import Fernet
+
 from core import admin_notifications, customer_store, google_calendar, google_calendar_store
 
 PROGRAMS = [
@@ -100,6 +102,7 @@ class TempDatabaseMixin:
         self.db_root = Path(self.temp_dir.name)
         self.db_path = self.db_root / "site_admin.sqlite3"
         self.patchers = [
+            patch.dict(os.environ, {google_calendar_store.TOKEN_KEY_ENV: Fernet.generate_key().decode()}),
             patch.object(customer_store, "DB_ROOT", self.db_root),
             patch.object(customer_store, "DB_PATH", self.db_path),
             patch.object(admin_notifications, "DB_ROOT", self.db_root),
@@ -167,7 +170,14 @@ class ImportedEventsTests(TempDatabaseMixin, unittest.TestCase):
             _event("misc", "Созвон с поставщиком", "2099-10-05T12:00:00+05:00", "2099-10-05T13:00:00+05:00"),
             _event("gone", "Дэдпул", "2099-10-05T19:00:00+05:00", "2099-10-05T20:00:00+05:00", status="cancelled"),
         ]
-        rows = {row["event_id"]: row for row in self._rows(events, ignored_keys={"cal@example.com|skip"})}
+        site_order = {
+            "id": 7, "public_id": "SRP-00007", "status": "new", "celebration_date": "2099-10-05",
+            "time_from": "15:00", "time_to": "16:00", "program_slug": "standard-program", "character_slugs": [],
+        }
+        rows = {
+            row["event_id"]: row
+            for row in self._rows(events, ignored_keys={"cal@example.com|skip"}, site_orders=[site_order])
+        }
         self.assertNotIn("gone", rows)
         self.assertEqual(rows["own"]["match_status"], "own")
         self.assertEqual(rows["own"]["order_public_id"], "SRP-00007")
@@ -175,6 +185,11 @@ class ImportedEventsTests(TempDatabaseMixin, unittest.TestCase):
         self.assertEqual(rows["skip"]["match_status"], "ignored")
         self.assertEqual(rows["misc"]["match_status"], "unmatched")
         self.assertFalse(any(row["blocks_time"] for row in rows.values()))
+
+        # A site event whose order no longer holds time is read like a manual booking.
+        orphan = {row["event_id"]: row for row in self._rows(events[:1])}
+        self.assertEqual(orphan["own"]["match_status"], "matched")
+        self.assertTrue(orphan["own"]["blocks_time"])
 
         strict = {row["event_id"]: row for row in self._rows(events[3:4], block_unmatched=True)}
         self.assertTrue(strict["misc"]["blocks_time"])
@@ -614,3 +629,229 @@ class AdapterCalendarEndpointsTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+def _site_order(order_id: int, day: str, time_from: str, time_to: str, characters: list[str], program: str = "") -> dict[str, Any]:
+    return {
+        "id": order_id, "public_id": f"SRP-{order_id:05d}", "status": "new", "celebration_date": day,
+        "time_from": time_from, "time_to": time_to, "program_slug": program, "character_slugs": characters,
+    }
+
+
+class ReviewFixesImportTests(TempDatabaseMixin, unittest.TestCase):
+    day = "2099-10-05"
+
+    def _rows(self, events: list[dict[str, Any]], **kwargs: Any) -> dict[str, dict[str, Any]]:
+        rows = google_calendar.build_imported_rows(events, calendar_id="cal", matcher=_matcher(), **kwargs)
+        return {row["event_id"]: row for row in rows}
+
+    def test_generic_mention_skips_costume_sold_on_the_site(self) -> None:
+        sold = _site_order(1, self.day, "14:00", "15:00", ["spiderman-n1"])
+        rows = self._rows(
+            [_event("gen", "Человек-паук, Петя 5 лет", f"{self.day}T15:00:00+05:00", f"{self.day}T16:00:00+05:00")],
+            site_orders=[sold],
+        )
+        self.assertEqual(rows["gen"]["character_slugs"], ["spiderman-n2"])
+        self.assertEqual(rows["gen"]["conflicts"], [])
+
+    def test_specific_costume_clash_is_flagged(self) -> None:
+        sold = _site_order(2, self.day, "15:00", "16:00", ["deadpool"], program="standard-program")
+        rows = self._rows(
+            [_event("dup", "Дэдпул", f"{self.day}T16:30:00+05:00", f"{self.day}T17:30:00+05:00")],
+            site_orders=[sold],
+        )
+        self.assertTrue(rows["dup"]["blocks_time"])
+        self.assertEqual(rows["dup"]["conflicts"][0]["order"]["public_id"], "SRP-00002")
+        self.assertIn("SRP-00002", rows["dup"]["note"])
+
+    def test_site_event_moved_in_google_blocks_its_new_time(self) -> None:
+        order = _site_order(3, self.day, "15:00", "16:00", ["ladybug-cat-noir"], program="standard-program")
+        own = {"extendedProperties": {"private": {"surprizOrderId": "SRP-00003"}}}
+        same = self._rows(
+            [_event("e", "Стандарт (Леди Баг)", f"{self.day}T15:00:00+05:00", f"{self.day}T16:00:00+05:00", **own)],
+            site_orders=[order],
+        )["e"]
+        self.assertEqual(same["match_status"], "own")
+        self.assertFalse(same["blocks_time"])
+
+        moved = self._rows(
+            [_event("e", "Стандарт (Леди Баг)", f"{self.day}T18:00:00+05:00", f"{self.day}T19:00:00+05:00", **own)],
+            site_orders=[order],
+        )["e"]
+        self.assertEqual(moved["match_status"], "own_moved")
+        self.assertTrue(moved["blocks_time"])
+        self.assertEqual(moved["program_slugs"], ["standard-program"])
+        self.assertEqual(moved["character_slugs"], ["ladybug-cat-noir"])
+        self.assertEqual(moved["conflicts"], [])
+        self.assertIn("15:00–16:00", moved["note"])
+
+        by_mapping = self._rows(
+            [_event("mapped", "Стандарт", f"{self.day}T18:00:00+05:00", f"{self.day}T19:00:00+05:00")],
+            site_orders=[order], own_event_orders={"mapped": 3},
+        )["mapped"]
+        self.assertEqual(by_mapping["match_status"], "own_moved")
+
+    def test_all_day_event_uses_time_written_in_text(self) -> None:
+        next_day = "2099-10-06"
+        rows = self._rows(
+            [
+                _event("clock", "15:00 Стандарт, Дэдпул", self.day, next_day, transparency="transparent"),
+                _event("range", "Дэдпул с 12 до 14", self.day, next_day),
+                _event("dash", "Дэдпул 10.30–12.00", self.day, next_day),
+                _event("date", "05.10 Дэдпул", self.day, next_day),
+                _event("free", "Отпуск", self.day, next_day, transparency="transparent"),
+            ]
+        )
+        self.assertEqual((rows["clock"]["start_local"], rows["clock"]["end_local"]), (f"{self.day}T15:00", f"{self.day}T16:00"))
+        self.assertEqual(rows["clock"]["match_status"], "matched")
+        self.assertFalse(rows["clock"]["all_day"])
+        self.assertEqual((rows["range"]["start_local"], rows["range"]["end_local"]), (f"{self.day}T12:00", f"{self.day}T14:00"))
+        self.assertEqual((rows["dash"]["start_local"], rows["dash"]["end_local"]), (f"{self.day}T10:30", f"{self.day}T12:00"))
+        self.assertTrue(rows["date"]["all_day"])
+        self.assertTrue(rows["date"]["blocks_time"])
+        self.assertEqual(rows["free"]["match_status"], "free")
+
+    def test_parse_text_time(self) -> None:
+        cases = {
+            "в 15:00": (900, None),
+            "15.00 Стандарт": (900, None),
+            "15:00-16:30": (900, 990),
+            "с 9 до 11": (540, 660),
+            "05.10 Дэдпул": None,
+            "05.10.2099 в 17:30": (1050, None),
+            "+998 90 123-45-67": None,
+            "3:00 ночи": None,
+        }
+        for text, expected in cases.items():
+            with self.subTest(text=text):
+                self.assertEqual(google_calendar.parse_text_time(text), expected)
+
+
+class ReviewFixesAlertTests(TempDatabaseMixin, unittest.TestCase):
+    def setUp(self) -> None:
+        super().setUp()
+        self.day = (date.today() + timedelta(days=5)).isoformat()
+        self.sent: list[str] = []
+        self.alert_patch = patch.object(admin_notifications, "send_admin_alert", lambda text: self.sent.append(text) or 1)
+        self.alert_patch.start()
+
+    def tearDown(self) -> None:
+        self.alert_patch.stop()
+        super().tearDown()
+
+    def test_new_unmatched_and_clashing_events_alert_once(self) -> None:
+        rows = google_calendar.build_imported_rows(
+            [
+                _event("u1", "Праздник у Ани", f"{self.day}T15:00:00+05:00", f"{self.day}T16:00:00+05:00"),
+                _event("c1", "Дэдпул", f"{self.day}T18:00:00+05:00", f"{self.day}T19:00:00+05:00"),
+                _event("old", "Непонятно что", "2000-01-01T15:00:00+05:00", "2000-01-01T16:00:00+05:00"),
+            ],
+            calendar_id="cal", matcher=_matcher(),
+            site_orders=[_site_order(9, self.day, "18:30", "19:30", ["deadpool"])],
+        )
+        google_calendar._notify_import_findings(rows)
+        google_calendar._notify_import_findings(rows)
+        self.assertEqual(len(self.sent), 2)
+        self.assertIn("не распознано 1 событие", self.sent[0])
+        self.assertIn("Праздник у Ани", self.sent[0])
+        self.assertNotIn("Непонятно", self.sent[0])
+        self.assertIn("двойная бронь", self.sent[1])
+        self.assertIn("SRP-00009", self.sent[1])
+
+    def test_auth_error_alerts_once(self) -> None:
+        google_calendar._set_auth_error("Google отозвал доступ")
+        google_calendar._set_auth_error("Google отозвал доступ")
+        self.assertEqual(len(self.sent), 1)
+        self.assertIn("отключился", self.sent[0])
+
+    def test_long_import_failure_alerts_once(self) -> None:
+        google_calendar._note_import_failure("Нет связи с Google")
+        self.assertEqual(self.sent, [])
+        past = (datetime.now(timezone.utc) - timedelta(minutes=45)).replace(microsecond=0).isoformat()
+        google_calendar_store.set_settings({"import_failing_since": past})
+        google_calendar._note_import_failure("Нет связи с Google")
+        google_calendar._note_import_failure("Нет связи с Google")
+        self.assertEqual(len(self.sent), 1)
+        self.assertIn("больше 30 минут", self.sent[0])
+
+
+class ReviewFixesSecurityTests(TempDatabaseMixin, unittest.TestCase):
+    def test_secrets_are_encrypted_at_rest_and_unreadable_without_the_key(self) -> None:
+        google_calendar_store.set_settings({"refresh_token": "rt-secret", "client_secret": "cs", "calendar_id": "cal"})
+        with self._connect() as connection:
+            raw = dict(connection.execute("SELECT key, value FROM google_calendar_settings").fetchall())
+        self.assertTrue(raw["refresh_token"].startswith("enc1:"))
+        self.assertNotIn("rt-secret", raw["refresh_token"])
+        self.assertEqual(raw["calendar_id"], "cal")
+        self.assertEqual(google_calendar_store.get_setting("refresh_token"), "rt-secret")
+
+        with patch.dict(os.environ, {google_calendar_store.TOKEN_KEY_ENV: Fernet.generate_key().decode()}):
+            self.assertEqual(google_calendar_store.get_setting("refresh_token"), "")
+        with patch.dict(os.environ, {google_calendar_store.TOKEN_KEY_ENV: ""}):
+            self.assertEqual(google_calendar_store.get_setting("refresh_token"), "")
+            self.assertFalse(google_calendar._is_connected(google_calendar._settings()))
+            with self.assertRaises(google_calendar_store.TokenKeyMissing):
+                google_calendar_store.set_settings({"refresh_token": "x"})
+            with self.assertRaises(google_calendar.GoogleCalendarNotConfigured):
+                google_calendar.build_authorization_url("https://example.com/cb")
+            with self.assertRaises(google_calendar.GoogleCalendarNotConfigured):
+                google_calendar.save_client_credentials("id.apps.googleusercontent.com", "secret")
+            self.assertIn("GOOGLE_CALENDAR_TOKEN_KEY", google_calendar.get_admin_payload()["status"]["auth_error"])
+
+    def test_worker_is_off_unless_enabled(self) -> None:
+        with patch.dict(os.environ, {}, clear=False):
+            os.environ.pop("GOOGLE_CALENDAR_WORKER", None)
+            self.assertFalse(google_calendar.worker_enabled())
+        with patch.dict(os.environ, {"GOOGLE_CALENDAR_WORKER": "1"}):
+            self.assertTrue(google_calendar.worker_enabled())
+
+    def test_disconnect_revokes_in_body_and_forgets_calendar(self) -> None:
+        google = FakeGoogle()
+        with patch.object(google_calendar, "_http_request", google):
+            google_calendar_store.set_settings({"refresh_token": "rt", "calendar_id": "cal", "calendar_summary": "Заказы"})
+            google_calendar.disconnect()
+        revoke = next(kwargs for method, url, kwargs in google.calls if url == google_calendar.GOOGLE_REVOKE_URL)
+        self.assertEqual(revoke.get("data"), {"token": "rt"})
+        self.assertNotIn("params", revoke)
+        self.assertEqual(google_calendar_store.get_setting("calendar_id"), "")
+
+    def test_event_id_salt_is_stable(self) -> None:
+        first = google_calendar._install_salt()
+        self.assertEqual(google_calendar_store.ensure_setting("event_id_salt", "zzzzzz"), first)
+        self.assertEqual(google_calendar._install_salt(), first)
+
+    def test_matcher_reads_only_active_catalog(self) -> None:
+        calls: list[dict[str, Any]] = []
+
+        def fake_list(**kwargs: Any) -> list[dict[str, Any]]:
+            calls.append(kwargs)
+            return []
+
+        with patch.object(google_calendar, "list_characters", fake_list):
+            google_calendar.CalendarMatcher.from_catalog()
+        self.assertTrue(calls)
+        self.assertTrue(all(call.get("status") == "active" for call in calls))
+
+
+class ReviewFixesExportTests(OrderExportTests):
+    def test_forbidden_delete_keeps_the_event_link_and_retries(self) -> None:
+        order_id = self._seed_order()
+        customer_store.set_order_confirmation(order_id, "confirmed", source="telegram")
+        google_calendar.process_order_queue()
+        self.assertIsNotNone(google_calendar_store.get_order_event(order_id))
+
+        original = self.google.__call__
+
+        def forbid_delete(method: str, url: str, **kwargs: Any) -> FakeResponse:
+            if method == "DELETE":
+                self.google.calls.append((method, url, kwargs))
+                return FakeResponse(403, {"error": {"errors": [{"reason": "forbidden"}], "message": "Forbidden"}})
+            return original(method, url, **kwargs)
+
+        with patch.object(google_calendar, "_http_request", forbid_delete):
+            customer_store.set_order_confirmation(order_id, "unconfirmed", source="telegram")
+            result = google_calendar.process_order_queue()
+        self.assertEqual(result["failed"], 1)
+        self.assertIsNotNone(google_calendar_store.get_order_event(order_id))
+        self.assertEqual(google_calendar_store.queue_stats()["pending"], 1)
+

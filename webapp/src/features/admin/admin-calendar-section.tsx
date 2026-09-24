@@ -67,11 +67,12 @@ type CalendarEvent = {
   html_link: string;
   program_names: string[];
   character_names: string[];
-  match_status: "matched" | "unmatched" | "free" | "own" | "ignored";
+  match_status: "matched" | "unmatched" | "free" | "own" | "own_moved" | "ignored";
   status_label: string;
   blocks_time: boolean;
   blocks_all: boolean;
   order_public_id: string;
+  note: string;
 };
 
 type CalendarAlias = { id: number; phrase: string; entity_slug: string; entity_name: string; kind: string };
@@ -101,6 +102,7 @@ const statusClass: Record<CalendarEvent["match_status"], string> = {
   unmatched: "status-new",
   free: "status-muted",
   own: "status-contacted",
+  own_moved: "status-new",
   ignored: "status-muted",
 };
 
@@ -169,7 +171,7 @@ export function AdminCalendarSection({ oauthResult = "", oauthMessage = "" }: { 
   }, [section.data]);
 
   const visibleEvents = useMemo(
-    () => (filter ? events.filter((item) => item.match_status === filter) : events),
+    () => (filter ? events.filter((item) => item.match_status === filter || (filter === "own" && item.match_status === "own_moved")) : events),
     [events, filter],
   );
   const programs = entities.filter((item) => item.kind === "program");
@@ -407,7 +409,7 @@ export function AdminCalendarSection({ oauthResult = "", oauthMessage = "" }: { 
                           <td data-label="Когда"><strong>{item.date_label}</strong><small>{item.time_label}</small></td>
                           <td data-label="Событие"><strong>{item.summary}</strong>{item.order_public_id ? <small>Заказ {item.order_public_id}</small> : null}</td>
                           <td data-label="Распознано">{recognized.length ? <div className="admin-chip-list">{recognized.map((name) => <span key={name}>{name}</span>)}</div> : <small>{item.match_status === "own" ? "Заказ уже учтён на сайте" : "—"}</small>}</td>
-                          <td data-label="Статус"><span className={`content-status ${statusClass[item.match_status] ?? ""}`}>{item.status_label}</span>{item.blocks_all ? <small>Закрывает время для всех</small> : null}</td>
+                          <td data-label="Статус"><span className={`content-status ${statusClass[item.match_status] ?? ""}`}>{item.status_label}</span>{item.blocks_all ? <small>Закрывает время для всех</small> : null}{item.note ? <small>{item.note}</small> : null}</td>
                           <td data-label="Действия">
                             <div className="admin-row-actions">
                               {item.html_link ? <a aria-label="Открыть в Google Календаре" href={item.html_link} rel="noreferrer" target="_blank"><ExternalLink size={17} /></a> : null}

@@ -854,6 +854,15 @@ def _answer_callback(callback_query_id: str, text: str = "") -> dict[str, Any]:
     return {"success": response.ok}
 
 
+def send_admin_alert(text: str) -> int:
+    """Send a service alert (HTML) to every active recipient; returns deliveries."""
+    delivered = 0
+    for recipient in list_recipients(active_only=True):
+        if _send_telegram_message(recipient["chat_id"], text).get("success"):
+            delivered += 1
+    return delivered
+
+
 def send_test_message(chat_id: str) -> dict[str, Any]:
     return _send_telegram_message(
         chat_id,

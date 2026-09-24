@@ -8,6 +8,7 @@ transactions and to read imported busy blocks for availability checks.
 from __future__ import annotations
 
 import json
+import os
 import sqlite3
 from datetime import date, datetime, timedelta, timezone
 from typing import Any, Iterable
@@ -41,6 +42,7 @@ CREATE TABLE IF NOT EXISTS google_calendar_events (
     order_public_id TEXT NOT NULL DEFAULT '',
     blocks_time INTEGER NOT NULL DEFAULT 0,
     blocks_all INTEGER NOT NULL DEFAULT 0,
+    note TEXT NOT NULL DEFAULT '',
     google_updated TEXT NOT NULL DEFAULT '',
     synced_at TEXT NOT NULL
 );
@@ -85,7 +87,23 @@ CREATE TABLE IF NOT EXISTS google_calendar_locks (
     owner TEXT NOT NULL,
     expires_at TEXT NOT NULL
 );
+
+CREATE TABLE IF NOT EXISTS google_calendar_alerts (
+    alert_key TEXT PRIMARY KEY,
+    created_at TEXT NOT NULL
+);
 """
+
+#: Settings that grant access to the Google account. They are stored encrypted
+#: with a key that lives only in the production ``.env``, so a copied database
+#: (backups, local snapshots) cannot read or act on the live calendar.
+SECRET_SETTING_KEYS = frozenset({"client_secret", "refresh_token", "access_token"})
+TOKEN_KEY_ENV = "GOOGLE_CALENDAR_TOKEN_KEY"
+_ENCRYPTED_PREFIX = "enc1:"
+
+
+class TokenKeyMissing(RuntimeError):
+    """The encryption key for Google credentials is not configured."""
 
 #: Imported events are stored as local Tashkent wall-clock strings.
 LOCAL_DATETIME_FORMAT = "%Y-%m-%dT%H:%M"
@@ -130,6 +148,54 @@ def init_google_calendar_store() -> None:
         connection.commit()
 
 
+# --- secrets ------------------------------------------------------------------
+
+
+def _cipher() -> Any | None:
+    key = os.environ.get(TOKEN_KEY_ENV, "").strip()
+    if not key:
+        return None
+    try:
+        # Imported lazily: without the package the integration stays off, but
+        # the booking code that imports this module keeps working.
+        from cryptography.fernet import Fernet
+    except ImportError:
+        return None
+    try:
+        return Fernet(key.encode("ascii"))
+    except (TypeError, ValueError):
+        return None
+
+
+def token_key_configured() -> bool:
+    return _cipher() is not None
+
+
+def _encrypt_secret(value: str) -> str:
+    if not value:
+        return ""
+    cipher = _cipher()
+    if cipher is None:
+        raise TokenKeyMissing(
+            f"На сервере не задан ключ {TOKEN_KEY_ENV}: данные Google сохранить нельзя."
+        )
+    return _ENCRYPTED_PREFIX + cipher.encrypt(value.encode("utf-8")).decode("ascii")
+
+
+def _decrypt_secret(value: str) -> str:
+    if not value.startswith(_ENCRYPTED_PREFIX):
+        return ""
+    cipher = _cipher()
+    if cipher is None:
+        return ""
+    from cryptography.fernet import InvalidToken
+
+    try:
+        return cipher.decrypt(value[len(_ENCRYPTED_PREFIX):].encode("ascii")).decode("utf-8")
+    except (InvalidToken, ValueError):
+        return ""
+
+
 # --- settings -----------------------------------------------------------------
 
 
@@ -139,7 +205,11 @@ def get_settings(keys: Iterable[str] | None = None) -> dict[str, str]:
             rows = connection.execute("SELECT key, value FROM google_calendar_settings").fetchall()
     except sqlite3.OperationalError:
         return {}
-    values = {str(row["key"]): str(row["value"] or "") for row in rows}
+    values = {}
+    for row in rows:
+        key = str(row["key"])
+        value = str(row["value"] or "")
+        values[key] = _decrypt_secret(value) if key in SECRET_SETTING_KEYS else value
     if keys is None:
         return values
     return {key: values.get(key, "") for key in keys}
@@ -153,17 +223,34 @@ def set_settings(values: dict[str, Any]) -> None:
     if not values:
         return
     now = utcnow_iso()
+    prepared = {}
+    for key, value in values.items():
+        text = "" if value is None else str(value)
+        prepared[str(key)] = _encrypt_secret(text) if key in SECRET_SETTING_KEYS else text
     with get_connection() as connection:
         ensure_schema(connection)
-        for key, value in values.items():
+        for key, value in prepared.items():
             connection.execute(
                 """
                 INSERT INTO google_calendar_settings(key, value, updated_at) VALUES(?, ?, ?)
                 ON CONFLICT(key) DO UPDATE SET value = excluded.value, updated_at = excluded.updated_at
                 """,
-                (str(key), "" if value is None else str(value), now),
+                (key, value, now),
             )
         connection.commit()
+
+
+def ensure_setting(key: str, value: str) -> str:
+    """Store ``value`` only if the key is unset and return the stored value (race-free)."""
+    with get_connection() as connection:
+        ensure_schema(connection)
+        connection.execute(
+            "INSERT OR IGNORE INTO google_calendar_settings(key, value, updated_at) VALUES(?, ?, ?)",
+            (key, value, utcnow_iso()),
+        )
+        connection.commit()
+        row = connection.execute("SELECT value FROM google_calendar_settings WHERE key = ?", (key,)).fetchone()
+    return str(row["value"] or "") if row else value
 
 
 # --- order push queue -----------------------------------------------------------
@@ -332,13 +419,18 @@ def delete_order_event(order_id: int) -> None:
 
 
 def list_order_event_ids(calendar_id: str) -> set[str]:
+    return set(list_order_event_map(calendar_id))
+
+
+def list_order_event_map(calendar_id: str) -> dict[str, int]:
+    """``event_id -> order_id`` for events the site wrote to this calendar."""
     with get_connection() as connection:
         ensure_schema(connection)
         rows = connection.execute(
-            "SELECT event_id FROM google_calendar_order_events WHERE calendar_id = ?",
+            "SELECT event_id, order_id FROM google_calendar_order_events WHERE calendar_id = ?",
             (calendar_id,),
         ).fetchall()
-    return {str(row["event_id"]) for row in rows}
+    return {str(row["event_id"]): int(row["order_id"]) for row in rows}
 
 
 def get_order_event_links(order_ids: Iterable[int]) -> dict[int, str]:
@@ -373,8 +465,8 @@ def replace_imported_events(rows: list[dict[str, Any]]) -> None:
                 INSERT OR REPLACE INTO google_calendar_events(
                     event_key, calendar_id, event_id, summary, html_link, start_local, end_local,
                     all_day, program_slugs, program_names, character_slugs, character_names,
-                    match_status, order_public_id, blocks_time, blocks_all, google_updated, synced_at
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    match_status, order_public_id, blocks_time, blocks_all, note, google_updated, synced_at
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 """,
                 (
                     row["event_key"],
@@ -393,6 +485,7 @@ def replace_imported_events(rows: list[dict[str, Any]]) -> None:
                     str(row.get("order_public_id") or ""),
                     1 if row.get("blocks_time") else 0,
                     1 if row.get("blocks_all") else 0,
+                    str(row.get("note") or "")[:300],
                     str(row.get("google_updated") or ""),
                     now,
                 ),
@@ -433,6 +526,7 @@ def _imported_row_to_dict(row: sqlite3.Row) -> dict[str, Any]:
         "order_public_id": str(row["order_public_id"] or ""),
         "blocks_time": bool(row["blocks_time"]),
         "blocks_all": bool(row["blocks_all"]),
+        "note": str(row["note"] or "") if "note" in row.keys() else "",
     }
 
 
@@ -659,3 +753,22 @@ def release_lease(name: str, owner: str) -> None:
     with get_connection() as connection:
         connection.execute("DELETE FROM google_calendar_locks WHERE name = ? AND owner = ?", (name, owner))
         connection.commit()
+
+
+# --- manager alerts -------------------------------------------------------------
+
+ALERT_RETENTION_DAYS = 200
+
+
+def claim_alert(alert_key: str) -> bool:
+    """True exactly once per key, so a Telegram alert is never repeated."""
+    cutoff = (datetime.now(timezone.utc) - timedelta(days=ALERT_RETENTION_DAYS)).replace(microsecond=0).isoformat()
+    with get_connection() as connection:
+        ensure_schema(connection)
+        connection.execute("DELETE FROM google_calendar_alerts WHERE created_at < ?", (cutoff,))
+        cursor = connection.execute(
+            "INSERT OR IGNORE INTO google_calendar_alerts(alert_key, created_at) VALUES (?, ?)",
+            (str(alert_key)[:400], utcnow_iso()),
+        )
+        connection.commit()
+    return cursor.rowcount == 1
