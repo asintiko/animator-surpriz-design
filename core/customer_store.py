@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import logging
 import os
+import re
 import sqlite3
 from collections import OrderedDict
 from datetime import date, datetime, time, timedelta, timezone
@@ -20,6 +21,7 @@ from .catalog_store import (
     FIXED_CAST_PROGRAM_DETAILS,
     FIXED_CAST_SHOW_PROGRAM_SLUGS,
     build_character_search_index,
+    clean_ensemble_member,
     get_character_by_slug,
     get_default_show_program_duration_minutes,
     get_show_program_character_slug_map,
@@ -28,6 +30,11 @@ from .catalog_store import (
     list_characters_for_public,
 )
 from .config import DATA_ROOT
+from .google_calendar_store import (
+    enqueue_order_sync as _enqueue_calendar_order_sync,
+    ensure_schema as _ensure_calendar_schema,
+    fetch_busy_blocks as _fetch_calendar_busy_blocks,
+)
 from .tashkent_geo import is_inside_tashkent
 
 DB_ROOT = DATA_ROOT / "admin"
@@ -311,8 +318,71 @@ def _ensure_party_order_columns() -> None:
                 ON party_order_addons(order_id, sort_order, id)
                 """
             )
+            connection.execute(
+                """
+                CREATE TABLE IF NOT EXISTS party_order_reschedule_events (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    order_id INTEGER NOT NULL,
+                    previous_date TEXT NOT NULL,
+                    previous_time_from TEXT NOT NULL,
+                    previous_time_to TEXT NOT NULL,
+                    celebration_date TEXT NOT NULL,
+                    time_from TEXT NOT NULL,
+                    time_to TEXT NOT NULL,
+                    forced INTEGER NOT NULL DEFAULT 0,
+                    source TEXT NOT NULL DEFAULT '',
+                    actor TEXT NOT NULL DEFAULT '',
+                    created_at TEXT NOT NULL,
+                    FOREIGN KEY(order_id) REFERENCES party_orders(id) ON DELETE CASCADE
+                )
+                """
+            )
+            _ensure_calendar_schema(connection)
+            _repair_character_name_snapshots(connection)
             connection.commit()
         _PARTY_ORDER_SCHEMA_READY_PATH = schema_path
+
+
+def clean_character_name_snapshot(value: str) -> str:
+    """Turn a roster saved as "['Скай' + 'Гонщик']" back into "Скай + Гонщик"."""
+    text = str(value or "")
+    if "[" not in text and "]" not in text:
+        return text
+    head, suffix = text, ""
+    match = re.match(r"^(.*?)(\s\([^()]*\))$", text)
+    if match:
+        head, suffix = match.group(1), match.group(2)
+    parts = [clean_ensemble_member(part) for part in head.split(" + ")]
+    return " + ".join(part for part in parts if part) + suffix
+
+
+def _repair_character_name_snapshots(connection: sqlite3.Connection) -> None:
+    """Fix rosters stored while ensemble members were a list literal, then refresh the cards."""
+    try:
+        rows = connection.execute(
+            """
+            SELECT id, order_id, name_snapshot FROM party_order_characters
+            WHERE name_snapshot LIKE '%[%' OR name_snapshot LIKE '%]%'
+            """
+        ).fetchall()
+    except sqlite3.OperationalError:
+        return
+    repaired_orders: set[int] = set()
+    for row in rows:
+        cleaned = clean_character_name_snapshot(str(row["name_snapshot"] or ""))
+        if cleaned and cleaned != str(row["name_snapshot"] or ""):
+            connection.execute(
+                "UPDATE party_order_characters SET name_snapshot = ? WHERE id = ?",
+                (cleaned, int(row["id"])),
+            )
+            repaired_orders.add(int(row["order_id"]))
+    now = utcnow_iso()
+    for order_id in sorted(repaired_orders):
+        try:
+            _queue_confirmation_sync(connection, order_id, now)
+        except sqlite3.OperationalError:
+            pass
+        _enqueue_calendar_order_sync(connection, order_id, now)
 
 
 def reconcile_order_confirmation_lifecycle_states() -> None:
@@ -865,6 +935,11 @@ def get_busy_dates_summary(days_ahead: int = 120) -> dict[str, Any]:
                     "slug": str(cr["slug"] or ""),
                     "name": str(cr["name_snapshot"] or cr["slug"] or "—"),
                 })
+        calendar_blocks = _fetch_calendar_busy_blocks(
+            connection,
+            date.today(),
+            date.today() + timedelta(days=int(days_ahead)),
+        )
 
     by_date: dict[str, dict[str, Any]] = {}
     for r in rows:
@@ -881,6 +956,25 @@ def get_busy_dates_summary(days_ahead: int = 120) -> dict[str, Any]:
             "character_slugs": [c["slug"] for c in characters if c["slug"]],
             "characters": [c["name"] for c in characters],
         })
+    # Manual bookings from the connected Google Calendar close time exactly
+    # like site orders; free-text event titles never leave the calendar store.
+    for iso, blocks in calendar_blocks.items():
+        entry = by_date.setdefault(iso, {"count": 0, "bookings": []})
+        for block in blocks:
+            entry["count"] += 1
+            entry["bookings"].append({
+                "public_id": "",
+                "time_from": block["time_from"],
+                "time_to": block["time_to"],
+                "program_slug": block["program_slug"],
+                "program_slugs": list(block["program_slugs"]),
+                "program_name": block["program_name"],
+                "character_slugs": list(block["character_slugs"]),
+                "characters": list(block["characters"]),
+                "blocks_all": bool(block["blocks_all"]),
+                "source": "google_calendar",
+            })
+        entry["bookings"].sort(key=lambda booking: (booking["time_from"], booking["time_to"]))
     return {"by_date": by_date}
 
 
@@ -1076,9 +1170,17 @@ def build_resource_availability_calendar(
             if (
                 not selected_characters
                 and selected_program
-                and str(booking.get("program_slug") or "").strip() == selected_program
+                and selected_program in _booking_program_slugs(booking)
             ):
                 key = f"program:{selected_program}"
+                resource_intervals.setdefault(key, []).append((blocked_start, blocked_end))
+                resource_capacities[key] = 1
+                matched = True
+
+            # A calendar event nobody could recognise may close the time for
+            # everyone (admin setting «Нераспознанные события закрывают время»).
+            if booking.get("blocks_all"):
+                key = "calendar:all"
                 resource_intervals.setdefault(key, []).append((blocked_start, blocked_end))
                 resource_capacities[key] = 1
                 matched = True
@@ -1611,6 +1713,102 @@ def _character_capacity(character: dict[str, Any]) -> int:
     return max(1, 1 + max(0, duplicate_count))
 
 
+CALENDAR_CLOSED_MESSAGE = "Это время уже занято. Выберите другое время."
+
+
+def _booking_program_slugs(booking: dict[str, Any]) -> set[str]:
+    slugs = {str(slug or "").strip() for slug in (booking.get("program_slugs") or [])}
+    slugs.add(str(booking.get("program_slug") or "").strip())
+    slugs.discard("")
+    return slugs
+
+
+def _calendar_blocks_on(celebration_date: str) -> list[dict[str, Any]]:
+    """Busy blocks imported from Google Calendar for one date."""
+    try:
+        with _get_connection() as connection:
+            blocks = _fetch_calendar_busy_blocks(connection, celebration_date)
+    except (ValueError, sqlite3.Error):
+        return []
+    return blocks.get(celebration_date, [])
+
+
+def _calendar_block_overlap(
+    block: dict[str, Any],
+    start_minutes: int,
+    end_minutes: int,
+) -> dict[str, Any] | None:
+    busy_start = _time_to_minutes(str(block.get("time_from") or ""))
+    busy_end = _time_to_minutes(str(block.get("time_to") or ""))
+    if busy_start is None or busy_end is None or busy_end <= busy_start:
+        return None
+    blocked_start = busy_start - CHARACTER_BOOKING_BUFFER_BEFORE_MINUTES
+    blocked_end = busy_end + CHARACTER_BOOKING_BUFFER_AFTER_MINUTES
+    if not (start_minutes < blocked_end and end_minutes > blocked_start):
+        return None
+    return {
+        "time_from": block.get("time_from"),
+        "time_to": block.get("time_to"),
+        "blocked_from": _minutes_to_time(blocked_start),
+        "blocked_to": _minutes_to_time(blocked_end),
+        "blocked_start": blocked_start,
+        "blocked_end": blocked_end,
+    }
+
+
+def _calendar_closed_conflicts(
+    celebration_date: str,
+    start_minutes: int,
+    end_minutes: int,
+    blocks: list[dict[str, Any]] | None = None,
+) -> list[dict[str, Any]]:
+    """Calendar events that close the interval for every program and costume."""
+    conflicts: list[dict[str, Any]] = []
+    for block in _calendar_blocks_on(celebration_date) if blocks is None else blocks:
+        if not block.get("blocks_all"):
+            continue
+        overlap = _calendar_block_overlap(block, start_minutes, end_minutes)
+        if overlap:
+            overlap.pop("blocked_start", None)
+            overlap.pop("blocked_end", None)
+            conflicts.append(
+                {
+                    "slug": "",
+                    "name": "Занято в календаре",
+                    "kind": "calendar",
+                    "capacity": 1,
+                    "used": 1,
+                    "duplicate_count": 0,
+                    "orders": [overlap],
+                }
+            )
+    return conflicts
+
+
+def _cast_free_conflicts(
+    *,
+    program_slug: str,
+    celebration_date: str,
+    start_minutes: int,
+    end_minutes: int,
+    exclude_order_id: int | None = None,
+) -> tuple[list[dict[str, Any]], str]:
+    """Conflicts for a request without selected costumes: calendar closures and the program."""
+    closed = _calendar_closed_conflicts(celebration_date, start_minutes, end_minutes)
+    if closed:
+        return closed, "calendar_closed"
+    if not program_slug:
+        return [], ""
+    conflicts = _check_program_conflict(
+        program_slug=program_slug,
+        celebration_date=celebration_date,
+        start_minutes=start_minutes,
+        end_minutes=end_minutes,
+        exclude_order_id=exclude_order_id,
+    )
+    return conflicts, "program_overlap" if conflicts else ""
+
+
 def _check_program_conflict(
     *,
     program_slug: str,
@@ -1670,6 +1868,28 @@ def _check_program_conflict(
                     ],
                 }
             )
+    for block in _calendar_blocks_on(celebration_date):
+        program_slugs = list(block.get("program_slugs") or [])
+        if program_slug not in program_slugs:
+            continue
+        overlap = _calendar_block_overlap(block, start_minutes, end_minutes)
+        if not overlap:
+            continue
+        overlap.pop("blocked_start", None)
+        overlap.pop("blocked_end", None)
+        names = list(block.get("program_names") or [])
+        index = program_slugs.index(program_slug)
+        conflicts.append(
+            {
+                "slug": program_slug,
+                "name": names[index] if index < len(names) else program_slug,
+                "kind": "program",
+                "capacity": 1,
+                "used": 1,
+                "duplicate_count": 0,
+                "orders": [overlap],
+            }
+        )
     return conflicts
 
 
@@ -1740,6 +1960,7 @@ def check_character_availability(
     time_to: str,
     program_slug: str = "",
     exclude_order_id: int | None = None,
+    enforce_lead_time: bool = True,
 ) -> dict[str, Any]:
     selected_slugs = _normalize_character_slugs(list(character_slugs))
     try:
@@ -1753,13 +1974,29 @@ def check_character_availability(
         return {"success": False, "available": False, "message": "Укажите корректное время праздника.", "conflicts": []}
 
     lead_time = check_booking_lead_time(celebration_date=celebration_date, time_from=time_from)
-    if not lead_time["allowed"]:
+    if enforce_lead_time and not lead_time["allowed"]:
         return {
             "success": True,
             "available": False,
             "message": lead_time["message"],
             "reason": lead_time["reason"],
             "conflicts": [],
+        }
+
+    calendar_blocks = _calendar_blocks_on(celebration_date)
+    closed_conflicts = _calendar_closed_conflicts(
+        celebration_date,
+        start_minutes,
+        end_minutes,
+        calendar_blocks,
+    )
+    if closed_conflicts:
+        return {
+            "success": True,
+            "available": False,
+            "message": CALENDAR_CLOSED_MESSAGE,
+            "reason": "calendar_closed",
+            "conflicts": closed_conflicts,
         }
 
     if not selected_slugs:
@@ -1850,6 +2087,20 @@ def check_character_availability(
                     "blocked_to": _minutes_to_time(blocked_end),
                 }
             )
+
+    # Each costume mentioned in a calendar event occupies one copy of it,
+    # exactly like a site order does.
+    for block in calendar_blocks:
+        booked = selected_set.intersection(block.get("character_slugs") or [])
+        if not booked:
+            continue
+        overlap = _calendar_block_overlap(block, start_minutes, end_minutes)
+        if not overlap:
+            continue
+        window = (overlap.pop("blocked_start"), overlap.pop("blocked_end"))
+        for slug in booked:
+            intervals_by_slug[slug].append(window)
+            details_by_slug[slug].append(dict(overlap))
 
     conflicts: list[dict[str, Any]] = []
     for slug in selected_slugs:
@@ -1949,16 +2200,12 @@ def build_character_time_slot_availability(
             continue
 
         if not selected_slugs:
-            program_conflicts = (
-                _check_program_conflict(
-                    program_slug=program_slug,
-                    celebration_date=celebration_date,
-                    start_minutes=start_minutes,
-                    end_minutes=start_minutes + duration,
-                    exclude_order_id=exclude_order_id,
-                )
-                if program_slug
-                else []
+            program_conflicts, conflict_reason = _cast_free_conflicts(
+                program_slug=program_slug,
+                celebration_date=celebration_date,
+                start_minutes=start_minutes,
+                end_minutes=start_minutes + duration,
+                exclude_order_id=exclude_order_id,
             )
             result_slots.append(
                 {
@@ -1966,7 +2213,7 @@ def build_character_time_slot_availability(
                     "label": slot.get("label") or start_value,
                     "time_to": end_value,
                     "available": not program_conflicts,
-                    "reason": "program_overlap" if program_conflicts else "",
+                    "reason": conflict_reason,
                     "conflicts": program_conflicts,
                 }
             )
@@ -2062,23 +2309,19 @@ def build_character_end_time_availability(
             continue
 
         if not selected_slugs:
-            program_conflicts = (
-                _check_program_conflict(
-                    program_slug=program_slug,
-                    celebration_date=celebration_date,
-                    start_minutes=start_minutes,
-                    end_minutes=end_minutes,
-                    exclude_order_id=exclude_order_id,
-                )
-                if program_slug
-                else []
+            program_conflicts, conflict_reason = _cast_free_conflicts(
+                program_slug=program_slug,
+                celebration_date=celebration_date,
+                start_minutes=start_minutes,
+                end_minutes=end_minutes,
+                exclude_order_id=exclude_order_id,
             )
             result_slots.append(
                 {
                     "value": end_value,
                     "label": slot.get("label") or end_value,
                     "available": not program_conflicts,
-                    "reason": "program_overlap" if program_conflicts else "",
+                    "reason": conflict_reason,
                     "conflicts": program_conflicts,
                 }
             )
@@ -2510,6 +2753,152 @@ def create_party_order(customer_id: int, data: dict[str, Any]) -> dict[str, Any]
     return {"success": True, "order": order}
 
 
+TERMINAL_ORDER_STATUSES = ("cancelled", "done")
+
+
+def _reschedule_failure(reason: str, message: str, **extra: Any) -> dict[str, Any]:
+    return {"success": False, "reason": reason, "message": message, **extra}
+
+
+def reschedule_order(
+    order_id: int,
+    *,
+    celebration_date: str,
+    time_from: str,
+    source: str = "telegram",
+    actor: str = "",
+    force: bool = False,
+    now: datetime | None = None,
+) -> dict[str, Any]:
+    """Move an order to a new start keeping its duration (manager action).
+
+    Unlike a customer booking there is no 24 h lead time, but the new slot is
+    checked against other orders and calendar blocks (the order itself is
+    excluded); ``force`` lets the manager move it despite a conflict.
+    """
+    _ensure_party_order_columns()
+    order = get_order_by_id(int(order_id))
+    if not order:
+        return _reschedule_failure("not_found", "Заказ не найден.")
+    if str(order.get("status") or "") in TERMINAL_ORDER_STATUSES:
+        return _reschedule_failure("terminal", "Отменённый или выполненный заказ перенести нельзя.")
+    try:
+        new_day = datetime.strptime(str(celebration_date or ""), "%Y-%m-%d").date()
+    except ValueError:
+        return _reschedule_failure("invalid", "Некорректная дата.")
+    start_minutes = _time_to_minutes(str(time_from or ""))
+    if start_minutes is None:
+        return _reschedule_failure("invalid", "Некорректное время начала.")
+
+    old_start = _time_to_minutes(str(order.get("time_from") or ""))
+    old_end = _time_to_minutes(str(order.get("time_to") or ""))
+    duration = (
+        old_end - old_start
+        if old_start is not None and old_end is not None and old_end > old_start
+        else max(1, int(order.get("duration_minutes") or DEFAULT_SHOW_PROGRAM_DURATION_MINUTES))
+    )
+    end_minutes = start_minutes + duration
+    if end_minutes > 24 * 60 - 1:
+        return _reschedule_failure(
+            "overnight",
+            f"Праздник длится {duration} мин и должен закончиться до полуночи. Укажите время пораньше.",
+        )
+    new_time_from = _minutes_to_time(start_minutes)
+    new_time_to = _minutes_to_time(end_minutes)
+    local_now = (now or booking_local_now()).replace(tzinfo=None)
+    if datetime.combine(new_day, time(start_minutes // 60, start_minutes % 60)) <= local_now:
+        return _reschedule_failure("past", "Это время уже прошло. Укажите будущую дату и время.")
+    new_date = new_day.isoformat()
+    previous = {
+        "celebration_date": str(order.get("celebration_date") or ""),
+        "time_from": str(order.get("time_from") or ""),
+        "time_to": str(order.get("time_to") or ""),
+    }
+    if (new_date, new_time_from) == (previous["celebration_date"], previous["time_from"]):
+        return _reschedule_failure("unchanged", "Заказ уже стоит на это время.")
+
+    target = {"celebration_date": new_date, "time_from": new_time_from, "time_to": new_time_to}
+    if not force:
+        availability = check_character_availability(
+            character_slugs=list(order.get("character_slugs") or []),
+            celebration_date=new_date,
+            time_from=new_time_from,
+            time_to=new_time_to,
+            program_slug=str(order.get("program_slug") or ""),
+            exclude_order_id=int(order["id"]),
+            enforce_lead_time=False,
+        )
+        if not availability.get("success") or not availability.get("available"):
+            return _reschedule_failure(
+                "conflict",
+                str(availability.get("message") or "На это время уже есть бронь."),
+                conflicts=list(availability.get("conflicts") or []),
+                target=target,
+            )
+
+    changed_at = utcnow_iso()
+    source_clean = (source or "telegram").strip()[:40] or "telegram"
+    actor_clean = (actor or "").strip()[:160]
+    with _get_connection() as connection:
+        connection.execute("BEGIN IMMEDIATE")
+        row = connection.execute(
+            "SELECT status, celebration_date, time_from, time_to FROM party_orders WHERE id = ?",
+            (int(order["id"]),),
+        ).fetchone()
+        if not row or str(row["status"] or "") in TERMINAL_ORDER_STATUSES:
+            connection.rollback()
+            return _reschedule_failure("terminal", "Отменённый или выполненный заказ перенести нельзя.")
+        if (str(row["celebration_date"]), str(row["time_from"]), str(row["time_to"])) != (
+            previous["celebration_date"],
+            previous["time_from"],
+            previous["time_to"],
+        ):
+            connection.rollback()
+            return _reschedule_failure("stale", "Заказ только что изменили. Нажмите «Перенести» ещё раз.")
+        connection.execute(
+            """
+            UPDATE party_orders
+            SET celebration_date = ?, time_from = ?, time_to = ?, duration_minutes = ?, updated_at = ?
+            WHERE id = ?
+            """,
+            (new_date, new_time_from, new_time_to, duration, changed_at, int(order["id"])),
+        )
+        connection.execute(
+            """
+            INSERT INTO party_order_reschedule_events(
+                order_id, previous_date, previous_time_from, previous_time_to,
+                celebration_date, time_from, time_to, forced, source, actor, created_at
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """,
+            (
+                int(order["id"]),
+                previous["celebration_date"],
+                previous["time_from"],
+                previous["time_to"],
+                new_date,
+                new_time_from,
+                new_time_to,
+                1 if force else 0,
+                source_clean,
+                actor_clean,
+                changed_at,
+            ),
+        )
+        _queue_confirmation_sync(connection, int(order["id"]), changed_at)
+        _enqueue_calendar_order_sync(connection, int(order["id"]), changed_at)
+        connection.commit()
+    return {
+        "success": True,
+        "changed": True,
+        "order_id": int(order["id"]),
+        "public_id": str(order.get("public_id") or ""),
+        "forced": bool(force),
+        "previous": previous,
+        "current": target,
+        "duration_minutes": duration,
+    }
+
+
 def _order_row_to_dict(row: sqlite3.Row) -> dict[str, Any]:
     character_names = [name for name in (row["character_names"] or "").split("|||") if name]
     character_slugs = [slug for slug in (row["character_slugs"] or "").split("|||") if slug]
@@ -2848,6 +3237,7 @@ def set_order_confirmation(
                 (int(row["id"]), previous_state, normalized_state, source_clean, actor_clean, now),
             )
         _queue_confirmation_sync(connection, int(row["id"]), now)
+        _enqueue_calendar_order_sync(connection, int(row["id"]), now)
         connection.commit()
     return {
         "success": True,
@@ -2956,6 +3346,7 @@ def apply_legacy_order_cancellation_by_public_id(
                     (order_id, previous_state, source_clean, actor_clean, now),
                 )
             _queue_confirmation_sync(connection, order_id, now)
+            _enqueue_calendar_order_sync(connection, order_id, now)
         connection.commit()
 
     if changed:

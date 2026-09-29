@@ -34,6 +34,8 @@ CHARACTER_BOOKING_BUFFER_AFTER_MINUTES = 60
 
 Проверка через `_check_program_conflict` и `check_character_availability(program_slug=...)`.
 
+События подключённого Google Календаря закрывают время так же, как заказы: распознанные персонажи и шоу — только для себя, нераспознанные — для всех, если это включено в настройках ([[Google-Calendar]]).
+
 ## Persistence в браузере
 
 `localStorage` ключ `surpriz_party_builder_draft_v1` — сохраняет выбор между перезагрузками.

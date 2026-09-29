@@ -17,6 +17,7 @@
 | `admin_notifications.py` | TG-bot для уведомлений админу о новых заказах + callback-кнопки |
 | `addon_store.py` | Доп. услуги к программам ([[Free-Choice-Bonus]]) |
 | `catalog_site.py` | Публичная страница `/catalog/` |
+| `google_calendar.py` / `google_calendar_store.py` | Синхронизация с Google Календарём ([[Google-Calendar]]) |
 
 ## Данные
 
@@ -30,6 +31,7 @@ SQLite в `content/data/admin/` на сервере, `content/data/admin/` ло�
 - `admin_telegram_settings` — токены TG бота и Gateway
 - `admin_telegram_recipients` — кому слать notifications
 - `admin_telegram_processed_updates` — дедуп callback'ов
+- `google_calendar_*` — настройки, события календаря, очередь выгрузки заказов ([[Google-Calendar]])
 
 ## Шаблоны
 
