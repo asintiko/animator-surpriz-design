@@ -661,12 +661,9 @@ def _repair_ensemble_member_values(connection: sqlite3.Connection) -> None:
 
 def clean_ensemble_member(value: Any) -> str:
     """Strip list-literal debris ("['Скай'") left by older saves of a Python list."""
-    text = _clean_text(str(value or ""))
-    previous = None
-    while text != previous:
-        previous = text
-        text = text.strip().strip("[]").strip().strip("'\"").strip()
-    return text
+    # Saves repeated over a stringified list escape the quotes again each time,
+    # so backslashes belong to the debris too.
+    return _clean_text(str(value or "")).strip(" \t[]'\"\\")
 
 
 def _ensemble_list_literal(raw: str) -> list[Any] | None:

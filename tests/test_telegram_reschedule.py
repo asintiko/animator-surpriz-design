@@ -28,6 +28,8 @@ class EnsembleMemberParsingTests(unittest.TestCase):
             ("['Скай', 'Гонщик']", ["Скай", "Гонщик"]),
             ('["[\'Скай\'", "\'Гонщик\']"]', ["Скай", "Гонщик"]),
             ("Анна, Эльза\nОлаф (ростовой)", ["Анна", "Эльза", "Олаф (ростовой)"]),
+            # Re-saved several times: every save escaped the quotes once more.
+            ('[\'[\\\'["[\\\\\\\'Анна\\\\\\\'"\\\'\', \'\\\'"\\\\\\\'Эльза\\\\\\\'"\\\'\', \'\\\'"\\\\\\\'Олаф (ростовой)\\\\\\\']"]\\\']\']', ["Анна", "Эльза", "Олаф (ростовой)"]),
             ("", []),
             (None, []),
         ]
@@ -53,6 +55,7 @@ class EnsembleMemberParsingTests(unittest.TestCase):
 
     def test_order_roster_snapshot_is_cleaned(self) -> None:
         clean = customer_store.clean_character_name_snapshot
+        self.assertEqual(clean('[\'[\\\'["[\\\\\\\'Анна\\\\\\\'"\\\'\' + \'\\\'"\\\\\\\'Эльза\\\\\\\'"\\\'\''), "Анна + Эльза")
         self.assertEqual(clean("['Скай' + 'Гонщик']"), "Скай + Гонщик")
         self.assertEqual(clean("['Ник' + 'Джуди'] (игрушка в комплекте; +300 000 сум)"), "Ник + Джуди (игрушка в комплекте; +300 000 сум)")
         self.assertEqual(clean("Скай + Гонщик"), "Скай + Гонщик")
