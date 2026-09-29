@@ -2,10 +2,11 @@ from __future__ import annotations
 
 import html
 import os
+import re
 import sqlite3
 from urllib.parse import quote
 from concurrent.futures import ThreadPoolExecutor, as_completed
-from datetime import datetime, timedelta, timezone
+from datetime import date, datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any
 from uuid import uuid4
@@ -63,6 +64,19 @@ def init_admin_notifications_store() -> None:
     with _get_connection() as connection:
         connection.executescript(
             """
+            CREATE TABLE IF NOT EXISTS admin_telegram_reschedule_sessions (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                chat_id TEXT NOT NULL,
+                prompt_message_id INTEGER NOT NULL DEFAULT 0,
+                order_id INTEGER NOT NULL,
+                actor TEXT NOT NULL DEFAULT '',
+                pending_date TEXT NOT NULL DEFAULT '',
+                pending_time_from TEXT NOT NULL DEFAULT '',
+                created_at TEXT NOT NULL,
+                expires_at TEXT NOT NULL
+            );
+            CREATE INDEX IF NOT EXISTS idx_admin_tg_reschedule_prompt
+            ON admin_telegram_reschedule_sessions(chat_id, prompt_message_id);
             CREATE TABLE IF NOT EXISTS admin_telegram_recipients (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 chat_id TEXT NOT NULL UNIQUE,
@@ -937,7 +951,7 @@ def _format_order_message(order: dict[str, Any]) -> str:
         program_line += f" · {duration_label}"
     age_label = ""
     if celebrant_age not in (None, ""):
-        age_label = f" {escape(celebrant_age)} года"
+        age_label = f" {escape(celebrant_age)} {_years_word(celebrant_age)}"
 
     lines = [
         f"📅 <b>{escape(celebration_date)} в {escape(time_from or '—')}</b>",
@@ -979,9 +993,11 @@ def _build_order_keyboard(
     else:
         button = {"text": "✅ Подтвердить", "callback_data": f"order:{pid}:confirm"}
     reject_button = {"text": "❌ Отклонить", "callback_data": f"order:{pid}:cancel"}
+    reschedule_button = {"text": "🕒 Перенести", "callback_data": f"order:{pid}:reschedule"}
     return {
         "inline_keyboard": [
-            [button, reject_button]
+            [button, reject_button],
+            [reschedule_button],
         ]
     }
 
@@ -1410,11 +1426,16 @@ def handle_callback(update: dict[str, Any]) -> dict[str, Any]:
     user_id = str(from_user.get("id") or "").strip()
     actor = f"{user_label} ({user_id})" if user_id else user_label
 
+    if data.startswith("resched:"):
+        return _handle_reschedule_callback(callback, callback_id, callback_chat_id, data, actor)
+
     parts = data.split(":")
     if len(parts) != 3 or parts[0] != "order":
         _answer_callback(callback_id, "Неизвестная команда")
         return {"success": False, "message": "bad data"}
     public_id, action = parts[1], parts[2]
+    if action == "reschedule":
+        return _start_reschedule(callback_id, callback_chat_id, public_id, actor)
     if action not in {"confirm", "unconfirm", "cancel"}:
         _answer_callback(callback_id, "Неизвестное действие")
         return {"success": False, "message": "bad action"}
@@ -1466,6 +1487,431 @@ def handle_callback(update: dict[str, Any]) -> dict[str, Any]:
     }
 
 
+# === Order rescheduling from the chat ===
+
+RESCHEDULE_SESSION_TTL = timedelta(minutes=30)
+_MONTHS_GENITIVE = (
+    "января", "февраля", "марта", "апреля", "мая", "июня",
+    "июля", "августа", "сентября", "октября", "ноября", "декабря",
+)
+_MONTH_STEMS = {
+    "янв": 1, "фев": 2, "мар": 3, "апр": 4, "май": 5, "мая": 5, "июн": 6,
+    "июл": 7, "авг": 8, "сен": 9, "окт": 10, "ноя": 11, "дек": 12,
+}
+_RESCHEDULE_CANCEL_WORDS = {"отмена", "отменить", "cancel", "/cancel", "стоп", "нет"}
+_TERMINAL_STATUSES = {"cancelled", "done"}
+
+
+def _years_word(value: Any) -> str:
+    try:
+        number = abs(int(value))
+    except (TypeError, ValueError):
+        return "лет"
+    if number % 10 == 1 and number % 100 != 11:
+        return "год"
+    if 2 <= number % 10 <= 4 and not 12 <= number % 100 <= 14:
+        return "года"
+    return "лет"
+
+
+def _human_date(value: str) -> str:
+    try:
+        parsed = datetime.strptime(str(value or ""), "%Y-%m-%d")
+    except ValueError:
+        return str(value or "—")
+    return f"{parsed.day} {_MONTHS_GENITIVE[parsed.month - 1]}"
+
+
+def _clock_minutes(value: str) -> int | None:
+    try:
+        parsed = datetime.strptime(str(value or ""), "%H:%M")
+    except ValueError:
+        return None
+    return parsed.hour * 60 + parsed.minute
+
+
+def _duration_words(minutes: int) -> str:
+    hours, rest = divmod(max(0, int(minutes)), 60)
+    parts: list[str] = []
+    if hours:
+        parts.append(f"{hours} {'час' if hours == 1 else 'часа' if 2 <= hours <= 4 else 'часов'}")
+    if rest:
+        parts.append(f"{rest} мин")
+    return " ".join(parts) or "0 мин"
+
+
+def _local_today() -> date:
+    return datetime.now(timezone(timedelta(hours=5))).date()
+
+
+def _resolve_day(day: int, month: int, year: str | None, today: date) -> date:
+    target_year = int(year) if year else today.year
+    if target_year < 100:
+        target_year += 2000
+    try:
+        resolved = date(target_year, month, day)
+    except ValueError:
+        raise ValueError(f"Такой даты нет: {day:02d}.{month:02d}.") from None
+    if not year and resolved < today:
+        resolved = date(target_year + 1, month, day)
+    return resolved
+
+
+def parse_reschedule_text(
+    text: str,
+    *,
+    today: date,
+    current_date: str,
+    current_time: str,
+) -> tuple[str, str, str | None]:
+    """Read "06.10 15:00", "6 октября в 15:30", "завтра 12:00", "15:00" or "07.10".
+
+    Returns ``(date, start, end_or_None)``; a missing date or time keeps the
+    current one. Raises ``ValueError`` with a manager-facing hint.
+    """
+    raw = " " + str(text or "").lower().replace("ё", "е") + " "
+    new_day: date | None = None
+    month_match = re.search(
+        r"(\d{1,2})\s+(янв|фев|мар|апр|ма[йя]|июн|июл|авг|сен|окт|ноя|дек)[а-я]*\.?(?:\s+(\d{4}))?",
+        raw,
+    )
+    if month_match:
+        new_day = _resolve_day(
+            int(month_match.group(1)),
+            _MONTH_STEMS[month_match.group(2)],
+            month_match.group(3),
+            today,
+        )
+        raw = raw[: month_match.start()] + " " + raw[month_match.end():]
+    else:
+        for word, offset in (("послезавтра", 2), ("завтра", 1), ("сегодня", 0)):
+            word_match = re.search(rf"\b{word}\b", raw)
+            if word_match:
+                new_day = today + timedelta(days=offset)
+                raw = raw[: word_match.start()] + " " + raw[word_match.end():]
+                break
+        else:
+            for numeric in re.finditer(r"(?<![\d:.])(\d{1,2})[./](\d{1,2})(?:[./](\d{2,4}))?(?![\d:])", raw):
+                day, month = int(numeric.group(1)), int(numeric.group(2))
+                if 1 <= month <= 12 and 1 <= day <= 31:
+                    new_day = _resolve_day(day, month, numeric.group(3), today)
+                    raw = raw[: numeric.start()] + " " + raw[numeric.end():]
+                    break
+
+    times = [
+        f"{int(hour):02d}:{minute}"
+        for hour, minute in re.findall(r"(?<![\d.:])([01]?\d|2[0-3])[:.]([0-5]\d)(?![\d.:])", raw)
+    ]
+    if not times:
+        hour_match = re.search(r"\b(?:в|на|к)\s+([01]?\d|2[0-3])(?:\s*(?:ч|час|часа|часов))?\b", raw)
+        if hour_match:
+            times = [f"{int(hour_match.group(1)):02d}:00"]
+    if new_day is None and not times:
+        raise ValueError("Не нашёл дату или время. Напишите, например: 06.10 15:00")
+    return (
+        new_day.isoformat() if new_day else current_date,
+        times[0] if times else current_time,
+        times[1] if len(times) > 1 else None,
+    )
+
+
+def _reschedule_row(row: sqlite3.Row | None) -> dict[str, Any] | None:
+    if row is None:
+        return None
+    session = dict(row)
+    session["expired"] = str(session.get("expires_at") or "") < _utcnow_iso()
+    return session
+
+
+def _create_reschedule_session(chat_id: str, prompt_message_id: int, order_id: int, actor: str) -> int:
+    now = datetime.now(timezone.utc).replace(microsecond=0)
+    with _get_connection() as connection:
+        connection.execute("BEGIN IMMEDIATE")
+        connection.execute(
+            "DELETE FROM admin_telegram_reschedule_sessions WHERE expires_at < ? OR (chat_id = ? AND order_id = ?)",
+            (now.isoformat(), str(chat_id), int(order_id)),
+        )
+        cursor = connection.execute(
+            """
+            INSERT INTO admin_telegram_reschedule_sessions(
+                chat_id, prompt_message_id, order_id, actor, created_at, expires_at
+            ) VALUES (?, ?, ?, ?, ?, ?)
+            """,
+            (
+                str(chat_id),
+                int(prompt_message_id),
+                int(order_id),
+                str(actor or "")[:160],
+                now.isoformat(),
+                (now + RESCHEDULE_SESSION_TTL).isoformat(),
+            ),
+        )
+        connection.commit()
+    return int(cursor.lastrowid)
+
+
+def _get_reschedule_session(session_id: int) -> dict[str, Any] | None:
+    with _get_connection() as connection:
+        row = connection.execute(
+            "SELECT * FROM admin_telegram_reschedule_sessions WHERE id = ?",
+            (int(session_id),),
+        ).fetchone()
+    return _reschedule_row(row)
+
+
+def _find_reschedule_session(chat_id: str, prompt_message_id: int) -> dict[str, Any] | None:
+    try:
+        with _get_connection() as connection:
+            row = connection.execute(
+                """
+                SELECT * FROM admin_telegram_reschedule_sessions
+                WHERE chat_id = ? AND prompt_message_id = ?
+                ORDER BY id DESC LIMIT 1
+                """,
+                (str(chat_id), int(prompt_message_id)),
+            ).fetchone()
+    except sqlite3.OperationalError:
+        return None
+    return _reschedule_row(row)
+
+
+def _update_reschedule_session(session_id: int, **fields: Any) -> None:
+    allowed = {"prompt_message_id", "pending_date", "pending_time_from"}
+    updates = {key: value for key, value in fields.items() if key in allowed}
+    expires_at = (datetime.now(timezone.utc).replace(microsecond=0) + RESCHEDULE_SESSION_TTL).isoformat()
+    assignments = ", ".join(f"{key} = ?" for key in updates)
+    with _get_connection() as connection:
+        connection.execute(
+            f"UPDATE admin_telegram_reschedule_sessions SET {assignments + ', ' if assignments else ''}expires_at = ? WHERE id = ?",
+            (*updates.values(), expires_at, int(session_id)),
+        )
+        connection.commit()
+
+
+def _delete_reschedule_session(session_id: int) -> None:
+    with _get_connection() as connection:
+        connection.execute("DELETE FROM admin_telegram_reschedule_sessions WHERE id = ?", (int(session_id),))
+        connection.commit()
+
+
+def _order_slot_label(celebration_date: str, time_from: str, time_to: str) -> str:
+    return f"{_human_date(celebration_date)}, {time_from}–{time_to}"
+
+
+def _send_reschedule_prompt(chat_id: str, order: dict[str, Any], intro: str = "") -> int | None:
+    duration = int(order.get("duration_minutes") or 0)
+    start, end = _clock_minutes(str(order.get("time_from") or "")), _clock_minutes(str(order.get("time_to") or ""))
+    if start is not None and end is not None and end > start:
+        duration = end - start
+    text = (
+        f"{intro}🕒 <b>Перенос заказа {_escape_html(order.get('public_id'))}</b>\n"
+        f"Сейчас: {_escape_html(_order_slot_label(str(order.get('celebration_date') or ''), str(order.get('time_from') or ''), str(order.get('time_to') or '')))}"
+        f" ({_escape_html(_duration_words(duration))})\n\n"
+        "Ответьте на это сообщение новой датой и временем начала, например:\n"
+        "<code>06.10 15:00</code> · <code>6 октября в 15:30</code> · <code>завтра 12:00</code>\n"
+        "Можно написать только дату или только время. Длительность сохранится.\n"
+        "Передумали — ответьте «отмена»."
+    )
+    result = _send_telegram_message(
+        chat_id,
+        text,
+        reply_markup={"force_reply": True, "input_field_placeholder": "06.10 15:00"},
+    )
+    message_id = (result.get("result") or {}).get("message_id") if result.get("success") else None
+    return int(message_id) if message_id else None
+
+
+def _reschedule_announcement(order: dict[str, Any], result: dict[str, Any]) -> str:
+    previous = result.get("previous") or {}
+    current = result.get("current") or {}
+    lines = [
+        f"✅ <b>Заказ {_escape_html(result.get('public_id') or order.get('public_id'))} перенесён</b>",
+        f"Было: {_escape_html(_order_slot_label(previous.get('celebration_date', ''), previous.get('time_from', ''), previous.get('time_to', '')))}",
+        f"Стало: <b>{_escape_html(_order_slot_label(current.get('celebration_date', ''), current.get('time_from', ''), current.get('time_to', '')))}</b>",
+    ]
+    if result.get("forced"):
+        lines.append("⚠️ Перенесено несмотря на пересечение с другой бронью.")
+    customer = str(order.get("customer_name") or "").strip()
+    phone = str(order.get("customer_phone") or "").strip()
+    if phone:
+        lines.append(f"Предупредите клиента: {_escape_html(customer or 'клиент')} · <code>{_escape_html(phone)}</code>")
+    lines.append("Карточка заказа и Google Календарь обновятся автоматически.")
+    return "\n".join(lines)
+
+
+def _after_reschedule(order_id: int) -> None:
+    sync_order_messages(int(order_id))
+    _wake_calendar_sync()
+
+
+def _start_reschedule(callback_id: str, chat_id: str, public_id: str, actor: str) -> dict[str, Any]:
+    from .customer_store import get_order_by_public_id
+
+    order = get_order_by_public_id(public_id)
+    if not order:
+        _answer_callback(callback_id, "Заказ не найден")
+        return {"success": False, "message": "order not found"}
+    if str(order.get("status") or "") in _TERMINAL_STATUSES:
+        _answer_callback(callback_id, "Отменённый или выполненный заказ перенести нельзя")
+        return {"success": False, "message": "terminal order"}
+    prompt_id = _send_reschedule_prompt(chat_id, order)
+    if not prompt_id:
+        _answer_callback(callback_id, "Не удалось отправить вопрос о переносе")
+        return {"success": False, "message": "prompt not sent"}
+    _create_reschedule_session(chat_id, prompt_id, int(order["id"]), actor)
+    _answer_callback(callback_id, "Ответьте на сообщение бота новой датой и временем")
+    return {"success": True, "message": f"{public_id} → reschedule prompt"}
+
+
+def _message_actor(message: dict[str, Any]) -> str:
+    from_user = message.get("from") or {}
+    label = (from_user.get("username") and f"@{from_user['username']}") or str(from_user.get("first_name") or "admin")
+    user_id = str(from_user.get("id") or "").strip()
+    return f"{label} ({user_id})" if user_id else label
+
+
+def _handle_reschedule_reply(session: dict[str, Any], message: dict[str, Any]) -> dict[str, Any]:
+    from .customer_store import get_order_by_id, reschedule_order
+
+    chat_id = str(session["chat_id"])
+    text = str(message.get("text") or "").strip()
+    if session.get("expired"):
+        _delete_reschedule_session(int(session["id"]))
+        _send_telegram_message(chat_id, "⌛️ Время на перенос вышло. Нажмите «🕒 Перенести» под заказом ещё раз.")
+        return {"success": False, "message": "session expired"}
+    order = get_order_by_id(int(session["order_id"]))
+    if not order or str(order.get("status") or "") in _TERMINAL_STATUSES:
+        _delete_reschedule_session(int(session["id"]))
+        _send_telegram_message(chat_id, "Этот заказ уже нельзя перенести: он отменён, выполнен или удалён.")
+        return {"success": False, "message": "order unavailable"}
+    public_id = _escape_html(order.get("public_id"))
+    if text.lower() in _RESCHEDULE_CANCEL_WORDS:
+        _delete_reschedule_session(int(session["id"]))
+        _send_telegram_message(chat_id, f"✖️ Перенос заказа {public_id} отменён.")
+        return {"success": True, "message": "reschedule cancelled"}
+
+    def reprompt(problem: str) -> dict[str, Any]:
+        prompt_id = _send_reschedule_prompt(chat_id, order, f"⚠️ {_escape_html(problem)}\n\n")
+        if prompt_id:
+            _update_reschedule_session(int(session["id"]), prompt_message_id=prompt_id)
+        return {"success": False, "message": problem}
+
+    try:
+        new_date, new_time_from, new_time_to = parse_reschedule_text(
+            text,
+            today=_local_today(),
+            current_date=str(order.get("celebration_date") or ""),
+            current_time=str(order.get("time_from") or ""),
+        )
+    except ValueError as exc:
+        return reprompt(str(exc))
+    if new_time_to:
+        old_start = _clock_minutes(str(order.get("time_from") or ""))
+        old_end = _clock_minutes(str(order.get("time_to") or ""))
+        new_start, new_end = _clock_minutes(new_time_from), _clock_minutes(new_time_to)
+        if None not in (old_start, old_end, new_start, new_end) and (new_end - new_start) != (old_end - old_start):
+            return reprompt(
+                f"При переносе длительность не меняется ({_duration_words(old_end - old_start)}). "
+                "Напишите только дату и время начала."
+            )
+
+    result = reschedule_order(
+        int(order["id"]),
+        celebration_date=new_date,
+        time_from=new_time_from,
+        source="telegram",
+        actor=_message_actor(message),
+    )
+    if result.get("success"):
+        _delete_reschedule_session(int(session["id"]))
+        _send_telegram_message(chat_id, _reschedule_announcement(order, result))
+        _after_reschedule(int(order["id"]))
+        return {"success": True, "message": f"{order.get('public_id')} rescheduled"}
+    if result.get("reason") == "conflict":
+        target = result.get("target") or {}
+        _update_reschedule_session(
+            int(session["id"]),
+            pending_date=str(target.get("celebration_date") or ""),
+            pending_time_from=str(target.get("time_from") or ""),
+        )
+        warning = (
+            f"⚠️ <b>{_escape_html(_order_slot_label(str(target.get('celebration_date') or ''), str(target.get('time_from') or ''), str(target.get('time_to') or '')))}</b> — пересечение\n"
+            f"{_escape_html(result.get('message'))}\n\n"
+            f"Перенести заказ {public_id} всё равно? Или ответьте на это сообщение другой датой и временем."
+        )
+        keyboard = {
+            "inline_keyboard": [[
+                {"text": "✅ Всё равно перенести", "callback_data": f"resched:{int(session['id'])}:force"},
+                {"text": "✖️ Отмена", "callback_data": f"resched:{int(session['id'])}:cancel"},
+            ]]
+        }
+        sent = _send_telegram_message(chat_id, warning, reply_markup=keyboard)
+        message_id = (sent.get("result") or {}).get("message_id") if sent.get("success") else None
+        if message_id:
+            _update_reschedule_session(int(session["id"]), prompt_message_id=int(message_id))
+        return {"success": False, "message": "conflict"}
+    if result.get("reason") in {"not_found", "terminal", "stale"}:
+        _delete_reschedule_session(int(session["id"]))
+        _send_telegram_message(chat_id, _escape_html(result.get("message") or "Перенос не выполнен."))
+        return {"success": False, "message": str(result.get("reason"))}
+    return reprompt(str(result.get("message") or "Перенос не выполнен."))
+
+
+def _handle_reschedule_callback(
+    callback: dict[str, Any],
+    callback_id: str,
+    chat_id: str,
+    data: str,
+    actor: str,
+) -> dict[str, Any]:
+    from .customer_store import get_order_by_id, reschedule_order
+
+    parts = data.split(":")
+    if len(parts) != 3 or not parts[1].isdigit() or parts[2] not in {"force", "cancel"}:
+        _answer_callback(callback_id, "Неизвестная команда")
+        return {"success": False, "message": "bad data"}
+    session = _get_reschedule_session(int(parts[1]))
+    if not session or str(session["chat_id"]) != str(chat_id):
+        _answer_callback(callback_id, "Перенос уже неактуален")
+        return {"success": False, "message": "no session"}
+    message_id = int((callback.get("message") or {}).get("message_id") or 0)
+    if session.get("expired"):
+        _delete_reschedule_session(int(session["id"]))
+        _answer_callback(callback_id, "Время на перенос вышло — нажмите «Перенести» ещё раз")
+        return {"success": False, "message": "session expired"}
+    order = get_order_by_id(int(session["order_id"]))
+    public_id = _escape_html((order or {}).get("public_id") or "")
+    if parts[2] == "cancel":
+        _delete_reschedule_session(int(session["id"]))
+        _answer_callback(callback_id, "Перенос отменён")
+        if message_id:
+            _edit_telegram_message(chat_id, message_id, f"✖️ Перенос заказа {public_id} отменён.", reply_markup={"inline_keyboard": []})
+        return {"success": True, "message": "reschedule cancelled"}
+    if not order or not session.get("pending_date") or not session.get("pending_time_from"):
+        _answer_callback(callback_id, "Нечего переносить")
+        return {"success": False, "message": "no pending slot"}
+    result = reschedule_order(
+        int(order["id"]),
+        celebration_date=str(session["pending_date"]),
+        time_from=str(session["pending_time_from"]),
+        source="telegram",
+        actor=actor,
+        force=True,
+    )
+    if not result.get("success"):
+        if result.get("reason") in {"not_found", "terminal", "stale", "unchanged"}:
+            _delete_reschedule_session(int(session["id"]))
+        _answer_callback(callback_id, str(result.get("message") or "Перенос не выполнен.")[:190])
+        return {"success": False, "message": str(result.get("reason"))}
+    _delete_reschedule_session(int(session["id"]))
+    _answer_callback(callback_id, f"Перенесено: {order.get('public_id')}")
+    announcement = _reschedule_announcement(order, result)
+    if not message_id or not _edit_telegram_message(chat_id, message_id, announcement, reply_markup={"inline_keyboard": []}).get("success"):
+        _send_telegram_message(chat_id, announcement)
+    _after_reschedule(int(order["id"]))
+    return {"success": True, "message": f"{order.get('public_id')} rescheduled (forced)"}
+
+
 def _wake_calendar_sync() -> None:
     try:
         from .google_calendar import wake_worker
@@ -1498,6 +1944,12 @@ def _handle_message(message: dict[str, Any]) -> dict[str, Any]:
         )
         return {"success": False, "message": "unauthorized chat"}
 
+    reply_to = message.get("reply_to_message") or {}
+    if reply_to.get("message_id"):
+        session = _find_reschedule_session(chat_id, int(reply_to["message_id"]))
+        if session is not None:
+            return _handle_reschedule_reply(session, message)
+
     text = str(message.get("text") or "").strip()
     text_lower = text.lower()
     from_user = message.get("from") or {}
@@ -1508,7 +1960,7 @@ def _handle_message(message: dict[str, Any]) -> dict[str, Any]:
         reply = (
             f"👋 Привет, <b>{name}</b>!\n\n"
             "Я — бот Surpriz. Буду присылать тебе новые заказы с кнопками "
-            "<b>Подтвердить</b>, <b>Снять подтверждение</b> и <b>Отклонить</b>.\n\n"
+            "<b>Подтвердить</b>, <b>Снять подтверждение</b>, <b>Отклонить</b> и <b>Перенести</b>.\n\n"
             "Команды:\n"
             "/help — помощь\n"
             "/orders — последние 5 заказов\n"
@@ -1529,6 +1981,9 @@ def _handle_message(message: dict[str, Any]) -> dict[str, Any]:
             "  • Суммой и способом оплаты\n\n"
             "Под карточкой можно подтвердить заказ, снять подтверждение или отклонить заказ. "
             "Изменение сразу появится в админке.\n\n"
+            "🕒 <b>Перенести</b> — ответьте на вопрос бота новой датой и временем "
+            "(например, <code>06.10 15:00</code>). Длительность сохранится, "
+            "карточка и Google Календарь обновятся сами.\n\n"
             "<b>Команды:</b>\n"
             "/start — приветствие\n"
             "/orders — последние 5 заказов\n"

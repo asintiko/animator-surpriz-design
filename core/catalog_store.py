@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import ast
 import hashlib
 import json
 import re
@@ -633,12 +634,65 @@ def _ensure_character_ensemble_columns() -> None:
             added = True
         if added:
             connection.commit()
+        _repair_ensemble_member_values(connection)
+
+
+def _repair_ensemble_member_values(connection: sqlite3.Connection) -> None:
+    """Rewrite rosters corrupted into a list literal back to "Скай, Гонщик"."""
+    rows = connection.execute(
+        """
+        SELECT id, ensemble_members FROM managed_characters
+        WHERE ensemble_members LIKE '%[%' OR ensemble_members LIKE '%]%'
+           OR ensemble_members LIKE '%''%' OR ensemble_members LIKE '%"%'
+        """
+    ).fetchall()
+    changed = False
+    for row in rows:
+        canonical = ", ".join(parse_ensemble_members(row["ensemble_members"]))
+        if canonical != str(row["ensemble_members"] or ""):
+            connection.execute(
+                "UPDATE managed_characters SET ensemble_members = ? WHERE id = ?",
+                (canonical, int(row["id"])),
+            )
+            changed = True
+    if changed:
+        connection.commit()
+
+
+def clean_ensemble_member(value: Any) -> str:
+    """Strip list-literal debris ("['Скай'") left by older saves of a Python list."""
+    text = _clean_text(str(value or ""))
+    previous = None
+    while text != previous:
+        previous = text
+        text = text.strip().strip("[]").strip().strip("'\"").strip()
+    return text
+
+
+def _ensemble_list_literal(raw: str) -> list[Any] | None:
+    if not (raw.startswith("[") and raw.endswith("]")):
+        return None
+    try:
+        parsed = ast.literal_eval(raw)
+    except (ValueError, SyntaxError):
+        return None
+    return list(parsed) if isinstance(parsed, (list, tuple)) else None
 
 
 def parse_ensemble_members(value: Any) -> list[str]:
-    """Split the admin-entered member list ("Анна, Эльза, Олаф" or one per line)."""
-    raw = str(value or "")
-    parts = [_clean_text(part) for part in re.split(r"[\n,;]+", raw)]
+    """Split the admin-entered member list ("Анна, Эльза, Олаф" or one per line).
+
+    Also accepts a real list (an entity dict saved back as-is, e.g. by the
+    crop editor) and heals values that were stored as ``"['Скай', 'Гонщик']"``
+    before lists were handled here.
+    """
+    if isinstance(value, (list, tuple, set)):
+        raw_parts: list[Any] = list(value)
+    else:
+        raw = str(value or "").strip()
+        literal = _ensemble_list_literal(raw)
+        raw_parts = literal if literal is not None else re.split(r"[\n,;]+", raw)
+    parts = [clean_ensemble_member(part) for part in raw_parts]
     members: list[str] = []
     seen: set[str] = set()
     for part in parts:
