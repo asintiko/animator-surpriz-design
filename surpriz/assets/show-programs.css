@@ -62,6 +62,22 @@ img { max-width: 100%; }
 }
 .show-catalog__heading p { color: #5b526f; font-size: clamp(17px, 1.6vw, 21px); line-height: 1.6; margin: 24px auto 0; max-width: 720px; }
 .show-list { display: grid; gap: 52px; }
+
+/* Карточка с акцией: тёмно-оранжевая рамка, строки акций под описанием,
+   описание акции открывается поверх фото. */
+.show-list .show-card.show-card--promo { border: 2px solid #d9480f; box-shadow: 0 24px 70px rgba(217, 72, 15, .16); }
+.show-card__promo-lines { margin-top: 18px; }
+.show-card .catalog-card__promo { font-size: 15px; min-height: 38px; padding: 7px 14px 7px 10px; }
+.show-card__promo-tip {
+  bottom: auto;
+  left: 22px;
+  right: auto;
+  top: 22px;
+  width: min(380px, calc(100% - 44px));
+}
+.show-card__promo-tip .catalog-card__promo-item strong { font-size: 16px; }
+.show-card__promo-tip .catalog-card__promo-item p { font-size: 14px; }
+.show-card:nth-child(even) .show-card__promo-tip { left: auto; right: 22px; }
 .show-card {
   --accent: #6c1be3;
   background: rgba(255, 255, 255, .96);
@@ -401,4 +417,11 @@ a:focus-visible { outline: 3px solid #ff9b3f; outline-offset: 4px; }
   html { scroll-behavior: auto; }
   *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
   .show-card { opacity: 1; transform: none; }
+}
+
+@media (max-width: 899px) {
+  .show-card__promo-lines { margin-top: 14px; }
+  .show-card .catalog-card__promo { font-size: 14px; min-height: 34px; }
+  .show-card__promo-tip,
+  .show-card:nth-child(even) .show-card__promo-tip { left: 12px; right: 12px; top: 12px; width: auto; }
 }

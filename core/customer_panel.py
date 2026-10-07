@@ -789,6 +789,11 @@ def _builder_query_defaults() -> dict[str, Any]:
     date_value = _parse_builder_date_arg(request.args.get("date", ""))
     if date_value:
         defaults["celebration_date"] = date_value
+    # Add-ons ticked on the show page arrive pre-selected; the builder only renders
+    # the program's own paid add-ons, so a foreign slug simply matches nothing.
+    defaults["addon_slugs"] = list(
+        dict.fromkeys(value.strip() for value in request.args.getlist("addon") if value.strip())
+    )[:10]
     return defaults
 
 

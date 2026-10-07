@@ -1296,13 +1296,44 @@ def _attach_program_gifts(item: dict[str, Any], program_addons: list[dict[str, A
     item["paid_addons"] = paid_addons
 
 
-def _attach_program_promotions(item: dict[str, Any]) -> None:
+def promotions_enabled() -> bool:
+    """The admin «Акции» switch hides every promotion on the public site at once."""
+    try:
+        from .admin_store import get_public_settings
+
+        return bool(get_public_settings().get("show_promotions"))
+    except Exception:
+        return False
+
+
+def _attach_program_promotions(item: dict[str, Any], *, enabled: bool | None = None) -> None:
+    item["promotions"] = []
+    if not (promotions_enabled() if enabled is None else enabled):
+        return
     try:
         from .promotion_store import list_program_promotions_for_public
 
         item["promotions"] = list_program_promotions_for_public(int(item.get("id") or 0))
     except Exception:
         item["promotions"] = []
+    promo_by_addon = {
+        str(promo.get("addon_slug") or ""): promo for promo in item["promotions"] if promo.get("addon_slug")
+    }
+    if not promo_by_addon:
+        return
+    # The add-on a promotion points at carries the promo label wherever it is sold,
+    # so the builder and the show page say «Акция» right next to the price.
+    for key in ("paid_addons", "gift_bundles"):
+        for addon in item.get(key) or []:
+            promo = promo_by_addon.get(str(addon.get("slug") or ""))
+            if promo:
+                addon["promo_badge"] = promo.get("badge_text") or promo.get("title") or "Акция"
+                addon["promo_old_price"] = int(promo.get("old_price") or 0)
+                addon["promo_old_price_label"] = (
+                    format_money(addon["promo_old_price"])
+                    if addon["promo_old_price"] > int(addon.get("price") or 0)
+                    else ""
+                )
 
 
 def calculate_program_character_surcharge(program: dict[str, Any] | None, character_count: int) -> int:
@@ -1507,6 +1538,7 @@ def list_show_programs_for_public() -> list[dict[str, Any]]:
     from .addon_store import list_program_addons_for_public
     programs: list[dict[str, Any]] = []
     character_map = get_show_program_character_slug_map()
+    show_promotions = promotions_enabled()
     for item in list_characters(status="active", entity_type=ENTITY_TYPE_SHOW_PROGRAM):
         item["is_show_program"] = True
         item["is_thematic"] = item["slug"] in THEMATIC_PROGRAM_SLUGS
@@ -1528,7 +1560,7 @@ def list_show_programs_for_public() -> list[dict[str, Any]]:
         except Exception:
             program_addons = []
         _attach_program_gifts(item, program_addons)
-        _attach_program_promotions(item)
+        _attach_program_promotions(item, enabled=show_promotions)
         programs.append(item)
     return programs
 

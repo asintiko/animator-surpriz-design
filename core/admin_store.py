@@ -490,7 +490,6 @@ def apply_new_year_preset(enabled: bool) -> dict[str, bool]:
         "show_new_year_menu_link": enabled,
         "show_home_new_year_showcase": enabled,
         "show_snow": enabled,
-        "show_promotions": enabled,
     }
     return update_public_settings(preset)
 

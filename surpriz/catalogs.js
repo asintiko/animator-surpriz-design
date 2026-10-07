@@ -157,11 +157,98 @@
     details.textContent = "Подробнее";
     details.setAttribute("aria-label", `Подробнее: ${item.title}`);
 
-    body.append(title, description, details, order);
+    const promotions = kind === "shows" && Array.isArray(item.promotions) ? item.promotions : [];
+    if (promotions.length) {
+      // The offer sits where the description would be, so the photo stays clean;
+      // a tap opens the offers' mini-descriptions over the photo.
+      article.classList.add("catalog-card--promo");
+      const promo = document.createElement("div");
+      promo.className = "catalog-card__promos";
+      promotions.forEach((promotion, index) => {
+        const name = promotion.badge_text || promotion.title || "Акция";
+        const trigger = document.createElement("button");
+        trigger.type = "button";
+        trigger.className = "catalog-card__promo";
+        trigger.dataset.promoIndex = String(index);
+        trigger.setAttribute("aria-expanded", "false");
+        trigger.setAttribute("aria-label", `Акция: ${name}. Подробнее об акции`);
+        const flame = document.createElement("span");
+        flame.className = "catalog-card__promo-flame";
+        flame.setAttribute("aria-hidden", "true");
+        flame.textContent = "🔥";
+        const label = document.createElement("span");
+        label.className = "catalog-card__promo-text";
+        label.textContent = name;
+        trigger.append(flame, label);
+        promo.append(trigger);
+
+        // Each offer gets its own card over the photo, opened only by its own line.
+        const tip = document.createElement("div");
+        tip.className = "catalog-card__promo-tip";
+        tip.dataset.promoIndex = String(index);
+        tip.hidden = true;
+        const close = document.createElement("button");
+        close.type = "button";
+        close.className = "catalog-card__promo-close";
+        close.setAttribute("aria-label", "Закрыть");
+        close.textContent = "×";
+        const block = document.createElement("div");
+        block.className = "catalog-card__promo-item";
+        const heading = document.createElement("strong");
+        heading.textContent = `🔥 ${promotion.title || name}`;
+        block.append(heading);
+        [promotion.short_text, promotion.tooltip_text].filter(Boolean).forEach((text, textIndex) => {
+          const line = document.createElement("p");
+          if (textIndex) line.className = "catalog-card__promo-note";
+          line.textContent = text;
+          block.append(line);
+        });
+        tip.append(close, block);
+        article.append(tip);
+      });
+      body.classList.add("catalog-card__body--promo");
+      body.append(title, promo, details, order);
+    } else {
+      body.append(title, description, details, order);
+    }
     article.append(media, body);
     listItem.append(article);
     return listItem;
   };
+
+  // An open offer card pauses the autoplaying strip so it does not slide away.
+  const setPromoTip = (tip, open) => {
+    tip.hidden = !open;
+    tip.closest(".catalog-card")
+      ?.querySelector(`.catalog-card__promo[data-promo-index="${tip.dataset.promoIndex}"]`)
+      ?.setAttribute("aria-expanded", open ? "true" : "false");
+    tip.closest("[data-catalog-carousel]")?.dispatchEvent(new CustomEvent("catalog:promo-tip", { detail: { open } }));
+  };
+
+  const closePromoTips = (except) => {
+    document.querySelectorAll(".catalog-card__promo-tip:not([hidden])").forEach((tip) => {
+      if (tip !== except) setPromoTip(tip, false);
+    });
+  };
+
+  document.addEventListener("click", (event) => {
+    const trigger = event.target.closest(".catalog-card__promo");
+    const tip = trigger?.closest(".catalog-card")
+      ?.querySelector(`.catalog-card__promo-tip[data-promo-index="${trigger.dataset.promoIndex}"]`);
+    if (trigger && tip) {
+      event.preventDefault();
+      closePromoTips(tip);
+      setPromoTip(tip, tip.hidden);
+      return;
+    }
+    if (event.target.closest(".catalog-card__promo-close") || !event.target.closest(".catalog-card__promo-tip")) {
+      closePromoTips(null);
+    }
+  });
+
+  document.addEventListener("keydown", (event) => {
+    if (event.key === "Escape") closePromoTips(null);
+  });
 
   const makeClone = (item, copyName) => {
     const clone = item.cloneNode(true);
@@ -454,6 +541,10 @@
       if (document.hidden) pause("hidden");
       else resume("hidden");
     }, { signal });
+    carousel.addEventListener("catalog:promo-tip", (event) => {
+      if (event.detail?.open) pause("promo");
+      else resume("promo");
+    }, { signal });
 
     const mediaChanged = () => measure({ preservePosition: false });
     desktopMode.addEventListener("change", mediaChanged, { signal });
@@ -517,8 +608,11 @@
       const variants = shows.filter((item) => String(item?.variant_group_slug || "").trim() === groupSlug);
       if (variants.length < 2) return [show];
       const groupName = String(variants[0].variant_group_name || "").trim();
+      const promotions = variants.flatMap((variant) => variant.promotions || [])
+        .filter((promotion, index, all) => all.findIndex((other) => other.id === promotion.id) === index);
       return [{
         ...variants[0],
+        promotions,
         id: groupSlug,
         title: groupName || variants[0].title,
         alt: groupName || variants[0].alt,

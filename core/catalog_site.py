@@ -24,9 +24,11 @@ from .customer_store import (
     calculate_program_character_surcharge,
     list_show_programs_for_public,
     list_show_programs_grouped_for_public,
+    promotions_enabled,
 )
 from .loader import PageBundle
 from .partner_store import list_partners
+from .promotion_store import list_featured_promotions_for_public
 from .recommendation_store import HOMEPAGE_SLOTS, get_featured_slugs, sort_by_featured
 from .v2_theme import PHONE_DISPLAY, PHONE_TEL, TELEGRAM_URL, _asset_version, render_v2_page
 
@@ -394,15 +396,52 @@ def _build_frontend_show_cards() -> list[dict[str, object]]:
             "included_items": included_items,
             "suitable_for": suitable_for,
             "restrictions": restrictions,
+            "promotions": [_public_promotion(promo) for promo in item.get("promotions") or []],
         }
         card.update(_frontend_show_image_sources(item))
         shows.append(card)
     return shows
 
 
+def _public_promotion(promotion: dict[str, object]) -> dict[str, object]:
+    addon_price = int(promotion.get("addon_price") or 0)
+    old_price = int(promotion.get("old_price") or 0)
+    return {
+        "id": int(promotion.get("id") or 0),
+        "title": str(promotion.get("title") or "").strip(),
+        "badge_text": str(promotion.get("badge_text") or promotion.get("title") or "").strip(),
+        "short_text": str(promotion.get("short_text") or "").strip(),
+        "tooltip_text": str(promotion.get("tooltip_text") or "").strip(),
+        "is_featured": bool(promotion.get("is_featured")),
+        "price_label": _format_money(addon_price) if promotion.get("addon_slug") and addon_price > 0 else "",
+        "old_price_label": _format_money(old_price) if old_price > addon_price else "",
+    }
+
+
+def _featured_promotions_payload() -> list[dict[str, object]]:
+    """Main promotions for the homepage and the show catalog, empty while the switch is off."""
+    if not promotions_enabled():
+        return []
+    try:
+        featured = list_featured_promotions_for_public()
+    except Exception:
+        return []
+    payload: list[dict[str, object]] = []
+    for promotion in featured:
+        programs = promotion.get("programs") or []
+        item = _public_promotion(promotion)
+        item["programs"] = [
+            {"slug": program["slug"], "name": program["name"], "href": program["route"]}
+            for program in programs
+        ]
+        item["href"] = programs[0]["route"] if len(programs) == 1 else f"{SHOW_PROGRAMS_ROUTE}#programs"
+        payload.append(item)
+    return payload
+
+
 def build_frontend_show_payload() -> dict[str, object]:
     """Return the lightweight public payload used by the show listing page."""
-    return {"version": 1, "shows": _build_frontend_show_cards()}
+    return {"version": 1, "shows": _build_frontend_show_cards(), "promotions": _featured_promotions_payload()}
 
 
 def build_frontend_catalog_payload() -> dict[str, object]:
@@ -459,6 +498,7 @@ def build_frontend_catalog_payload() -> dict[str, object]:
         "filters": _build_frontend_character_filters(),
         "characters": characters,
         "shows": shows,
+        "promotions": _featured_promotions_payload(),
         "partners": [
             {
                 "id": partner["slug"],
@@ -534,7 +574,7 @@ def _show_addon_summary(addon: dict[str, object]) -> dict[str, object]:
         str(item.get("short_description") or item.get("description") or "Описание доп. услуги скоро появится.").strip()
         or "Описание доп. услуги скоро появится."
     )
-    item["price_label"] = f"от {_format_money(int(item.get('price') or 0))}"
+    item["price_label"] = _format_money(int(item.get("price") or 0))
     duration = int(item.get("duration_minutes") or 0)
     item["duration_label"] = _format_duration(duration) if duration > 0 else ""
     return item
@@ -640,11 +680,13 @@ def _show_price_tiers(show: dict[str, object]) -> list[dict[str, object]]:
     base_price = int(show.get("base_price") or 0)
     tiers: list[dict[str, object]] = []
     for count in range(included, included + 3):
+        amount = base_price + calculate_program_character_surcharge(show, count)
         tiers.append(
             {
                 "count": count,
                 "label": f"{count} {_plural(count, ('герой', 'героя', 'героев'))}",
-                "price_label": _format_money(base_price + calculate_program_character_surcharge(show, count)),
+                "amount": amount,
+                "price_label": _format_money(amount),
             }
         )
     return tiers
@@ -977,13 +1019,7 @@ def build_show_program_page(slug: str) -> PageBundle | None:
         return None
 
     show = _show_program_summary(show)
-    show["addons"] = [
-        _show_addon_summary(addon)
-        for addon in list_program_addons_for_public(int(show["id"]))
-        if str(addon.get("gift_mode") or "none") == "none"
-        and not addon.get("is_free_choice")
-        and int(addon.get("price") or 0) > 0
-    ]
+    show["addons"] = [_show_addon_summary(addon) for addon in show.get("paid_addons") or []]
     canonical_path = f"{SHOW_PROGRAMS_ROUTE}{show['slug']}/"
     description = str(show.get("seo_description") or show.get("short_description") or show.get("description") or "").strip()
     if not description:

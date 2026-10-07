@@ -4934,6 +4934,27 @@ textarea.customer-input,
   box-shadow: 0 4px 12px rgba(29, 53, 80, .14);
 }
 
+.v2-program-choice__media-badges .v2-badge--promo,
+.v2-badge--promo {
+  background: linear-gradient(105deg, #ff7700, #ff4d0b);
+  color: #fff;
+  font-weight: 800;
+}
+
+.v2-badge--promo .v2-i { width: 13px; height: 13px; }
+
+.v2-program-choice__badges .surpriz-promo-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: .38em .85em;
+  border-radius: var(--r-pill);
+  background: rgba(255, 138, 61, .14);
+  color: #e2560b;
+  font-size: .82rem;
+  font-weight: 800;
+  line-height: 1.25;
+}
+
 .v2-program-choice__price-tag {
   position: absolute;
   right: 12px;
@@ -5347,9 +5368,60 @@ textarea.customer-input,
   color: #fff;
 }
 
+.party-paid-addon__promo {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-left: 4px;
+  padding: 4px 9px;
+  border-radius: 999px;
+  background: rgba(255, 138, 61, .14);
+  color: #e2560b;
+  font-size: .74rem;
+  font-weight: 800;
+  vertical-align: 2px;
+  white-space: nowrap;
+}
+
+.party-paid-addon__promo .v2-i { width: 12px; height: 12px; }
+
+.party-paid-addon__meta s {
+  color: var(--ink-soft);
+  font-weight: 600;
+}
+
+/* Подарки и допы, перенесённые под выбранную карточку программы. */
+.party-program-extras.is-attached {
+  grid-column: 1 / -1;
+  display: grid;
+  gap: 14px;
+}
+
+.party-program-extras.is-attached > .v2-bonus,
+.party-program-extras.is-attached > .party-paid-addons {
+  margin-top: 0;
+}
+
+.party-program-extras.is-attached > .party-paid-addons {
+  border: 2px solid rgba(255, 138, 61, .35);
+  background: #fff;
+  box-shadow: 0 10px 26px rgba(54, 28, 96, .08);
+}
+
+.party-program-extras__next {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.party-program-extras__next[hidden] { display: none; }
+
 @media (max-width: 719.98px) {
   .party-paid-addons { padding: 16px; }
   .party-paid-addons__list { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 719.98px) {
+  .party-program-extras__next .v2-btn { width: 100%; justify-content: center; }
 }
 
 /* ---------- Шаг 2: персонажи ---------- */

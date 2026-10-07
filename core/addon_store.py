@@ -594,6 +594,38 @@ def set_program_addons(program_id: int, selections: list[dict[str, Any]]) -> Non
         connection.commit()
 
 
+def _promotion_gated_addon_ids(connection: sqlite3.Connection, program_id: int) -> set[int]:
+    """Add-ons a promotion offers for this show are sold only while that offer runs.
+
+    When a promotion links an add-on to the show, the add-on (a promo price or a
+    gift) stays off the show until the promotion is active and the site-wide
+    «Акции» switch is on; hiding the promotion withdraws the offer, not just its label.
+    """
+    try:
+        rows = connection.execute(
+            """
+            SELECT p.addon_id, MAX(p.status = 'active') AS running
+            FROM promotions p
+            INNER JOIN show_program_promotions spp ON spp.promotion_id = p.id
+            WHERE spp.program_id = ? AND p.addon_id IS NOT NULL
+            GROUP BY p.addon_id
+            """,
+            (program_id,),
+        ).fetchall()
+    except sqlite3.OperationalError:
+        return set()
+    if not rows:
+        return set()
+    try:
+        enabled_row = connection.execute(
+            "SELECT value FROM site_settings WHERE key = 'show_promotions' LIMIT 1"
+        ).fetchone()
+    except sqlite3.OperationalError:
+        enabled_row = None
+    enabled = bool(enabled_row) and str(enabled_row[0]) == "1"
+    return {int(row["addon_id"]) for row in rows if not (enabled and row["running"])}
+
+
 def list_program_addons_for_public(program_id: int) -> list[dict[str, Any]]:
     with _get_connection() as connection:
         rows = connection.execute(
@@ -613,9 +645,12 @@ def list_program_addons_for_public(program_id: int) -> list[dict[str, Any]]:
             """,
             (program_id,),
         ).fetchall()
+        gated = _promotion_gated_addon_ids(connection, program_id)
 
     addons: list[dict[str, Any]] = []
     for row in rows:
+        if int(row["id"]) in gated:
+            continue
         addon = _row_to_addon(row)
         addon["is_recommended"] = bool(row["is_recommended"])
         addon["is_default"] = bool(row["is_default"])

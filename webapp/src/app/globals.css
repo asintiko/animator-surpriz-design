@@ -4391,6 +4391,32 @@ input[type="radio"] {
   line-height: 1.55;
 }
 
+.admin-promotion-card .admin-linked-list {
+  margin-top: 0;
+}
+
+.admin-promotion-flags {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.admin-promotion-featured {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 9px;
+  border-radius: 999px;
+  background: #fff1e6;
+  color: var(--orange);
+  font-size: 0.68rem;
+  font-weight: 800;
+}
+
+.admin-promotion-switch {
+  margin-bottom: 16px;
+}
+
 .admin-editor-drawer {
   position: fixed;
   top: 18px;

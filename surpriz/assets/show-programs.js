@@ -51,8 +51,13 @@
       const variants = shows.filter((candidate) => toGroupSlug(candidate) === groupSlug);
       if (variants.length < 2) return [show];
       const groupName = String(variants[0].variant_group_name || "").trim();
+      const promotions = [];
+      variants.forEach((variant) => (variant.promotions || []).forEach((promotion) => {
+        if (!promotions.some((item) => item.id === promotion.id)) promotions.push(promotion);
+      }));
       return [{
         ...variants[0],
+        promotions,
         id: groupSlug,
         title: groupName || variants[0].title,
         variant_label: "",
@@ -124,6 +129,7 @@
       picture.append(image);
       media.append(picture);
     }
+    const promotions = Array.isArray(show.promotions) ? show.promotions : [];
 
     const body = document.createElement("div");
     body.className = "show-card__body";
@@ -137,6 +143,41 @@
     title.append(titleLink);
     body.append(title);
     body.append(makeTextElement("p", "show-card__description", show.description || "Яркая программа для вашего праздника."));
+    if (promotions.length) {
+      article.classList.add("show-card--promo");
+      const lines = document.createElement("div");
+      lines.className = "catalog-card__promos show-card__promo-lines";
+      promotions.forEach((promotion, index) => {
+        const name = promotion.badge_text || promotion.title || "Акция";
+        const trigger = document.createElement("button");
+        trigger.type = "button";
+        trigger.className = "catalog-card__promo";
+        trigger.dataset.promoIndex = String(index);
+        trigger.setAttribute("aria-expanded", "false");
+        trigger.setAttribute("aria-label", `Акция: ${name}. Подробнее об акции`);
+        const flame = makeTextElement("span", "catalog-card__promo-flame", "🔥");
+        flame.setAttribute("aria-hidden", "true");
+        trigger.append(flame, makeTextElement("span", "catalog-card__promo-text", name));
+        lines.append(trigger);
+
+        const tip = document.createElement("div");
+        tip.className = "catalog-card__promo-tip show-card__promo-tip";
+        tip.dataset.promoIndex = String(index);
+        tip.hidden = true;
+        const close = makeTextElement("button", "catalog-card__promo-close", "×");
+        close.type = "button";
+        close.setAttribute("aria-label", "Закрыть");
+        const block = document.createElement("div");
+        block.className = "catalog-card__promo-item";
+        block.append(makeTextElement("strong", "", `🔥 ${promotion.title || name}`));
+        [promotion.short_text, promotion.tooltip_text].filter(Boolean).forEach((text, textIndex) => {
+          block.append(makeTextElement("p", textIndex ? "catalog-card__promo-note" : "", text));
+        });
+        tip.append(close, block);
+        article.append(tip);
+      });
+      body.append(lines);
+    }
 
     const chips = document.createElement("div");
     chips.className = "show-card__chips";
@@ -253,6 +294,38 @@
     );
     cards.forEach((card) => observer.observe(card));
   };
+
+  const setPromoTip = (tip, open) => {
+    tip.hidden = !open;
+    tip.closest(".show-card")
+      ?.querySelector(`.catalog-card__promo[data-promo-index="${tip.dataset.promoIndex}"]`)
+      ?.setAttribute("aria-expanded", open ? "true" : "false");
+  };
+
+  const closePromoTips = (except) => {
+    document.querySelectorAll(".show-card__promo-tip:not([hidden])").forEach((tip) => {
+      if (tip !== except) setPromoTip(tip, false);
+    });
+  };
+
+  // One offer line opens only its own mini-description, over the card.
+  document.addEventListener("click", (event) => {
+    const trigger = event.target.closest(".show-card .catalog-card__promo");
+    const tip = trigger?.closest(".show-card")
+      ?.querySelector(`.show-card__promo-tip[data-promo-index="${trigger.dataset.promoIndex}"]`);
+    if (trigger && tip) {
+      closePromoTips(tip);
+      setPromoTip(tip, tip.hidden);
+      return;
+    }
+    if (event.target.closest(".catalog-card__promo-close") || !event.target.closest(".show-card__promo-tip")) {
+      closePromoTips(null);
+    }
+  });
+
+  document.addEventListener("keydown", (event) => {
+    if (event.key === "Escape") closePromoTips(null);
+  });
 
   const render = async () => {
     try {

@@ -160,6 +160,7 @@
                       <span class="v2-program-choice__media-badges">
                         <span class="v2-badge v2-badge--time"><svg class="v2-i" aria-hidden="true"><use href="#i-clock"/></svg>{{ primary.duration_label }}</span>
                         <span class="v2-badge v2-badge--price">{{ group.variants|length }} варианта</span>
+                        {% if group.variants|selectattr('promotions')|list %}<span class="v2-badge v2-badge--promo"><svg class="v2-i" aria-hidden="true"><use href="#i-tag"/></svg>Акция</span>{% endif %}
                       </span>
                     </span>
                     <span class="party-program-card__body v2-program-choice__body">
@@ -251,6 +252,7 @@
                       {% endif %}
                       <span class="v2-program-choice__media-badges">
                         <span class="v2-badge v2-badge--time"><svg class="v2-i" aria-hidden="true"><use href="#i-clock"/></svg>{{ program.duration_label }}</span>
+                        {% if program.promotions %}<span class="v2-badge v2-badge--promo"><svg class="v2-i" aria-hidden="true"><use href="#i-tag"/></svg>Акция</span>{% endif %}
                       </span>
                       <span class="v2-program-choice__price-tag">{{ program.price_label }}</span>
                     </span>
@@ -285,6 +287,9 @@
             </div>
           {% endif %}
 
+          {# Подарки и доп. услуги показываются прямо под выбранной программой: скрипт
+             переносит этот блок к её карточке, чтобы допы не терялись под списком шоу. #}
+          <div class="party-program-extras" data-program-extras hidden>
           {% set programs_with_gifts = [] %}
           {% for group in shows_grouped %}
             {% if group.is_group %}
@@ -313,7 +318,7 @@
                 <div class="party-gifts__program" data-party-gifts-for="{{ p.slug }}" hidden>
                   {% for bundle in p.gift_bundles %}
                     <div class="party-gifts__bundle v2-bonus__bundle">
-                      <span class="party-gifts__bundle-label v2-badge v2-badge--time">Включено бесплатно</span>
+                      <span class="party-gifts__bundle-label v2-badge v2-badge--time">{{ 'Подарок по акции' if bundle.promo_badge else 'Включено бесплатно' }}</span>
                       <span class="party-gifts__bundle-name">{{ bundle.name }}</span>
                       {% if bundle.short_description %}<small>{{ bundle.short_description }}</small>{% endif %}
                     </div>
@@ -378,12 +383,13 @@
                         value="{{ addon.slug }}"
                       >
                       <span class="party-paid-addon__copy">
-                        <strong>{{ addon.name }}</strong>
+                        <strong>{{ addon.name }}{% if addon.promo_badge %} <span class="party-paid-addon__promo"><svg class="v2-i" aria-hidden="true"><use href="#i-tag"/></svg>{{ addon.promo_badge }}</span>{% endif %}</strong>
                         {% if addon.short_description %}<small>{{ addon.short_description }}</small>{% endif %}
                         <span class="party-paid-addon__meta">
+                          {% if addon.promo_old_price_label %}<s>{{ addon.promo_old_price_label }}</s>{% endif %}
                           <b>+ {{ addon.price_label }}</b>
                           {% if addon.duration_label %}<span>+ {{ addon.duration_label }}</span>{% endif %}
-                          {% if addon.is_recommended %}<span>Рекомендуем</span>{% endif %}
+                          {% if addon.is_recommended and not addon.promo_badge %}<span>Рекомендуем</span>{% endif %}
                         </span>
                       </span>
                       <span class="party-paid-addon__check" aria-hidden="true"><svg class="v2-i"><use href="#i-check"/></svg></span>
@@ -395,6 +401,10 @@
           {% endif %}
           {% if errors.gift_choices %}<p class="customer-error">{{ errors.gift_choices }}</p>{% endif %}
           {% if errors.addon_slugs %}<p class="customer-error">{{ errors.addon_slugs }}</p>{% endif %}
+            <div class="party-program-extras__next" data-program-extras-next hidden>
+              <button class="v2-btn v2-btn--primary v2-btn--sm" data-step-next type="button"><span>Выбрать и дальше</span><svg class="v2-i" aria-hidden="true"><use href="#i-arrow-right"/></svg></button>
+            </div>
+          </div>
 
           <div class="party-section__actions v2-panel__actions">
             <span class="customer-note v2-panel__hint">Выбор программы обязателен — остальное можно менять.</span>
@@ -4190,7 +4200,10 @@
 
     const syncPaidAddonVisibility = () => {
       const wrap = root.querySelector("[data-party-paid-addons]");
-      if (!wrap) return;
+      if (!wrap) {
+        placeProgramExtras();
+        return;
+      }
       const slug = getSelectedProgramSlug();
       let anyVisible = false;
       wrap.querySelectorAll("[data-paid-addons-for]").forEach((list) => {
@@ -4202,6 +4215,36 @@
         }
       });
       wrap.hidden = !anyVisible;
+      placeProgramExtras();
+    };
+
+    const programExtras = root.querySelector("[data-program-extras]");
+    const programExtrasHome = programExtras ? document.createComment("program-extras") : null;
+    if (programExtras) programExtras.before(programExtrasHome);
+    const placeProgramExtras = () => {
+      if (!programExtras) return;
+      const visible = Array.from(programExtras.querySelectorAll("[data-party-gifts], [data-party-paid-addons], .customer-error"))
+        .some((block) => !block.hidden);
+      const card = getSelectedProgramInput()?.closest(".party-program-card--group, .party-program-card--managed");
+      programExtras.hidden = !visible;
+      if (visible && card) {
+        // Land after the last card of the selected card's row, so a multi-column
+        // grid never pushes the neighbouring card below the extras.
+        let anchor = card;
+        while (
+          anchor.nextElementSibling
+          && anchor.nextElementSibling !== programExtras
+          && anchor.nextElementSibling.offsetTop === card.offsetTop
+        ) {
+          anchor = anchor.nextElementSibling;
+        }
+        if (anchor.nextElementSibling !== programExtras) anchor.after(programExtras);
+        programExtras.classList.add("is-attached");
+      } else {
+        programExtrasHome.after(programExtras);
+        programExtras.classList.remove("is-attached");
+      }
+      syncProgramInlineConfirm();
     };
 
     const syncProgramVariantDetails = (groupEl) => {
@@ -4269,9 +4312,16 @@
     };
 
     const syncProgramInlineConfirm = () => {
+      // With gifts or add-ons open under the card, its «Выбрать и дальше» moves
+      // below them so nobody skips the extras on the way to the next step.
+      const extrasCard = programExtras && !programExtras.hidden && programExtras.classList.contains("is-attached")
+        ? getSelectedProgramInput()?.closest(".party-program-card--group, .party-program-card--managed")
+        : null;
+      const extrasNext = programExtras?.querySelector("[data-program-extras-next]");
+      if (extrasNext) extrasNext.hidden = !(extrasCard && hasProgramSelectionInteraction);
       root.querySelectorAll("[data-program-inline-confirm]").forEach((bar) => {
         let isVisible = false;
-        if (!hasProgramSelectionInteraction) {
+        if (!hasProgramSelectionInteraction || (extrasCard && extrasCard.contains(bar))) {
           bar.hidden = true;
           bar.classList.remove("is-visible");
           return;

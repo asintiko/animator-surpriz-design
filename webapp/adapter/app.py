@@ -948,7 +948,22 @@ def create_app() -> Flask:
             return jsonify(success=True, categories=list_categories(True), tags=list_tags(True))
         if section == "addons":
             addons = list_addons(search=request.args.get("search", ""), status=request.args.get("status", ""))
-            return jsonify(success=True, items=addons, addons=addons, promotions=list_promotions(include_hidden=True))
+            programs = [
+                {"id": int(row["id"]), "name": str(row.get("name") or ""), "slug": str(row.get("slug") or ""), "status": str(row.get("status") or "")}
+                for row in list_characters(entity_type=ENTITY_TYPE_SHOW_PROGRAM)
+            ]
+            return jsonify(
+                success=True,
+                items=addons,
+                addons=addons,
+                promotions=list_promotions(include_hidden=True),
+                addon_options=[
+                    {"id": int(addon["id"]), "name": str(addon.get("name") or ""), "price": int(addon.get("price") or 0), "status": str(addon.get("status") or "")}
+                    for addon in list_addons()
+                ],
+                programs=programs,
+                promotions_enabled=bool(get_public_settings().get("show_promotions")),
+            )
         if section == "partners":
             partners = list_partners()
             return jsonify(success=True, items=partners, partners=partners)
@@ -1100,6 +1115,10 @@ def create_app() -> Flask:
         if section == "addons":
             if str(payload.get("resource", "addon")) == "promotion":
                 item_id = int(payload.get("id", 0) or 0)
+                if action == "site_toggle":
+                    enabled = bool(payload.get("enabled"))
+                    update_public_settings({"show_promotions": enabled})
+                    return jsonify(success=True, enabled=enabled, message="Акции включены на сайте." if enabled else "Акции скрыты с сайта.")
                 if action == "delete":
                     delete_promotion(item_id)
                     return jsonify(success=True)

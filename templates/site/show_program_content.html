@@ -7,6 +7,12 @@
     <img src="{{ image.src }}" alt="{{ alt }}" decoding="async" loading="{{ loading }}"{% if fetchpriority %} fetchpriority="{{ fetchpriority }}"{% endif %}{% if style %} style="{{ style }}"{% endif %} data-sd-img>
   </picture>
 {%- endmacro %}
+{% macro price_extras() -%}
+  {% for bundle in show.gift_bundles or [] %}
+    <p class="sd-price__gift">{{ icon('gift') }}<span>В подарок: <strong>{{ bundle.name }}</strong></span>{% if bundle.promo_badge %}<i>Акция</i>{% endif %}</p>
+  {% endfor %}
+  <p class="sd-price__total" data-sd-total hidden>С доп. услугами: <strong data-sd-total-value></strong></p>
+{%- endmacro %}
 {% macro icon(name) -%}<svg class="v2-i" aria-hidden="true"><use href="#i-{{ name }}"/></svg>{%- endmacro %}
 {% macro art(name) -%}
   {%- if name in assets.icons -%}<img class="sd-art" src="{{ assets.icons[name] }}" alt="" width="128" height="128" loading="lazy" decoding="async">{%- else -%}{{ icon(name) }}{%- endif -%}
@@ -45,7 +51,9 @@
           <span class="sd-gallery__placeholder-icon">{{ art('party-hat') }}</span>
           <span>{{ show.name }}</span>
         </div>
-        <span class="sd-gallery__badge">{{ icon('clock') }}{{ show.duration_label }}</span>
+        <div class="sd-gallery__badges">
+          <span class="sd-gallery__badge">{{ icon('clock') }}{{ show.duration_label }}</span>
+        </div>
         {% if show.video_url %}
           <button class="sd-gallery__video" type="button" data-video-open data-video-url="{{ show.video_url|e }}">
             <span class="sd-gallery__play">{{ icon('play') }}</span>
@@ -55,7 +63,24 @@
         {% if gallery|length > 1 %}
           <p class="sd-gallery__count" aria-hidden="true"><span data-sd-current>1</span> / {{ gallery|length }}</p>
         {% endif %}
+        {% for promo in show.promotions or [] %}
+          <div class="sd-offer-tip" data-sd-promo-tip="{{ loop.index0 }}" hidden>
+            <button class="sd-offer-tip__close" type="button" data-sd-promo-close aria-label="Закрыть">{{ icon('close') }}</button>
+            <strong>🔥 {{ promo.title }}</strong>
+            {% if promo.short_text %}<p>{{ promo.short_text }}</p>{% endif %}
+            {% if promo.tooltip_text %}<p class="sd-offer-tip__note">{{ promo.tooltip_text }}</p>{% endif %}
+          </div>
+        {% endfor %}
       </div>
+      {% if show.promotions %}
+        <div class="sd-offer-lines">
+          {% for promo in show.promotions %}
+            <button class="sd-offer-line" type="button" data-sd-promo="{{ loop.index0 }}" aria-expanded="false" aria-label="Акция: {{ promo.badge_text or promo.title }}. Подробнее об акции">
+              <span class="sd-offer-line__flame" aria-hidden="true">🔥</span><span>{{ promo.badge_text or promo.title }}</span>
+            </button>
+          {% endfor %}
+        </div>
+      {% endif %}
       {% if gallery|length > 1 %}
         <div class="sd-gallery__thumbs" role="group" aria-label="Выбор фотографии">
           {% for image in gallery %}
@@ -75,9 +100,21 @@
       <h1 class="sd-title" id="sd-title">{{ show.name }}</h1>
       <p class="sd-lead">{{ show.summary_text }}</p>
 
-      {% for promo in show.promotions or [] %}
-        <p class="sd-promo">{{ icon('sparkles') }}<strong>{{ promo.badge_text or promo.title }}</strong>{% if promo.tooltip_text %}<span>{{ promo.tooltip_text }}</span>{% endif %}</p>
-      {% endfor %}
+      {% if show.promotions %}
+        <ul class="sd-promos" aria-label="Акции">
+          {% for promo in show.promotions %}
+            <li class="sd-promo">
+              <span class="sd-promo__icon">{{ art('face-paint' if 'аквагрим' in ((promo.addon_name or '') ~ ' ' ~ promo.title)|lower else 'gift' if promo.addon_slug and not promo.addon_price else 'sparkles') }}</span>
+              <span class="sd-promo__body">
+                <small>Акция</small>
+                <strong>{{ promo.title }}</strong>
+                {% if promo.short_text %}<span>{{ promo.short_text }}</span>{% endif %}
+                {% if promo.tooltip_text %}<em>{{ promo.tooltip_text }}</em>{% endif %}
+              </span>
+            </li>
+          {% endfor %}
+        </ul>
+      {% endif %}
 
       {% if variants %}
         <nav class="sd-variants" aria-label="Форматы программы">
@@ -117,25 +154,41 @@
           </fieldset>
           <div class="sd-price" aria-live="polite">
             {% for tier in price_tiers %}
-              <p class="sd-price__row" data-tier-price="{{ tier.count }}"{% if not loop.first %} hidden{% endif %}>
+              <p class="sd-price__row" data-tier-price="{{ tier.count }}" data-amount="{{ tier.amount }}"{% if not loop.first %} hidden{% endif %}>
                 <strong class="sd-price__value">{{ tier.price_label }}</strong>
                 <span class="sd-price__unit">за {{ show.duration_label }}</span>
               </p>
             {% endfor %}
             <p class="sd-price__note">{{ price_note }}</p>
+            {{ price_extras() }}
           </div>
         {% else %}
           <div class="sd-price">
             <p class="sd-label">Стоимость</p>
-            <p class="sd-price__row">
+            <p class="sd-price__row" data-sd-base data-amount="{{ show.base_price or 0 }}">
               <strong class="sd-price__value">{{ price_value }}</strong>
               <span class="sd-price__unit">за {{ show.duration_label }}</span>
             </p>
             {% if cast.kind == 'fixed' %}<p class="sd-price__note">Цена за весь состав — выбирать героев не нужно.</p>{% endif %}
+            {{ price_extras() }}
           </div>
         {% endif %}
 
-        <a class="sd-btn sd-btn--primary" href="{{ builder_href }}">
+        {% if show.addons %}
+          <fieldset class="sd-extras">
+            <legend class="sd-label">Добавить к празднику</legend>
+            {% for addon in show.addons %}
+              <label class="sd-extra{% if addon.promo_badge %} is-promo{% endif %}">
+                <input type="checkbox" value="{{ addon.slug }}" data-sd-addon data-price="{{ addon.price }}">
+                <span class="sd-extra__box" aria-hidden="true">{{ icon('check') }}</span>
+                <span class="sd-extra__name">{{ addon.name }}{% if addon.promo_badge %}<i>Акция</i>{% endif %}</span>
+                <span class="sd-extra__price">{% if addon.promo_old_price_label %}<s>{{ addon.promo_old_price_label }}</s>{% endif %}+&nbsp;{{ addon.price_label }}</span>
+              </label>
+            {% endfor %}
+          </fieldset>
+        {% endif %}
+
+        <a class="sd-btn sd-btn--primary" href="{{ builder_href }}" data-sd-builder="{{ builder_href }}">
           {{ icon('party-hat') }}<span>Собрать праздник</span>
         </a>
         <div class="sd-buy__alt">
@@ -149,7 +202,7 @@
   <div data-sd-sentinel aria-hidden="true"></div>
 
   <!-- ============ ЧТО ВХОДИТ ============ -->
-  {% if features or gift_label %}
+  {% if features or gift_label or show.gift_bundles %}
     <section class="sd-wrap sd-section" aria-labelledby="sd-included">
       <header class="sd-head">
         <p class="sd-eyebrow">Всё включено</p>
@@ -163,12 +216,49 @@
             <span class="sd-feature__text">{{ feature.text }}</span>
           </li>
         {% endfor %}
-        {% if gift_label %}
+        {% for bundle in show.gift_bundles or [] %}
+          <li class="sd-feature sd-feature--gift">
+            <span class="sd-feature__icon">{{ art('gift') }}</span>
+            <span class="sd-feature__text"><small>{{ 'Подарок по акции' if bundle.promo_badge else 'В подарок' }}</small>{{ bundle.name }}</span>
+          </li>
+        {% endfor %}
+        {% if gift_label and show.gift_choice_groups %}
           <li class="sd-feature sd-feature--gift">
             <span class="sd-feature__icon">{{ art('gift') }}</span>
             <span class="sd-feature__text"><small>Подарок на выбор</small>{{ gift_label }}</span>
           </li>
         {% endif %}
+      </ul>
+    </section>
+  {% endif %}
+
+  <!-- ============ ДОПОЛНИТЕЛЬНО ============ -->
+  {% if show.addons %}
+    <section class="sd-wrap sd-section" aria-labelledby="sd-addons">
+      <header class="sd-head">
+        <p class="sd-eyebrow">По желанию</p>
+        <h2 class="sd-h2" id="sd-addons">Сделайте праздник ярче</h2>
+        <p class="sd-sub">Отметьте услуги — они сразу попадут в конструктор вместе с программой, а стоимость добавится к итогу.</p>
+      </header>
+      <ul class="sd-addons">
+        {% for addon in show.addons %}
+          <li class="sd-addon{% if addon.promo_badge %} is-promo{% endif %}" data-sd-addon-card="{{ addon.slug }}">
+            <span class="sd-addon__icon">{{ art('note' if 'диджей' in addon.name|lower else 'face-paint' if 'аквагрим' in addon.name|lower else 'party-hat') }}</span>
+            <span class="sd-addon__body">
+              <strong>{{ addon.name }}{% if addon.promo_badge %}<i class="sd-addon__tag">{{ icon('tag') }}{{ addon.promo_badge }}</i>{% endif %}</strong>
+              <span>{{ addon.summary_text|truncate(140, false, '…') }}</span>
+            </span>
+            <span class="sd-addon__price">
+              {% if addon.promo_old_price_label %}<s>{{ addon.promo_old_price_label }}</s>{% endif %}
+              + {{ addon.price_label }}
+              {% if addon.duration_label %}<small>+ {{ addon.duration_label }}</small>{% endif %}
+            </span>
+            <button class="sd-addon__toggle" type="button" data-sd-addon-toggle="{{ addon.slug }}" aria-pressed="false" aria-label="Добавить «{{ addon.name }}» к празднику">
+              <span class="sd-addon__toggle-add">{{ icon('plus') }}Добавить</span>
+              <span class="sd-addon__toggle-done">{{ icon('check') }}Добавлено</span>
+            </button>
+          </li>
+        {% endfor %}
       </ul>
     </section>
   {% endif %}
@@ -194,7 +284,7 @@
               {% endfor %}
             </ul>
             {% if variant.is_current %}
-              <a class="sd-btn sd-btn--primary sd-btn--block" href="{{ builder_href }}">{{ icon('party-hat') }}<span>Выбрать {{ variant.label }}</span></a>
+              <a class="sd-btn sd-btn--primary sd-btn--block" href="{{ builder_href }}" data-sd-builder="{{ builder_href }}">{{ icon('party-hat') }}<span>Выбрать {{ variant.label }}</span></a>
             {% else %}
               <a class="sd-btn sd-btn--soft sd-btn--block" href="{{ variant.route }}"><span>Смотреть {{ variant.label }}</span>{{ icon('arrow-right') }}</a>
             {% endif %}
@@ -218,7 +308,7 @@
       <ul class="sd-heroes" data-sd-rail>
         {% for character in featured_characters %}
           <li>
-            <a class="sd-hero-card" href="{{ character.href }}">
+            <a class="sd-hero-card" href="{{ character.href }}" data-sd-builder="{{ character.href }}">
               <span class="sd-hero-card__media">
                 {{ picture(character.image, character.name, '(min-width: 1100px) 150px, 40vw', 'lazy', 'object-position: ' ~ character.position) }}
               </span>
@@ -246,28 +336,6 @@
           {% endif %}
         </ul>
       </div>
-    </section>
-  {% endif %}
-
-  <!-- ============ ДОПОЛНИТЕЛЬНО ============ -->
-  {% if show.addons %}
-    <section class="sd-wrap sd-section" aria-labelledby="sd-addons">
-      <header class="sd-head">
-        <p class="sd-eyebrow">По желанию</p>
-        <h2 class="sd-h2" id="sd-addons">Можно добавить</h2>
-      </header>
-      <ul class="sd-addons">
-        {% for addon in show.addons %}
-          <li class="sd-addon">
-            <span class="sd-addon__icon">{{ art('note' if 'диджей' in addon.name|lower else 'party-hat') }}</span>
-            <span class="sd-addon__body">
-              <strong>{{ addon.name }}</strong>
-              <span>{{ addon.summary_text|truncate(140, false, '…') }}</span>
-            </span>
-            <span class="sd-addon__price">+ {{ addon.price_label|replace('от ', '') }}{% if addon.duration_label %}<small>+ {{ addon.duration_label }}</small>{% endif %}</span>
-          </li>
-        {% endfor %}
-      </ul>
     </section>
   {% endif %}
 
@@ -323,7 +391,7 @@
         </li>
       </ol>
       <div class="sd-order__cta">
-        <a class="sd-btn sd-btn--primary sd-btn--lg" href="{{ builder_href }}">{{ icon('party-hat') }}<span>Собрать праздник</span></a>
+        <a class="sd-btn sd-btn--primary sd-btn--lg" href="{{ builder_href }}" data-sd-builder="{{ builder_href }}">{{ icon('party-hat') }}<span>Собрать праздник</span></a>
         <a class="sd-order__phone" href="{{ phone_tel }}">{{ icon('phone') }}<span>{{ phone_display }}</span></a>
       </div>
     </div>
@@ -370,9 +438,9 @@
   <div class="sd-sticky__inner">
     <span class="sd-sticky__info">
       <strong>{{ show.name }}</strong>
-      <span>{{ show.price_label }} · {{ show.duration_label }}</span>
+      <span><span data-sd-sticky-price>{{ show.price_label }}</span> · {{ show.duration_label }}</span>
     </span>
-    <a class="sd-btn sd-btn--primary" href="{{ builder_href }}">{{ icon('party-hat') }}<span>Собрать</span></a>
+    <a class="sd-btn sd-btn--primary" href="{{ builder_href }}" data-sd-builder="{{ builder_href }}">{{ icon('party-hat') }}<span>Собрать</span></a>
   </div>
 </div>
 
@@ -461,14 +529,91 @@
     });
   }
 
+  /* Доп. услуги: галочки в блоке покупки и кнопки в карточках — одно состояние.
+     Выбранное уходит в конструктор параметрами ?addon=, итог пересчитывается. */
+  var addonInputs = Array.prototype.slice.call(document.querySelectorAll("[data-sd-addon]"));
+  var addonToggles = Array.prototype.slice.call(document.querySelectorAll("[data-sd-addon-toggle]"));
+  var builderLinks = Array.prototype.slice.call(document.querySelectorAll("[data-sd-builder]"));
+  var totalRows = Array.prototype.slice.call(document.querySelectorAll("[data-sd-total]"));
+  var stickyPrice = document.querySelector("[data-sd-sticky-price]");
+  var stickyPriceDefault = stickyPrice ? stickyPrice.textContent : "";
+  var formatMoney = function (value) {
+    return String(Math.round(value)).replace(/\B(?=(\d{3})+(?!\d))/g, " ") + " сум";
+  };
+  var basePrice = function () {
+    var row = document.querySelector("[data-tier-price]:not([hidden])") || document.querySelector("[data-sd-base]");
+    return Number(row && row.getAttribute("data-amount")) || 0;
+  };
+  var syncAddons = function () {
+    var picked = addonInputs.filter(function (input) { return input.checked; });
+    var extra = picked.reduce(function (sum, input) { return sum + (Number(input.getAttribute("data-price")) || 0); }, 0);
+    var base = basePrice();
+    var total = base + extra;
+    /* «Цена по запросу» (0 сум) не складываем с допами — итог был бы неправдой. */
+    var showTotal = picked.length > 0 && base > 0;
+    totalRows.forEach(function (row) {
+      row.hidden = !showTotal;
+      var value = row.querySelector("[data-sd-total-value]");
+      if (value) value.textContent = formatMoney(total);
+    });
+    if (stickyPrice) stickyPrice.textContent = showTotal ? formatMoney(total) : stickyPriceDefault;
+    addonToggles.forEach(function (button) {
+      var on = picked.some(function (input) { return input.value === button.getAttribute("data-sd-addon-toggle"); });
+      button.setAttribute("aria-pressed", on ? "true" : "false");
+      var card = button.closest("[data-sd-addon-card]");
+      if (card) card.classList.toggle("is-selected", on);
+    });
+    builderLinks.forEach(function (link) {
+      var url = new URL(link.getAttribute("data-sd-builder"), window.location.origin);
+      picked.forEach(function (input) { url.searchParams.append("addon", input.value); });
+      link.setAttribute("href", url.pathname + url.search);
+    });
+  };
+  addonInputs.forEach(function (input) { input.addEventListener("change", syncAddons); });
+  addonToggles.forEach(function (button) {
+    button.addEventListener("click", function () {
+      var slug = button.getAttribute("data-sd-addon-toggle");
+      addonInputs.forEach(function (input) {
+        if (input.value === slug) input.checked = !input.checked;
+      });
+      syncAddons();
+    });
+  });
+
+  /* Строки акций под фото: каждая открывает над фото описание только своей акции. */
+  var promoLines = Array.prototype.slice.call(document.querySelectorAll("[data-sd-promo]"));
+  var promoTips = Array.prototype.slice.call(document.querySelectorAll("[data-sd-promo-tip]"));
+  var showPromoTip = function (index) {
+    promoTips.forEach(function (tip) { tip.hidden = tip.getAttribute("data-sd-promo-tip") !== index; });
+    promoLines.forEach(function (line) {
+      line.setAttribute("aria-expanded", line.getAttribute("data-sd-promo") === index ? "true" : "false");
+    });
+  };
+  if (promoLines.length) {
+    document.addEventListener("click", function (event) {
+      var line = event.target.closest("[data-sd-promo]");
+      if (line) {
+        var index = line.getAttribute("data-sd-promo");
+        showPromoTip(line.getAttribute("aria-expanded") === "true" ? null : index);
+        return;
+      }
+      if (event.target.closest("[data-sd-promo-close]") || !event.target.closest("[data-sd-promo-tip]")) showPromoTip(null);
+    });
+    document.addEventListener("keydown", function (event) {
+      if (event.key === "Escape") showPromoTip(null);
+    });
+  }
+
   /* Тариф по числу героев. */
   document.querySelectorAll("[data-sd-tier]").forEach(function (input) {
     input.addEventListener("change", function () {
       document.querySelectorAll("[data-tier-price]").forEach(function (row) {
         row.hidden = row.getAttribute("data-tier-price") !== input.value;
       });
+      syncAddons();
     });
   });
+  syncAddons();
 
   /* Плавающая кнопка: после блока покупки и не поверх футера. */
   var sticky = document.querySelector("[data-sd-sticky]");

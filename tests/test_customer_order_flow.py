@@ -173,6 +173,14 @@ class CustomerOrderFlowTests(unittest.TestCase):
         self.assertEqual(collected["contact_name"], "Мадина")
         self.assertEqual(collected["contact_phone"], "+998 (90) 123-45-67")
 
+    def test_builder_link_preselects_add_ons_from_the_show_page(self) -> None:
+        url = "/party-builder/?program=standard-program&addon=aqua-face-paint-addon&addon=%20&addon=aqua-face-paint-addon"
+        with self.app.test_request_context(url):
+            defaults = customer_panel._builder_query_defaults()
+
+        self.assertEqual(defaults["program_slug"], "standard-program")
+        self.assertEqual(defaults["addon_slugs"], ["aqua-face-paint-addon"])
+
     def test_guest_order_needs_no_registration_and_is_remembered(self) -> None:
         """Заказ без входа: гость заводится как аккаунт с неподтверждённым телефоном,
         а его public_id запоминается в сессии — сессию покупателя не выдаём."""
