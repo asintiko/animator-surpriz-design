@@ -14,7 +14,7 @@ try:
 except Exception:
     pass
 
-from flask import Flask, abort, jsonify, redirect, render_template, request, send_file, send_from_directory, session
+from flask import Flask, Response, abort, jsonify, redirect, render_template, request, send_file, send_from_directory, session
 from flask_compress import Compress
 from werkzeug.middleware.proxy_fix import ProxyFix
 
@@ -34,6 +34,7 @@ from core.catalog_site import (
 )
 from core.catalog_bootstrap import resolve_landing_root, sync_curated_catalog_for_runtime
 from core.catalog_store import list_characters_for_public, sync_curated_character_catalog
+from core.season_theme import register_season_theme
 from core.config import STATIC_ROOT
 from core.admin_store import init_admin_store, log_visit
 from core.customer_panel import register_customer_routes
@@ -464,9 +465,15 @@ def _landing_page_exists(filename: str) -> bool:
 
 
 def _serve_landing_page(filename: str):
-    response = send_from_directory(SURPRIZ_LANDING_ROOT, filename)
+    # Read into memory, not streamed: the season hook rewrites the HTML, and the
+    # conditional handling happens there on the final body instead of on the file.
+    response = Response((SURPRIZ_LANDING_ROOT / filename).read_bytes(), mimetype="text/html")
+    response.surpriz_conditional = True
     response.headers["Cache-Control"] = "private, no-cache, max-age=0, must-revalidate"
     return response
+
+
+register_season_theme(app, SURPRIZ_LANDING_ROOT)
 
 
 @app.get("/api/catalogs")

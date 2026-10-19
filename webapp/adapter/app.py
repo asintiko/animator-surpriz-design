@@ -53,7 +53,6 @@ from core.admin_store import (  # noqa: E402
     get_popular_programs,
     get_public_settings,
     get_revenue_stats,
-    apply_new_year_preset,
     unblock_customer,
     update_public_settings,
 )
@@ -135,6 +134,7 @@ from core.promotion_store import (  # noqa: E402
     list_promotions,
     update_promotion,
 )
+from core.seasons import season_admin_payload, set_active_season  # noqa: E402
 from core.tashkent_geo import is_inside_tashkent  # noqa: E402
 
 
@@ -276,6 +276,9 @@ CROP_FIELDS = (
     "mobile_cover_fit",
     "mobile_image_zoom",
 )
+
+
+SEASON_OWNED_FLAGS = ("new_year_season_enabled", "show_new_year_menu_link", "show_home_new_year_showcase", "show_snow")
 
 
 def _entity_payload(payload: dict[str, Any]) -> dict[str, Any]:
@@ -1023,6 +1026,7 @@ def create_app() -> Flask:
             party_builder_settings = get_party_builder_settings()
             return jsonify(
                 success=True,
+                season=season_admin_payload(),
                 settings=public_settings,
                 party_builder=party_builder_settings,
                 public_settings=public_settings,
@@ -1049,9 +1053,16 @@ def create_app() -> Flask:
             return jsonify(result), 200 if result.get("success") else 502
 
         if section == "settings":
-            if action == "season_preset":
-                settings = apply_new_year_preset(bool(payload.get("enabled")))
-                return jsonify(success=True, settings=settings, party_builder=get_party_builder_settings())
+            if action == "season":
+                effects = payload.get("effects")
+                try:
+                    state = set_active_season(str(payload.get("season", "")), effects=None if effects is None else bool(effects))
+                except ValueError as error:
+                    return jsonify(success=False, message=str(error)), 400
+                # The legacy page layer still reads the New Year flags; promotions stay as they are.
+                is_new_year = state["active"] == "new_year"
+                settings = update_public_settings({key: is_new_year for key in SEASON_OWNED_FLAGS})
+                return jsonify(success=True, season=season_admin_payload(), settings=settings, party_builder=get_party_builder_settings())
             combined = payload.get("settings") if isinstance(payload.get("settings"), dict) else {}
             public_keys = set(get_public_settings())
             party_keys = set(get_party_builder_settings())

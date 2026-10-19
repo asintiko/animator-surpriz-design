@@ -5,6 +5,7 @@ from urllib.parse import urlencode
 
 from flask import render_template
 
+from . import seasons
 from .addon_store import list_program_addons_for_public
 from .catalog_store import (
     ENTITY_TYPE_CHARACTER,
@@ -457,6 +458,14 @@ def build_frontend_catalog_payload() -> dict[str, object]:
     ordered_characters.extend(
         item for item in character_rows if str(item.get("slug") or "") not in set(ordered_slugs)
     )
+    season = seasons.active_season()
+    season_filter_slug = f"season-{season.id}" if season else ""
+    seasonal = [item for item in ordered_characters if item.get("is_seasonal")]
+    if seasonal:
+        # In season the seasonal heroes lead everywhere, including the homepage carousel.
+        ordered_characters = seasonal + [item for item in ordered_characters if not item.get("is_seasonal")]
+        seasonal_slugs = [str(item.get("slug") or "") for item in seasonal]
+        featured = set((seasonal_slugs + [slug for slug in ordered_slugs if slug not in seasonal_slugs])[:HOMEPAGE_SLOTS])
 
     characters: list[dict[str, object]] = []
     for item in ordered_characters:
@@ -466,6 +475,10 @@ def build_frontend_catalog_payload() -> dict[str, object]:
         placements = ["catalog", "party_builder"]
         if slug in featured:
             placements.insert(0, "homepage")
+        categories = _frontend_character_categories(item)
+        if item.get("is_seasonal"):
+            # Appended, so the card label keeps showing the hero's own category.
+            categories.append(season_filter_slug)
         characters.append(
             {
                 "id": slug,
@@ -485,17 +498,29 @@ def build_frontend_catalog_payload() -> dict[str, object]:
                 "mobile_image_position": _frontend_mobile_image_position(item),
                 "mobile_image_zoom": _frontend_mobile_image_zoom(item),
                 "mobile_cover_fit": "contain" if item.get("mobile_cover_fit") == "contain" else "cover",
-                "categories": _frontend_character_categories(item),
+                "categories": categories,
                 "placements": placements,
+                "seasonal": bool(item.get("is_seasonal")),
             }
         )
 
     shows = _build_frontend_show_cards()
+    filters = _build_frontend_character_filters()
+    if seasonal and season:
+        filters.insert(
+            1,
+            {
+                "slug": season_filter_slug,
+                "label": season.catalog_label,
+                "icon": season.filter_icon,
+            },
+        )
 
     return {
         "version": 3,
         "settings": {"autoplay_enabled": True, "autoplay_speed": 18},
-        "filters": _build_frontend_character_filters(),
+        "season": seasons.season_public_payload(season),
+        "filters": filters,
         "characters": characters,
         "shows": shows,
         "promotions": _featured_promotions_payload(),

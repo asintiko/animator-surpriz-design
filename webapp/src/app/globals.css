@@ -4595,26 +4595,245 @@ input[type="radio"] {
 .admin-season-card {
   overflow: hidden;
   background:
-    radial-gradient(circle at 100% 0, rgba(15, 91, 87, 0.1), transparent 18rem),
+    radial-gradient(circle at 100% 0, rgba(255, 122, 26, 0.1), transparent 20rem),
     #fff;
 }
 
-.admin-season-visual {
-  min-height: 170px;
-  display: grid;
-  place-items: center;
-  align-content: center;
-  gap: 12px;
-  margin-bottom: 17px;
-  border-radius: 15px;
-  color: var(--violet-dark);
-  background: linear-gradient(145deg, #f2eaff, #fff8dc);
-  text-align: center;
+.admin-season-status {
+  flex: none;
+  padding: 7px 12px;
+  border: 1px solid #e5ddd7;
+  border-radius: 999px;
+  color: #6f636b;
+  background: #faf6f2;
+  font-size: 0.76rem;
+  font-weight: 750;
+  white-space: nowrap;
 }
 
-.admin-season-visual svg {
-  width: 42px;
-  height: 42px;
+.admin-season-status.is-on {
+  border-color: #3a1a66;
+  color: #fff4de;
+  background: #1b0f2e;
+}
+
+.admin-season-options {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.admin-season-option {
+  position: relative;
+  display: grid;
+  gap: 11px;
+  padding: 10px 10px 14px;
+  border: 2px solid #e8e0da;
+  border-radius: 18px;
+  color: inherit;
+  background: #fff;
+  text-align: left;
+  cursor: pointer;
+  transition: border-color 160ms ease, box-shadow 160ms ease, transform 160ms var(--ease-out);
+}
+
+.admin-season-option:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-xs);
+}
+
+.admin-season-option[aria-checked="true"] {
+  border-color: var(--violet);
+  box-shadow: 0 0 0 4px var(--violet-soft);
+}
+
+.admin-season-option.season-halloween[aria-checked="true"] {
+  border-color: #ff7a1a;
+  box-shadow: 0 0 0 4px rgba(255, 122, 26, 0.18);
+}
+
+.admin-season-option:focus-visible {
+  outline: 3px solid var(--yellow);
+  outline-offset: 3px;
+}
+
+.admin-season-preview {
+  position: relative;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  aspect-ratio: 5 / 3;
+  border-radius: 12px;
+  background: #f3eee9;
+  font-size: 2.6rem;
+}
+
+.admin-season-preview img {
+  object-fit: cover;
+}
+
+.season-new_year .admin-season-preview {
+  background: linear-gradient(150deg, #0f2a4a, #1f5a8c 60%, #d8eefc);
+}
+
+.admin-season-preview em {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  padding: 4px 9px;
+  border-radius: 999px;
+  color: #fff;
+  background: rgba(24, 16, 30, 0.78);
+  font-size: 0.66rem;
+  font-style: normal;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+}
+
+.admin-season-option-text strong,
+.admin-season-option-text small {
+  display: block;
+}
+
+.admin-season-option-text strong {
+  font-family: var(--font-card);
+  font-size: 0.98rem;
+}
+
+.admin-season-option-text small {
+  margin-top: 4px;
+  color: #7c7078;
+  font-size: 0.74rem;
+  line-height: 1.4;
+}
+
+.admin-season-option > i {
+  position: absolute;
+  top: 18px;
+  right: 18px;
+  display: grid;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  border: 2px solid rgba(255, 255, 255, 0.9);
+  border-radius: 50%;
+  color: #fff;
+  background: rgba(24, 16, 30, 0.35);
+}
+
+.admin-season-option[aria-checked="true"] > i {
+  background: var(--violet);
+}
+
+.admin-season-option.season-halloween[aria-checked="true"] > i {
+  background: #ff7a1a;
+}
+
+.admin-season-body {
+  display: grid;
+  grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr);
+  align-items: start;
+  gap: 22px;
+  margin: 20px 0 16px;
+}
+
+.admin-season-heroes h3 {
+  margin: 0 0 8px;
+  font-family: var(--font-card);
+  font-size: 0.95rem;
+}
+
+.admin-season-heroes p {
+  margin: 0;
+  color: #7c7078;
+  font-size: 0.8rem;
+}
+
+.admin-season-heroes ul {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.admin-season-heroes li {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 7px 6px 12px;
+  border: 1px solid #e5ddd7;
+  border-radius: 999px;
+  background: #fff;
+  font-size: 0.8rem;
+}
+
+.admin-season-heroes li a {
+  color: inherit;
+  font-weight: 750;
+  text-decoration: none;
+}
+
+.admin-season-heroes li a:hover {
+  text-decoration: underline;
+}
+
+.admin-season-heroes li span {
+  padding: 3px 8px;
+  border-radius: 999px;
+  color: #5d5159;
+  background: #f3eee9;
+  font-size: 0.68rem;
+  font-weight: 700;
+}
+
+.admin-season-heroes li span.is-only {
+  color: #8a3a06;
+  background: #ffe7d4;
+}
+
+.admin-season-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.admin-toggle.is-disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+.season-editor-body {
+  display: grid;
+  grid-template-columns: minmax(220px, 320px) minmax(0, 1fr);
+  align-items: center;
+  gap: 18px;
+}
+
+.season-editor-body > label:first-child {
+  display: grid;
+  gap: 7px;
+  color: #665b62;
+  font-size: 0.76rem;
+  font-weight: 750;
+}
+
+.season-editor-body .admin-toggle {
+  border-bottom: 0;
+}
+
+.season-editor-body select {
+  border-color: #dcd2cb;
+  background: #fbfaf9;
+}
+
+@media (max-width: 900px) {
+  .admin-season-options,
+  .admin-season-body,
+  .season-editor-body {
+    grid-template-columns: 1fr;
+  }
 }
 
 .admin-sticky-actions {

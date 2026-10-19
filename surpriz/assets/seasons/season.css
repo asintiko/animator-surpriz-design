@@ -1,0 +1,148 @@
+/* Shared season layer: hero badges and the effect sprites that
+   season.js mounts. Each season tunes the look through the --season-* custom
+   properties in its own season.css. */
+
+:root {
+  --season-ink: #1b0f2e;
+  --season-cream: #fff4de;
+  --season-accent: #ff7a1a;
+  --season-badge-bg: linear-gradient(120deg, #1b0f2e, #3a1a66);
+}
+
+/* --- seasonal hero badges ------------------------------------------------------ */
+
+.season-badge-host { position: relative; }
+
+/* The catalog paints active chip icons white; a season icon keeps its colours. */
+html[data-season] body .cat-filter img[src*="/assets/seasons/"] { filter: none; }
+
+.season-badge {
+  align-items: center;
+  background: var(--season-badge-bg);
+  border: 1px solid color-mix(in srgb, var(--season-accent) 60%, transparent);
+  border-radius: 999px;
+  box-shadow: 0 6px 16px rgba(27, 15, 46, .3);
+  color: var(--season-cream);
+  display: inline-flex;
+  font: 800 11px/1 "Rubik", sans-serif;
+  gap: 5px;
+  letter-spacing: .01em;
+  padding: 6px 10px 6px 7px;
+  pointer-events: none;
+  position: absolute;
+  right: 10px;
+  top: 10px;
+  white-space: nowrap;
+  z-index: 3;
+}
+
+.season-badge__icon,
+.season-pill__icon {
+  background: var(--season-icon) center / contain no-repeat;
+  display: inline-block;
+  flex: none;
+  height: 16px;
+  width: 16px;
+}
+.season-badge--compact { font-size: 0; gap: 0; padding: 4px; right: 6px; top: 6px; }
+.season-badge--compact .season-badge__icon { height: 18px; width: 18px; }
+
+html[data-season] body .is-season-card {
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--season-accent) 55%, transparent), 0 18px 40px rgba(27, 15, 46, .16) !important;
+}
+
+.season-pill {
+  align-items: center;
+  background: var(--season-badge-bg);
+  border-radius: 999px;
+  color: var(--season-cream);
+  display: inline-flex;
+  font: 800 12px/1 "Rubik", sans-serif;
+  gap: 6px;
+  margin: 0 0 10px;
+  padding: 7px 12px 7px 8px;
+  width: fit-content;
+}
+
+.season-pill__icon { height: 18px; width: 18px; }
+
+/* --- effects (season.js) ----------------------------------------------------- */
+
+.season-spider {
+  height: 190px;
+  overflow: hidden;
+  pointer-events: none;
+  position: absolute;
+  right: 4%;
+  top: 0;
+  width: 60px;
+  z-index: 3;
+}
+
+.season-spider__drop {
+  display: block;
+  left: 7px;
+  pointer-events: auto;
+  position: absolute;
+  top: 0;
+  transform: translateY(-90px);
+  transform-origin: 50% -80px;
+  transition: transform 1.2s cubic-bezier(.34, 1.4, .64, 1);
+  width: 46px;
+}
+
+.season-spider__drop::before {
+  background: linear-gradient(180deg, rgba(255, 244, 222, 0), rgba(90, 70, 120, .7));
+  bottom: 100%;
+  content: "";
+  height: 200px;
+  left: calc(50% - 1px);
+  position: absolute;
+  width: 2px;
+}
+
+.season-spider__drop img { display: block; filter: drop-shadow(0 6px 8px rgba(17, 8, 32, .3)); width: 100%; }
+.season-spider.is-down .season-spider__drop { transform: translateY(96px); }
+.season-spider.is-down .season-spider__drop img { animation: season-sway 3.4s ease-in-out 1.2s infinite; transform-origin: 50% -60px; }
+.season-spider.is-up .season-spider__drop { transform: translateY(-90px); transition-duration: .5s; transition-timing-function: ease-in; }
+.season-spider button { background: none; border: 0; cursor: pointer; display: block; padding: 0; width: 100%; }
+.season-spider button:focus-visible { outline: 2px solid var(--season-accent); outline-offset: 4px; border-radius: 50%; }
+
+@keyframes season-sway {
+  0%, 100% { transform: rotate(-6deg); }
+  50% { transform: rotate(6deg); }
+}
+
+.season-pumpkin {
+  animation: season-flicker 3.8s ease-in-out infinite;
+  display: block;
+  pointer-events: none;
+  position: absolute;
+  width: 58px;
+  z-index: 2;
+}
+
+.season-pumpkin--footer { left: 112px; top: -4px; width: 52px; }
+
+@keyframes season-flicker {
+  0%, 100% { filter: drop-shadow(0 0 6px rgba(255, 122, 26, .35)); transform: rotate(-3deg); }
+  18% { filter: drop-shadow(0 0 16px rgba(255, 150, 40, .85)); }
+  22% { filter: drop-shadow(0 0 9px rgba(255, 122, 26, .5)); }
+  55% { filter: drop-shadow(0 0 18px rgba(255, 150, 40, .9)); transform: rotate(3deg); }
+}
+
+.season-paused .season-pumpkin,
+.season-paused .season-spider__drop img { animation-play-state: paused; }
+
+html[data-season-effects="off"] .season-spider,
+html[data-season-effects="off"] .season-pumpkin { display: none !important; }
+
+@media (prefers-reduced-motion: reduce) {
+  .season-spider { display: none !important; }
+  .season-pumpkin { animation: none; }
+}
+
+@media (max-width: 767px) {
+  .season-spider { display: none; }
+}
+
