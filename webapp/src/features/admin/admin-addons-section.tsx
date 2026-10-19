@@ -4,6 +4,8 @@ import { BadgePercent, Gift, Pencil, Plus, Search, Star, Trash2, X } from "lucid
 import Image from "next/image";
 import { type FormEvent, useMemo, useState } from "react";
 
+import { IconPicker, iconSrc } from "@/features/admin/program-content-editor";
+
 import {
   AdminSectionState,
   formatMoney,
@@ -44,6 +46,7 @@ type PromotionRecord = {
   addon_name?: string;
   addon_price?: number;
   old_price: number;
+  icon: string;
   program_ids: number[];
   program_names?: string[];
 };
@@ -87,6 +90,7 @@ const emptyPromotion: PromotionDraft = {
   is_featured: false,
   addon_id: null,
   old_price: 0,
+  icon: "",
   program_ids: [],
 };
 
@@ -102,6 +106,7 @@ function promotionDraft(promotion: PromotionRecord): PromotionDraft {
     is_featured: promotion.is_featured,
     addon_id: promotion.addon_id,
     old_price: promotion.old_price,
+    icon: promotion.icon ?? "",
     program_ids: promotion.program_ids ?? [],
   };
 }
@@ -174,6 +179,7 @@ function PromotionEditor({
     event.preventDefault();
     void onSave();
   }
+  const [pickingIcon, setPickingIcon] = useState(false);
   const linkedAddon = addons.find((addon) => addon.id === value.addon_id);
   return <section className="admin-surface admin-editor-drawer"><div className="admin-surface-head"><div><p className="eyebrow">РЕДАКТОР АКЦИИ</p><h2>{value.id ? value.title : "Новая акция"}</h2></div><button aria-label="Закрыть" onClick={onClose} type="button"><X /></button></div><form onSubmit={submit}><div className="admin-form-grid">
     <label>Название<input placeholder="Аквагрим со скидкой" required value={value.title} onChange={(event) => field("title", event.target.value)} /></label>
@@ -182,6 +188,7 @@ function PromotionEditor({
     <label className="wide">Условия (необязательно)<textarea rows={3} placeholder="Например: до 31 октября, при заказе от 2 героев." value={value.tooltip_text} onChange={(event) => field("tooltip_text", event.target.value)} /></label>
     <label>Статус<select value={value.status} onChange={(event) => field("status", event.target.value)}><option value="active">Активна</option><option value="hidden">Скрыта</option></select></label>
     <label>Порядок<input min={0} type="number" value={value.sort_order} onChange={(event) => field("sort_order", Number(event.target.value))} /></label>
+    <div className="wide admin-promotion-icon"><span>Иконка в карточке акции</span><div className="program-feature-icon"><button aria-expanded={pickingIcon} aria-label="Выбрать иконку акции" onClick={() => setPickingIcon(!pickingIcon)} type="button">{value.icon ? <Image alt="" height={48} src={iconSrc(value.icon)} unoptimized width={48} /> : <small>Авто</small>}</button>{pickingIcon ? <IconPicker onClose={() => setPickingIcon(false)} onPick={(icon) => { field("icon", icon); setPickingIcon(false); }} value={value.icon} /> : null}</div><p className="admin-note">{value.icon ? <button className="button button-secondary" onClick={() => field("icon", "")} type="button">Подбирать автоматически</button> : "Сейчас подбирается сама: подарок, палитра для аквагрима или искорки."}</p></div>
     <label className="admin-check wide"><input checked={value.is_featured} onChange={(event) => field("is_featured", event.target.checked)} type="checkbox" /> Главная акция — показывать на главной и в каталоге шоу</label>
   </div>
   <div className="taxonomy-picker"><fieldset><legend>Шоу-программы с акцией</legend>{programs.map((program) => <label key={program.id}><input checked={value.program_ids.includes(program.id)} onChange={() => toggleProgram(program.id)} type="checkbox" /> {program.name}{program.status !== "active" ? " (скрыта)" : ""}</label>)}</fieldset></div>

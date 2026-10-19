@@ -104,7 +104,7 @@
         <ul class="sd-promos" aria-label="Акции">
           {% for promo in show.promotions %}
             <li class="sd-promo">
-              <span class="sd-promo__icon">{{ art('face-paint' if 'аквагрим' in ((promo.addon_name or '') ~ ' ' ~ promo.title)|lower else 'gift' if promo.addon_slug and not promo.addon_price else 'sparkles') }}</span>
+              <span class="sd-promo__icon">{{ art(promo.icon or ('face-paint' if 'аквагрим' in ((promo.addon_name or '') ~ ' ' ~ promo.title)|lower else 'gift' if promo.addon_slug and not promo.addon_price else 'sparkles')) }}</span>
               <span class="sd-promo__body">
                 <small>Акция</small>
                 <strong>{{ promo.title }}</strong>

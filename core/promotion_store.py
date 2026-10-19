@@ -3,7 +3,7 @@ from __future__ import annotations
 import sqlite3
 from typing import Any
 
-from .catalog_store import DB_PATH, ENTITY_TYPE_SHOW_PROGRAM, utcnow_iso
+from .catalog_store import DB_PATH, ENTITY_TYPE_SHOW_PROGRAM, SHOW_FEATURE_ICONS, utcnow_iso
 
 PROMOTION_STATUSES = {"active", "hidden"}
 PROMOTIONS_SEED_META_KEY = "promotions_seed_v1"
@@ -93,6 +93,7 @@ def init_promotion_store() -> None:
             "is_featured": "INTEGER NOT NULL DEFAULT 0",
             "addon_id": "INTEGER",
             "old_price": "INTEGER NOT NULL DEFAULT 0",
+            "icon": "TEXT NOT NULL DEFAULT ''",
         }
         for column, definition in additions.items():
             if column in columns:
@@ -130,6 +131,7 @@ def _row_to_promotion(row: sqlite3.Row) -> dict[str, Any]:
         "addon_name": str(row["addon_name"] or "") if "addon_name" in keys else "",
         "addon_price": _int(row["addon_price"]) if "addon_price" in keys else 0,
         "old_price": _int(row["old_price"]),
+        "icon": str(row["icon"] or "") if "icon" in keys else "",
         "created_at": row["created_at"],
         "updated_at": row["updated_at"],
     }
@@ -241,6 +243,10 @@ def get_promotion_by_id(promotion_id: int) -> dict[str, Any] | None:
 def _promotion_values(payload: dict[str, Any]) -> tuple[Any, ...]:
     status = payload.get("status") if payload.get("status") in PROMOTION_STATUSES else "active"
     addon_id = _int(payload.get("addon_id"))
+    # Empty means «по смыслу»: the show page picks gift / face paint / sparkles itself.
+    icon = str(payload.get("icon") or "").strip()
+    if icon not in SHOW_FEATURE_ICONS:
+        icon = ""
     return (
         str(payload.get("title") or "").strip(),
         str(payload.get("short_text") or "").strip(),
@@ -251,6 +257,7 @@ def _promotion_values(payload: dict[str, Any]) -> tuple[Any, ...]:
         1 if payload.get("is_featured") else 0,
         addon_id or None,
         _int(payload.get("old_price")),
+        icon,
     )
 
 
@@ -281,9 +288,9 @@ def create_promotion(payload: dict[str, Any]) -> int:
             """
             INSERT INTO promotions(
                 title, short_text, badge_text, tooltip_text, status, sort_order,
-                is_featured, addon_id, old_price, created_at, updated_at
+                is_featured, addon_id, old_price, icon, created_at, updated_at
             )
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """,
             (*_promotion_values(payload), now, now),
         )
@@ -306,7 +313,7 @@ def update_promotion(promotion_id: int, payload: dict[str, Any]) -> None:
             """
             UPDATE promotions
             SET title = ?, short_text = ?, badge_text = ?, tooltip_text = ?, status = ?, sort_order = ?,
-                is_featured = ?, addon_id = ?, old_price = ?, updated_at = ?
+                is_featured = ?, addon_id = ?, old_price = ?, icon = ?, updated_at = ?
             WHERE id = ?
             """,
             (*_promotion_values(payload), utcnow_iso(), promotion_id),

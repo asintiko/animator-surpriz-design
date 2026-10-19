@@ -135,6 +135,15 @@ class PromotionTests(unittest.TestCase):
             (True, promotion["addon_id"], 575_000, [self.standard["id"]]),
         )
 
+    def test_icon_is_kept_only_from_the_show_icon_set(self) -> None:
+        promotion = self._face_paint_promotion()
+
+        promotion_store.update_promotion(promotion["id"], {"icon": "face-paint"})
+        self.assertEqual(promotion_store.get_promotion_by_id(promotion["id"])["icon"], "face-paint")
+
+        promotion_store.update_promotion(promotion["id"], {"icon": "../../etc/passwd"})
+        self.assertEqual(promotion_store.get_promotion_by_id(promotion["id"])["icon"], "")
+
     def test_featured_list_skips_unfeatured_and_unlinked_promotions(self) -> None:
         promotion_store.create_promotion({"title": "Без шоу", "badge_text": "Без шоу", "is_featured": True})
         promotion_store.create_promotion(

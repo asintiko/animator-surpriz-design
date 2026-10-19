@@ -24,13 +24,14 @@ export const PROGRAM_FEATURE_ICONS = [
   { id: "cash", label: "Оплата" },
   { id: "info", label: "Важно" },
   { id: "party-hat", label: "Праздник" },
+  { id: "face-paint", label: "Аквагрим, краски" },
 ] as const;
 
 const FEATURES_LIMIT = 20;
 const FEATURE_TEXT_LIMIT = 160;
 const CAST_LIMIT = 12;
 
-function iconSrc(icon: string) {
+export function iconSrc(icon: string) {
   return `/v2/show-detail/icons/${icon}.webp`;
 }
 
@@ -38,7 +39,7 @@ function iconLabel(icon: string) {
   return PROGRAM_FEATURE_ICONS.find((item) => item.id === icon)?.label ?? "Иконка";
 }
 
-function IconPicker({ value, onPick, onClose }: { value: string; onPick: (icon: string) => void; onClose: () => void }) {
+export function IconPicker({ value, onPick, onClose }: { value: string; onPick: (icon: string) => void; onClose: () => void }) {
   const ref = useRef<HTMLDivElement>(null);
 
   useEffect(() => {

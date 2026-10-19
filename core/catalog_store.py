@@ -682,6 +682,7 @@ def _ensemble_list_literal(raw: str) -> list[Any] | None:
 SHOW_FEATURE_ICONS: tuple[str, ...] = (
     "note", "users", "sparkles", "confetti", "star", "wand", "clock", "gift",
     "mask", "box", "map-pin", "home", "calendar", "cash", "info", "party-hat",
+    "face-paint",
 )
 SHOW_FEATURE_DEFAULT_ICON = "party-hat"
 SHOW_FEATURES_LIMIT = 20

@@ -4413,6 +4413,28 @@ input[type="radio"] {
   font-weight: 800;
 }
 
+.admin-promotion-icon {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  align-items: center;
+  gap: 8px 14px;
+}
+
+.admin-promotion-icon > span {
+  grid-column: 1 / -1;
+  font-weight: 700;
+}
+
+.admin-promotion-icon .program-feature-icon > button small {
+  color: var(--ink-soft);
+  font-size: 0.7rem;
+  font-weight: 800;
+}
+
+.admin-promotion-icon .admin-note {
+  margin: 0;
+}
+
 .admin-promotion-switch {
   margin-bottom: 16px;
 }
