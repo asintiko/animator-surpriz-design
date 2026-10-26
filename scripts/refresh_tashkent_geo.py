@@ -1,18 +1,40 @@
 #!/usr/bin/env python3
-"""Обновить content/geo/tashkent-city-polygon.json из OSM (relation 2216724)."""
+"""Обновить зону обслуживания: content/geo/tashkent-city-polygon.json и static/geo/tashkent.geojson.
+
+Зона — городские районы Ташкента из OSM без земель, недавно переданных городу из
+Ташкентской области (Янгиташкентский район), и без анклава у Улугбека: работаем
+только по самому городу. Нужен пакет shapely (только для этого скрипта).
+"""
 
 from __future__ import annotations
 
 import json
-import math
+import time
 import urllib.request
 from pathlib import Path
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 OUT_PATH = PROJECT_ROOT / "content/geo/tashkent-city-polygon.json"
 GEOJSON_OUT_PATH = PROJECT_ROOT / "static/geo/tashkent.geojson"
-OSM_RELATION_ID = 2216724
 USER_AGENT = "EventSurpriz-Animator/1.0 (refresh_tashkent_geo)"
+# Районы города Ташкент (OSM, admin_level=6). Без Yangi Toshkent Tumani (R17389398).
+CITY_DISTRICT_RELATIONS = {
+    1751444: "Яшнабадский",
+    2434059: "Учтепинский",
+    2439529: "Шайхантахурский",
+    2441651: "Алмазарский",
+    2441810: "Чиланзарский",
+    2443769: "Яккасарайский",
+    2447546: "Сергелийский",
+    2447560: "Бектемирский",
+    2447634: "Мирабадский",
+    2448072: "Юнусабадский",
+    5620904: "Мирзо-Улугбекский",
+    12030887: "Янгихаётский",
+}
+# Стыки районов в OSM не идеальны: склеиваем с небольшим запасом и убираем его обратно.
+SEAM_BUFFER_DEG = 0.0005
+POLYGON_TOLERANCE_DEG = 0.0003
 
 
 def fetch_relation_geojson(osm_id: int) -> dict:
@@ -25,83 +47,33 @@ def fetch_relation_geojson(osm_id: int) -> dict:
     return data[0]["geojson"]
 
 
-def rings_from_geojson(geojson: dict) -> list[list[list[float]]]:
-    geom_type = geojson.get("type")
-    coords = geojson.get("coordinates", [])
-    rings: list[list[list[float]]] = []
-    if geom_type == "Polygon" and coords:
-        rings.append(coords[0])
-    elif geom_type == "MultiPolygon":
-        for poly in coords:
-            if poly:
-                rings.append(poly[0])
-    return rings
+def city_outline():
+    from shapely.geometry import Polygon, shape
+    from shapely.ops import unary_union
 
-
-def ring_area(ring: list[list[float]]) -> float:
-    area = 0.0
-    for i, point in enumerate(ring):
-        x1, y1 = point
-        x2, y2 = ring[(i + 1) % len(ring)]
-        area += x1 * y2 - x2 * y1
-    return abs(area)
-
-
-def to_latlng(ring: list[list[float]]) -> list[list[float]]:
-    return [[point[1], point[0]] for point in ring]
-
-
-def simplify_ring(ring_latlng: list[list[float]], max_points: int = 100) -> list[list[float]]:
-    def perp_dist(point, start, end):
-        ax, ay = start
-        bx, by = end
-        px, py = point
-        dx, dy = bx - ax, by - ay
-        if dx == 0 and dy == 0:
-            return math.hypot(px - ax, py - ay)
-        t = max(0, min(1, ((px - ax) * dx + (py - ay) * dy) / (dx * dx + dy * dy)))
-        projx, projy = ax + t * dx, ay + t * dy
-        return math.hypot(px - projx, py - projy)
-
-    def rdp(points: list[list[float]], eps: float) -> list[list[float]]:
-        if len(points) < 3:
-            return points
-        start, end = points[0], points[-1]
-        idx, dist_max = 0, 0.0
-        for i in range(1, len(points) - 1):
-            dist = perp_dist(points[i], start, end)
-            if dist > dist_max:
-                idx, dist_max = i, dist
-        if dist_max > eps:
-            left = rdp(points[: idx + 1], eps)
-            right = rdp(points[idx:], eps)
-            return left[:-1] + right
-        return [start, end]
-
-    simplified = ring_latlng
-    for tolerance in (0.003, 0.006, 0.01, 0.015, 0.02, 0.03, 0.05):
-        simplified = rdp(ring_latlng, tolerance)
-        if len(simplified) <= max_points:
-            break
-    if simplified and simplified[0] == simplified[-1]:
-        simplified = simplified[:-1]
-    return simplified
+    parts = []
+    for osm_id in CITY_DISTRICT_RELATIONS:
+        parts.append(shape(fetch_relation_geojson(osm_id)).buffer(SEAM_BUFFER_DEG))
+        time.sleep(1.1)  # Nominatim usage policy: не чаще раза в секунду.
+    union = unary_union(parts).buffer(-SEAM_BUFFER_DEG)
+    polygons = list(union.geoms) if union.geom_type == "MultiPolygon" else [union]
+    # Только основной контур: мелкие анклавы (посёлок Улугбек) в зону не входят.
+    main = max(polygons, key=lambda polygon: polygon.area)
+    return Polygon(main.exterior)
 
 
 def main() -> None:
-    geojson = fetch_relation_geojson(OSM_RELATION_ID)
-    rings = rings_from_geojson(geojson)
-    if not rings:
-        raise RuntimeError("No polygon rings in OSM geojson")
-    outer = max(rings, key=ring_area)
-    polygon = simplify_ring(to_latlng(outer))
+    outline = city_outline()
+    detailed = [[round(lng, 7), round(lat, 7)] for lng, lat in outline.exterior.coords]
+    polygon = [[round(lat, 6), round(lng, 6)] for lng, lat in outline.simplify(POLYGON_TOLERANCE_DEG).exterior.coords][:-1]
     lats = [p[0] for p in polygon]
     lngs = [p[1] for p in polygon]
     pad_lat, pad_lng = 0.05, 0.08
+    source = "OpenStreetMap, районы города Ташкент без Янгиташкентского района, ODbL"
     payload = {
-        "name": "Tashkent City (OSM R2216724)",
-        "source": "OpenStreetMap relation 2216724 Toshkent shahri, ODbL",
-        "description": "Официальная административная граница города Ташкент. Упрощена для карты.",
+        "name": "Tashkent City districts (OSM)",
+        "source": source,
+        "description": "Зона обслуживания: город Ташкент без земель Ташкентской области и анклавов.",
         "mask_outer": [
             [min(lats) - pad_lat, min(lngs) - pad_lng],
             [min(lats) - pad_lat, max(lngs) + pad_lng],
@@ -110,24 +82,18 @@ def main() -> None:
         ],
         "polygon": polygon,
     }
+    OUT_PATH.parent.mkdir(parents=True, exist_ok=True)
     OUT_PATH.write_text(json.dumps(payload, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     print(f"Wrote {len(polygon)} points to {OUT_PATH}")
 
-    # Детальный (неупрощённый) GeoJSON для точной отрисовки границы на карте.
     geojson_feature = {
         "type": "Feature",
-        "properties": {
-            "name": "Tashkent City (OSM R2216724)",
-            "source": "OpenStreetMap relation 2216724 Toshkent shahri, ODbL",
-        },
-        "geometry": geojson,
+        "properties": {"name": "Tashkent City districts (OSM)", "source": source},
+        "geometry": {"type": "Polygon", "coordinates": [detailed]},
     }
     GEOJSON_OUT_PATH.parent.mkdir(parents=True, exist_ok=True)
-    GEOJSON_OUT_PATH.write_text(
-        json.dumps(geojson_feature, ensure_ascii=False) + "\n", encoding="utf-8"
-    )
-    total_points = sum(len(r) for r in rings)
-    print(f"Wrote detailed GeoJSON ({total_points} points) to {GEOJSON_OUT_PATH}")
+    GEOJSON_OUT_PATH.write_text(json.dumps(geojson_feature, ensure_ascii=False) + "\n", encoding="utf-8")
+    print(f"Wrote detailed GeoJSON ({len(detailed)} points) to {GEOJSON_OUT_PATH}")
 
 
 if __name__ == "__main__":

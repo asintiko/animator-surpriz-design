@@ -61,7 +61,7 @@
     data-map-polygon='{{ tashkent_map_polygon | tojson }}'
     data-map-mask-outer='{{ tashkent_map_mask_outer | tojson }}'
     data-map-bbox='{{ tashkent_map_bbox | tojson }}'
-    data-map-geojson-url="/geo/tashkent.geojson"
+    data-map-geojson-url="/geo/tashkent.geojson?v={{ tashkent_geojson_version }}"
     data-yandex-suggest-enabled="{{ '1' if yandex_suggest_enabled else '' }}"
     data-server-draft-restored="{{ '1' if draft_restored else '' }}"
     data-resume-step="{{ resume_step or '' }}"

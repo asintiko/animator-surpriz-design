@@ -698,6 +698,13 @@ def _add_duration_to_time(start_time: str, duration_minutes: int) -> str:
     return finish.strftime("%H:%M")
 
 
+def _static_version(relative_path: str) -> str:
+    try:
+        return str(int((STATIC_ROOT / relative_path).stat().st_mtime))
+    except OSError:
+        return "1"
+
+
 def _builder_defaults(program_slug: str = "", character_slugs: list[str] | None = None) -> dict[str, Any]:
     time_from = "12:00"
     time_to = _add_duration_to_time(time_from, get_program_duration_minutes(program_slug))
@@ -1570,5 +1577,7 @@ def register_customer_routes(app: Flask) -> None:
             tashkent_map_polygon=polygon_for_template(),
             tashkent_map_mask_outer=mask_outer_for_template(),
             tashkent_map_bbox=bbox_for_template(),
+            # The builder fetches the boundary with force-cache, so a new zone needs a new URL.
+            tashkent_geojson_version=_static_version("geo/tashkent.geojson"),
         )
         return _render_customer_page(page)
